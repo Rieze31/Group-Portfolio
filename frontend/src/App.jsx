@@ -9,7 +9,6 @@ const DW_TOOLS = [
 ];
 const clamp = (v) => Math.max(0, Math.min(1, v));
 const scTo = (id) => document.getElementById(id).scrollIntoView({ behavior: "smooth" });
-
 function useRoute() {
   const get = () => { const h = location.hash.replace("#", ""); return M.some((m) => m.id === h) ? h : "home"; };
   const [r, setR] = useState(get);
@@ -23,7 +22,11 @@ function useRoute() {
 }
 
 function ThemeBtn({ dark, toggle }) {
-  return <button className="tb" onClick={toggle}>{dark ? "LIGHT" : "DARK"}</button>;
+  return (
+    <button className="tb" onClick={toggle} aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}>
+      {dark ? "☀" : "☾"}
+    </button>
+  );
 }
 
 function Flash({ onDone }) {
@@ -36,7 +39,7 @@ function Flash({ onDone }) {
 }
 
 /* ---------- Landing ---------- */
-function Stack({ go, order, setOrder }) {
+function Stack({ go, onMatch, order, setOrder }) {
   const [dx, setDx] = useState(0);
   const [drag, setDrag] = useState(false);
   const busy = useRef(false), start = useRef(0), moved = useRef(false), act = useRef({});
@@ -47,7 +50,7 @@ function Stack({ go, order, setOrder }) {
     setTimeout(() => { cb(); setDx(0); busy.current = false; }, 280);
   };
   const pass = () => fly(-1, () => setOrder((o) => [...o.slice(1), o[0]]));
-  const look = () => fly(1, () => go(M[order[0]].id));
+  const look = () => fly(1, () => onMatch(M[order[0]]));
   act.current = { pass, look };
 
   useEffect(() => {
@@ -81,16 +84,16 @@ function Stack({ go, order, setOrder }) {
           const m = M[idx], t = i === 0;
           return (
             <div key={idx} className={"card" + (t ? " t" : "")} {...(t ? h : {})}
-              style={{ background: m.color, zIndex: 10 - i, transition: t && drag ? "none" : undefined,
+              style={{ background: m.color, color: m.textColor, zIndex: 10 - i, transition: t && drag ? "none" : undefined,
                 transform: t ? `translateX(${dx}px) rotate(${dx / 22}deg)` : BACK[i] }}>
               {t && (
                 <>
-                  <div className="photo" style={{ background: `linear-gradient(155deg,${m.color}cc,#2b2622)` }}>
-                    <b>{m.init}</b>
+                  <div className="photo" style={{ background: `linear-gradient(155deg,${m.color}cc,#001B2B)` }}>
+                    {m.photoUrl ? <img src={m.photoUrl} alt={m.name} /> : <b>{m.init}</b>}
                     <span className="badge">{m.match}% YOUR TYPE</span>
                     <span className="cap">{m.cap}</span>
                     <span className="stamp" style={{ opacity: clamp(Math.abs(dx) / 90), transform: dx < 0 ? "rotate(10deg)" : undefined,
-                      left: dx < 0 ? "auto" : 20, right: dx < 0 ? 20 : "auto" }}>{dx < 0 ? "NOT YET" : "LET’S LOOK"}</span>
+                      left: dx < 0 ? "auto" : 20, right: dx < 0 ? 20 : "auto" }}>{dx < 0 ? "OH HELL NAHHH" : "ALAM MO HAAA"}</span>
                   </div>
                   <div className="info">
                     <div className="role">{m.role}</div>
@@ -107,14 +110,14 @@ function Stack({ go, order, setOrder }) {
       </div>
       <p className="hint">DRAG THE CARD OR USE YOUR ARROW KEYS</p>
       <div className="acts">
-        <button className="act" onClick={pass}><i style={{ background: "#1a1816" }}>✕</i>NOT YET</button>
-        <button className="act" onClick={look}><i style={{ background: "#ff6a4d" }}>+</i>LET’S LOOK</button>
+        <button className="act" onClick={pass}><i style={{ background: "#331A04", color: "#F8E964" }}>✕</i>OH HELL NAHHH</button>
+        <button className="act" onClick={look}><i style={{ background: "#EEA233", color: "#331A04" }}>+</i>ALAM MO HAAA</button>
       </div>
     </div>
   );
 }
 
-function Landing({ go, order, setOrder, dark, toggle }) {
+function Landing({ go, onMatch, order, setOrder, dark, toggle }) {
   return (
     <main className="hero">
       <div className="bar"><span className="mono">CTPR CLUB</span><ThemeBtn dark={dark} toggle={toggle} /></div>
@@ -123,11 +126,11 @@ function Landing({ go, order, setOrder, dark, toggle }) {
         <h1>Find your<br />dev <em>match.</em></h1>
         <p className="sub">Eight charming profiles. Eight real portfolios. Zero awkward coffee chats. Swipe through the people behind the pixels.</p>
         <div className="trust">
-          <span className="avs">{M.slice(0, 5).map((m) => <button key={m.id} className="av" title={m.name} style={{ background: m.color }} onClick={() => go(m.id)}>{m.init}</button>)}</span>
+          <span className="avs">{M.slice(0, 5).map((m) => <button key={m.id} className="av" title={m.name} style={{ background: m.color, color: m.textColor }} onClick={() => go(m.id)}>{m.photoUrl ? <img src={m.photoUrl} alt="" /> : m.init}</button>)}</span>
           <span className="mono">TRUSTED BY AT LEAST OUR PARENTS</span>
         </div>
       </div>
-      <Stack go={go} order={order} setOrder={setOrder} />
+      <Stack go={go} onMatch={onMatch} order={order} setOrder={setOrder} />
     </main>
   );
 }
@@ -187,7 +190,7 @@ function Portfolio({ m, go, dark, toggle }) {
   const bio = m.bio;
   const slides = m.slides;
   return (
-    <div style={{ "--acc": m.color }}>
+    <div>
       <Cursor /><Peek />
       <nav className="pn"><div className="w">
         <button className="back" onClick={() => go("home")}>← CTPR Club</button>
@@ -198,7 +201,9 @@ function Portfolio({ m, go, dark, toggle }) {
       </div></nav>
       <div className="w">
         <section className="sec ph">
-          <div className="pp" style={{ background: `linear-gradient(155deg,${m.color},#2b2622)` }}><b>{m.init}</b></div>
+          <div className="pp" style={{ background: `linear-gradient(155deg,${m.color},#001B2B)` }}>
+            {m.photoUrl ? <img src={m.photoUrl} alt={m.name} /> : <b>{m.init}</b>}
+          </div>
           <div style={{ flex: "1 1 300px" }}>
             <div className="tag">~/HOME · {m.role}</div>
             <h1 style={{ fontSize: "clamp(40px,7vw,76px)" }}>Hi, I’m <em>{m.name}</em></h1>
@@ -247,19 +252,45 @@ function Portfolio({ m, go, dark, toggle }) {
 }
 
 /* ---------- App ---------- */
+function MatchScreen({ member }) {
+  return (
+    <main className="match-screen">
+      <section className="match-card" role="dialog" aria-modal="true" aria-labelledby="match-title">
+        <p className="match-kicker mono">A PROMISING TEAM-UP</p>
+        <h1 id="match-title">It’s a <em>match!</em></h1>
+        <img className="match-image" src="/match-celebration.jpg" alt="Celebrating when the school bell rings" />
+        <p className="match-copy">
+          You and <strong>{member.name}</strong> look like a great match for your next project.
+          Your teacher might call it teamwork. We call it excellent timing.
+        </p>
+      </section>
+    </main>
+  );
+}
+
 function App() {
   const [route, go] = useRoute();
   const [order, setOrder] = useState(M.map((_, i) => i));
+  const [match, setMatch] = useState(null);
   const [dark, setDark] = useState(() => matchMedia("(prefers-color-scheme: dark)").matches);
   const [fk, setFk] = useState(0);
   useEffect(() => { document.documentElement.setAttribute("data-theme", dark ? "dark" : "light"); }, [dark]);
+  useEffect(() => {
+    if (!match) return undefined;
+    const timeout = window.setTimeout(() => {
+      go(match.id);
+      setMatch(null);
+    }, 3600);
+    return () => window.clearTimeout(timeout);
+  }, [match]);
   const toggle = () => { if (dark) { setDark(false); setFk((k) => k + 1); } else setDark(true); };
   const m = M.find((x) => x.id === route);
   return (
     <>
       {fk > 0 && <Flash key={fk} onDone={() => setFk(0)} />}
-      {m ? <Portfolio key={m.id} m={m} go={go} dark={dark} toggle={toggle} />
-         : <Landing go={go} order={order} setOrder={setOrder} dark={dark} toggle={toggle} />}
+      {match ? <MatchScreen member={match} />
+        : m ? <Portfolio key={m.id} m={m} go={go} dark={dark} toggle={toggle} />
+          : <Landing go={go} onMatch={setMatch} order={order} setOrder={setOrder} dark={dark} toggle={toggle} />}
     </>
   );
 }
