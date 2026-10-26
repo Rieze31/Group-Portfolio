@@ -10,7 +10,7 @@ button{font-family:inherit}
 em{font-family:var(--serif);font-style:italic;font-weight:400;color:var(--acc)}
 .mono{font:11px var(--mono);letter-spacing:.08em}
 .bar{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:22px 32px}
-.tb{background:none;border:1px solid var(--line);color:var(--ink);border-radius:20px;padding:5px 12px;font:11px var(--mono);cursor:pointer}
+.tb{width:42px;height:42px;display:grid;place-items:center;background:none;border:1px solid var(--line);color:var(--ink);border-radius:50%;font:22px/1 var(--sans);cursor:pointer}
 .tb:hover{border-color:var(--acc)}
 .hero{position:relative;min-height:100vh;display:grid;grid-template-columns:1.1fr .9fr;gap:48px;align-items:center;max-width:1180px;margin:0 auto;padding:90px 32px 40px}
 h1{font:500 clamp(50px,7.6vw,108px)/.92 var(--sans);letter-spacing:-.05em;margin:18px 0 0}
