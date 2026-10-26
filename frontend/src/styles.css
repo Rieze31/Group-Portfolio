@@ -45,6 +45,7 @@ h1 em{font-size:1.08em;letter-spacing:-.03em}
 .acts{display:flex;gap:26px}
 .act{display:grid;justify-items:center;gap:8px;font:10px var(--mono);letter-spacing:.08em;background:none;border:0;color:var(--ink);cursor:pointer}
 .act i{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:24px;color:#fff;transition:transform .2s}
+.act i svg{width:24px;height:24px;display:block}
 .act:hover i{transform:scale(1.1)}
 .match-screen{position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:32px 20px;background:radial-gradient(ellipse at top,var(--card),var(--bg) 72%);animation:match-fade 3.6s ease-in forwards}
 .match-card{width:min(100%,520px);padding:32px;border:1px solid var(--line);border-radius:28px;background:var(--card);text-align:center;box-shadow:0 24px 70px rgba(0,0,0,.18);animation:match-pop 3.6s cubic-bezier(.2,.8,.2,1) forwards}

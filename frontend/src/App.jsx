@@ -117,7 +117,7 @@ function Stack({ go, onMatch, order, setOrder }) {
       <p className="hint">DRAG THE CARD OR USE YOUR ARROW KEYS</p>
       <div className="acts">
         <button className="act" onClick={pass}><i style={{ background: "#331A04", color: "#F8E964" }}>✕</i>OH HELL NAHHH</button>
-        <button className="act" onClick={look}><i style={{ background: "#EEA233", color: "#331A04" }}>+</i>ALAM MO HAAA</button>
+        <button className="act" onClick={look}><i style={{ background: "#EEA233", color: "#331A04" }}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78Z" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg></i>ALAM MO HAAA</button>
       </div>
     </div>
   );
