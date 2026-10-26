@@ -30,7 +30,7 @@ function useRoute() {
 function ThemeBtn({ dark, toggle }) {
   return (
     <button className="tb" onClick={toggle} aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}>
-      {dark ? "☀" : "☾"}
+      <span className={dark ? "tb-icon" : "tb-icon moon"}>{dark ? "☀" : "☾"}</span>
     </button>
   );
 }
