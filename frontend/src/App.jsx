@@ -16,7 +16,7 @@ const realNames = {
   m4: "Carlo Timbas",
 };
 function useRoute() {
-  const get = () => { const h = location.hash.replace("#", ""); return M.some((m) => m.id === h) ? h : "home"; };
+  const get = () => { const h = location.hash.replace("#", ""); return h === "deck" || M.some((m) => m.id === h) ? h : "home"; };
   const [r, setR] = useState(get);
   useEffect(() => {
     const f = () => { setR(get()); scrollTo(0, 0); };
@@ -125,9 +125,9 @@ function Stack({ go, onMatch, order, setOrder }) {
 
 function Landing({ go, onMatch, order, setOrder, dark, toggle }) {
   return (
-    <main className="hero">
+    <main className="home-screen">
       <div className="bar"><span className="mono">CTPR CLUB</span><ThemeBtn dark={dark} toggle={toggle} /></div>
-      <div>
+      <div className="home-content">
         <div className="mono">A VERY SERIOUS CODING COLLECTIVE</div>
         <h1>Find your<br />dev <em>match.</em></h1>
         <p className="sub">Eight charming profiles. Eight real portfolios. Zero awkward coffee chats. Swipe through the people behind the pixels.</p>
@@ -135,6 +135,18 @@ function Landing({ go, onMatch, order, setOrder, dark, toggle }) {
           <span className="avs">{M.slice(0, 5).map((m) => <button key={m.id} className="av" title={m.name} style={{ background: m.color, color: m.textColor }} onClick={() => go(m.id)}>{m.photoUrl ? <img src={m.photoUrl} alt="" /> : m.init}</button>)}</span>
           <span className="mono">TRUSTED BY AT LEAST OUR PARENTS</span>
         </div>
+        <button className="find-match" onClick={() => go("deck")}>Find Your Match <span>→</span></button>
+      </div>
+    </main>
+  );
+}
+
+function Deck({ go, onMatch, order, setOrder, dark, toggle }) {
+  return (
+    <main className="deck-screen">
+      <div className="deck-bar">
+        <button className="back-home" onClick={() => go("home")}>← Back to Home</button>
+        <ThemeBtn dark={dark} toggle={toggle} />
       </div>
       <Stack go={go} onMatch={onMatch} order={order} setOrder={setOrder} />
     </main>
@@ -296,7 +308,9 @@ function App() {
       {fk > 0 && <Flash key={fk} onDone={() => setFk(0)} />}
       {match ? <MatchScreen member={match} />
         : m ? <Portfolio key={m.id} m={m} go={go} dark={dark} toggle={toggle} />
-          : <Landing go={go} onMatch={setMatch} order={order} setOrder={setOrder} dark={dark} toggle={toggle} />}
+          : route === "deck"
+            ? <Deck go={go} onMatch={setMatch} order={order} setOrder={setOrder} dark={dark} toggle={toggle} />
+            : <Landing go={go} onMatch={setMatch} order={order} setOrder={setOrder} dark={dark} toggle={toggle} />}
     </>
   );
 }
