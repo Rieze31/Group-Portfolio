@@ -9,8 +9,8 @@ import java.util.List;
 
 @Component
 public class DataSeeder implements CommandLineRunner {
-    private static final String GREEN = "linear-gradient(160deg,#0f6b5c,#6fcf97)";
     private static final String BLUE = "linear-gradient(160deg,#2d8de0,#9b8cff)";
+    private static final String NAVY = "linear-gradient(160deg,#003f66,#002a45)";
     private static final String P1 = "linear-gradient(135deg,#1c2a3a,#4a3f2e)";
     private static final String P2 = "linear-gradient(135deg,#0d2b45,#1f6f8b)";
     private static final String SOON = "Portfolio coming soon. Replace this text with your story.";
