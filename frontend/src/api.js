@@ -36,7 +36,7 @@ export function normalize(m, index) {
     tags: m.tags || [],
     color,
     textColor: paletteTextColor(color),
-    photoUrl: m.id === "m2" ? "/member-rose.jpg" : null,
+    photoUrl: m.id === "m2" ? "/member-rose.jpg" : m.id === "m3" ? "/bela-padilla.jpg" : null,
     bio: m.bio,
     match: m.matchPercent,
     cap: m.caption,
