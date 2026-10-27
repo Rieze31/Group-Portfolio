@@ -53,9 +53,11 @@ function Stack({ go, onMatch, order, setOrder }) {
 
   useEffect(() => {
     const audio = new Audio("/OH%20HELL%20NAH%20-%20Sound%20Effect.mp3");
-    audio.loop = true;
+    const resetAfterPlayback = () => { audio.currentTime = 0; };
+    audio.addEventListener("ended", resetAfterPlayback);
     passSound.current = audio;
     return () => {
+      audio.removeEventListener("ended", resetAfterPlayback);
       audio.pause();
       audio.currentTime = 0;
       passSound.current = null;
@@ -65,13 +67,19 @@ function Stack({ go, onMatch, order, setOrder }) {
   const startPassSound = () => {
     const audio = passSound.current;
     if (!audio || !audio.paused) return;
+    audio.loop = true;
     audio.play().catch((error) => console.warn("Unable to play pass sound:", error));
   };
   const stopPassSound = () => {
     const audio = passSound.current;
     if (!audio) return;
+    audio.loop = false;
     audio.pause();
     audio.currentTime = 0;
+  };
+  const finishPassSound = () => {
+    const audio = passSound.current;
+    if (audio) audio.loop = false;
   };
 
   const fly = (dir, cb) => {
@@ -81,6 +89,7 @@ function Stack({ go, onMatch, order, setOrder }) {
       cb();
       setDx(0);
       busy.current = false;
+      if (dir < 0) finishPassSound();
     }, 280);
   };
   const pass = () => {
