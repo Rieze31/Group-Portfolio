@@ -12,7 +12,7 @@ const scTo = (id) => document.getElementById(id).scrollIntoView({ behavior: "smo
 const realNames = {
   dwight: "Rieze Andrei Venzon",
   m2: "Althea Lei Santos",
-  m3: "Phiona Eunice Garcia",
+  m3: "Bela Padilla",
   m4: "Carlo Timbas",
 };
 function useRoute() {
@@ -266,7 +266,7 @@ function MatchScreen({ member }) {
         <h1 id="match-title">It’s a <em>match!</em></h1>
         <img className="match-image" src="/match-celebration.jpg" alt="Celebrating when the school bell rings" />
         <p className="match-copy">
-          You and <strong>{member.name}</strong> (well, sort of... it’s actually {realNames[member.id]}) look like a great match for your next project.
+          You and <strong>{member.name}</strong> (well, sort of... it’s actually Phiona Eunice Garcia) look like a great match for your next project.
           Your teacher might call it teamwork. We call it excellent timing.
         </p>
       </section>
