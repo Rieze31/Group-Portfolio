@@ -4,6 +4,7 @@ export function normalize(m) {
   const parts = m.name.split(" ");
   return {
     id: m.id,
+    portfolio: m.portfolio || m.id,
     name: m.name,
     role: m.role,
     loc: m.location,
