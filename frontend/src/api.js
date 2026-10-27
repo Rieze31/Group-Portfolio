@@ -25,18 +25,19 @@ const paletteTextColor = (color) =>
   ["#003f66", "#002a45", "#001b2b"].includes(color.toLowerCase()) ? "#fff" : "#151515";
 
 export function normalize(m, index) {
-  const parts = m.name.split(" ");
+  const name = m.id === "m4" ? "Piolo Pascual" : m.name;
+  const parts = name.split(" ");
   const color = cardColors[index % cardColors.length];
   return {
     id: m.id,
-    name: m.name,
+    name,
     role: m.role,
     loc: m.location,
     quote: m.quote,
     tags: m.tags || [],
     color,
     textColor: paletteTextColor(color),
-    photoUrl: m.id === "m2" ? "/member-rose.jpg" : m.id === "m3" ? "/bela-padilla.jpg" : null,
+    photoUrl: m.id === "dwight" ? "/dwight-ramos.png" : m.id === "m2" ? "/member-rose.jpg" : m.id === "m3" ? "/bela-padilla.jpg" : m.id === "m4" ? "/piolo.jpg" : null,
     bio: m.bio,
     match: m.matchPercent,
     cap: m.caption,
