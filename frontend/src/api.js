@@ -30,7 +30,8 @@ export function normalize(m, index) {
   const color = cardColors[index % cardColors.length];
   return {
     id: m.id,
-    name,
+    portfolio: m.portfolio || m.id,
+    name: m.name,
     role: m.role,
     loc: m.location,
     quote: m.quote,
