@@ -276,9 +276,13 @@ function MatchScreen({ member }) {
       <section className="match-card" role="dialog" aria-modal="true" aria-labelledby="match-title">
         <p className="match-kicker mono">A PROMISING TEAM-UP</p>
         <h1 id="match-title">It’s a <em>match!</em></h1>
-        <img className="match-image" src="/match-celebration.jpg" alt="Celebrating when the school bell rings" />
+        <img
+          className="match-image"
+          src={member.id === "m4" ? "/empoy.jpg" : "/match-celebration.jpg"}
+          alt={member.id === "m4" ? "Empoy with Piolo Pascual" : "Celebrating when the school bell rings"}
+        />
         <p className="match-copy">
-          You and <strong>{member.name}</strong> (well, sort of... it’s actually Phiona Eunice Garcia) look like a great match for your next project.
+          You and <strong>{member.name}</strong> (well, sort of... it’s actually {realNames[member.id]}) look like a great match for your next project.
           Your teacher might call it teamwork. We call it excellent timing.
         </p>
       </section>

@@ -23,7 +23,15 @@ public class DataSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        if (repo.count() > 0) return;
+        if (repo.count() > 0) {
+            repo.findById("m4").ifPresent(member -> {
+                if (!"Piolo Pascual".equals(member.getName())) {
+                    member.setName("Piolo Pascual");
+                    repo.save(member);
+                }
+            });
+            return;
+        }
 
         Member dwight = member(0, "dwight", "Dwight Ramos", "FULL-STACK DEVELOPER", "Manila, PH",
                 "“I build the whole thing, then fuss over the corner radius.”", "#EEA233", "OPEN TO AMBITIOUS PROBLEMS",
@@ -39,7 +47,7 @@ public class DataSeeder implements CommandLineRunner {
                 dwight,
                 member(1, "m2", "Rosé", "UI/UX DESIGNER", "Quezon City, PH", "“Making complicated tools feel suspiciously simple.”", "#003F66", "FLUENT IN FIGMA", soon, "Figma", "Research", "Systems"),
                 member(2, "m3", "Bela Padilla", "FRONTEND DEVELOPER", "Manila, PH", "“Pixels are a love language.”", "#FFD358", "COFFEE-POWERED", soon, "React", "Tailwind", "A11y"),
-                member(3, "m4", "Member Four", "BACKEND DEVELOPER", "Makati, PH", "“If it scales quietly, I did my job.”", "#002A45", "BUILDS IN PUBLIC", soon, "Java", "APIs", "SQL")
+                member(3, "m4", "Piolo Pascual", "BACKEND DEVELOPER", "Makati, PH", "“If it scales quietly, I did my job.”", "#002A45", "BUILDS IN PUBLIC", soon, "Java", "APIs", "SQL")
         ));
     }
 
