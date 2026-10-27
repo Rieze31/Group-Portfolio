@@ -167,11 +167,6 @@ function Stack({ go, onMatch, order, setOrder }) {
                     <div className="role">{m.role}</div>
                     <div><div className="name">{m.name}</div><div className="loc">{m.loc}</div></div>
                     <div className="quote">{m.quote}</div>
-                    <div className="card-stats" aria-label={`${m.name} profile details`}>
-                      {PROFILE_STATS[m.id].map(([icon, text]) => (
-                        <span key={text}><i aria-hidden="true">{icon}</i>{text}</span>
-                      ))}
-                    </div>
                     <div className="tags">{m.tags.map((x) => <span key={x}>{x}</span>)}</div>
                     <button className="view" onClick={look}>View portfolio <span>→</span></button>
                   </div>
