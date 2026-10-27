@@ -7,6 +7,32 @@ const DW_TOOLS = [
   { n: "React", c: "Frontend", e: "⚛️" }, { n: "Tailwind", c: "Frontend", e: "🌬️" },
   { n: "Git", c: "Tools", e: "🔀" }, { n: "Figma", c: "Tools", e: "🎨" },
 ];
+const PROFILE_STATS = {
+  dwight: [
+    ["📍", "Pamantasan ng Lungsod ng Maynila"],
+    ["💻", "3rd Year BSIT"],
+    ["☕", "99% Coffee Dependent"],
+    ["🚩", "Consistently forgets to close tags"],
+  ],
+  m2: [
+    ["📍", "Pamantasan ng Lungsod ng Maynila"],
+    ["💻", "3rd Year BSIT"],
+    ["🎨", "Figma is the love language"],
+    ["🚩", "Will nudge it one pixel to the left"],
+  ],
+  m3: [
+    ["📍", "Pamantasan ng Lungsod ng Maynila"],
+    ["💻", "3rd Year BSIT"],
+    ["☕", "Coffee-powered creative"],
+    ["🚩", "Calls it a quick UI tweak"],
+  ],
+  m4: [
+    ["📍", "Pamantasan ng Lungsod ng Maynila"],
+    ["💻", "3rd Year BSIT"],
+    ["⚙️", "API-first thinker"],
+    ["🚩", "Treats “works locally” as QA"],
+  ],
+};
 const clamp = (v) => Math.max(0, Math.min(1, v));
 const scTo = (id) => document.getElementById(id).scrollIntoView({ behavior: "smooth" });
 const realNames = {
@@ -141,6 +167,11 @@ function Stack({ go, onMatch, order, setOrder }) {
                     <div className="role">{m.role}</div>
                     <div><div className="name">{m.name}</div><div className="loc">{m.loc}</div></div>
                     <div className="quote">{m.quote}</div>
+                    <div className="card-stats" aria-label={`${m.name} profile details`}>
+                      {PROFILE_STATS[m.id].map(([icon, text]) => (
+                        <span key={text}><i aria-hidden="true">{icon}</i>{text}</span>
+                      ))}
+                    </div>
                     <div className="tags">{m.tags.map((x) => <span key={x}>{x}</span>)}</div>
                     <button className="view" onClick={look}>View portfolio <span>→</span></button>
                   </div>
@@ -261,6 +292,11 @@ function Portfolio({ m, go, dark, toggle }) {
           <div style={{ flex: "1 1 300px" }}>
             <div className="tag">~/HOME · {m.role}</div>
             <h1 style={{ fontSize: "clamp(40px,7vw,76px)" }}>Hi, I’m <em>{m.name}</em></h1>
+            <ul className="profile-stats" aria-label={`${m.name} profile details`}>
+              {PROFILE_STATS[m.id].map(([icon, text]) => (
+                <li key={text}><span aria-hidden="true">{icon}</span>{text}</li>
+              ))}
+            </ul>
             <p className="p">{bio}</p>
             <button className="btn" onClick={() => scTo("projects")}>View projects</button>
             <button className="btn o" onClick={() => go("home")}>← Back to the club</button>
