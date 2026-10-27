@@ -49,13 +49,45 @@ function Stack({ go, onMatch, order, setOrder }) {
   const [dx, setDx] = useState(0);
   const [drag, setDrag] = useState(false);
   const busy = useRef(false), start = useRef(0), moved = useRef(false), act = useRef({});
+  const passSound = useRef(null);
+
+  useEffect(() => {
+    const audio = new Audio("/OH%20HELL%20NAH%20-%20Sound%20Effect.mp3");
+    audio.loop = true;
+    passSound.current = audio;
+    return () => {
+      audio.pause();
+      audio.currentTime = 0;
+      passSound.current = null;
+    };
+  }, []);
+
+  const startPassSound = () => {
+    const audio = passSound.current;
+    if (!audio || !audio.paused) return;
+    audio.play().catch((error) => console.warn("Unable to play pass sound:", error));
+  };
+  const stopPassSound = () => {
+    const audio = passSound.current;
+    if (!audio) return;
+    audio.pause();
+    audio.currentTime = 0;
+  };
 
   const fly = (dir, cb) => {
     if (busy.current) return;
     busy.current = true; setDrag(false); setDx(dir * 560);
-    setTimeout(() => { cb(); setDx(0); busy.current = false; }, 280);
+    setTimeout(() => {
+      cb();
+      setDx(0);
+      busy.current = false;
+    }, 280);
   };
-  const pass = () => fly(-1, () => setOrder((o) => [...o.slice(1), o[0]]));
+  const pass = () => {
+    if (busy.current) return;
+    startPassSound();
+    fly(-1, () => setOrder((o) => [...o.slice(1), o[0]]));
+  };
   const look = () => fly(1, () => onMatch(M[order[0]]));
   act.current = { pass, look };
 
@@ -71,14 +103,18 @@ function Stack({ go, onMatch, order, setOrder }) {
       if (!drag) return;
       const d = e.clientX - start.current;
       if (Math.abs(d) > 5 && !moved.current) { moved.current = true; e.currentTarget.setPointerCapture(e.pointerId); }
-      if (moved.current) setDx(d);
+      if (moved.current) {
+        if (d < 0) startPassSound(); else stopPassSound();
+        setDx(d);
+      }
     },
     onPointerUp: () => {
       if (!drag) return;
       setDrag(false);
       if (dx > 90) look(); else if (dx < -90) pass(); else setDx(0);
+      if (dx >= -90) stopPassSound();
     },
-    onPointerCancel: () => { setDrag(false); setDx(0); },
+    onPointerCancel: () => { setDrag(false); setDx(0); stopPassSound(); },
   };
   const BACK = [null, "translate(10px,12px) rotate(3deg)", "translate(-8px,22px) rotate(-3deg)"];
 
