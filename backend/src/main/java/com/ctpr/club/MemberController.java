@@ -9,6 +9,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/members")
 public class MemberController {
+    private static final int MAX_MEMBERS = 4;
+
     private final MemberRepository repo;
 
     public MemberController(MemberRepository repo) {
@@ -17,7 +19,7 @@ public class MemberController {
 
     @GetMapping
     public List<Member> all() {
-        return repo.findAllByOrderBySortOrderAsc();
+        return repo.findAllByOrderBySortOrderAsc().stream().limit(MAX_MEMBERS).toList();
     }
 
     @GetMapping("/{id}")

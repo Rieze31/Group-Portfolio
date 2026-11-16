@@ -9,8 +9,8 @@ import java.util.List;
 
 @Component
 public class DataSeeder implements CommandLineRunner {
-    private static final String GREEN = "linear-gradient(160deg,#0f6b5c,#6fcf97)";
     private static final String BLUE = "linear-gradient(160deg,#2d8de0,#9b8cff)";
+    private static final String NAVY = "linear-gradient(160deg,#003f66,#002a45)";
     private static final String P1 = "linear-gradient(135deg,#1c2a3a,#4a3f2e)";
     private static final String P2 = "linear-gradient(135deg,#0d2b45,#1f6f8b)";
     private static final String SOON = "Portfolio coming soon. Replace this text with your story.";
@@ -24,13 +24,22 @@ public class DataSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        if (repo.count() > 0) return;
+        if (repo.count() > 0) {
+            attachPhionaPortfolioToMemberThree();
+            repo.findById("m4").ifPresent(member -> {
+                if (!"Piolo Pascual".equals(member.getName())) {
+                    member.setName("Piolo Pascual");
+                    repo.save(member);
+                }
+            });
+            return;
+        }
 
         repo.saveAll(List.of(
                 // cards 1-4: the real members (portfolio = their own id)
-                member(0, "garcia", "garcia", "Phiona Garcia", "BSIT STUDENT", "Manila, PH", OPEN, "#7fb2e8", "PORTFOLIO INSIDE", "React", "Java", "Git"),
-                member(1, "santos", "santos", "Althea Lei Santos", "BSIT STUDENT", "Manila, PH", OPEN, "#b49cf0", "PORTFOLIO INSIDE", "Figma", "React", "Git"),
-                member(2, "timbas", "timbas", "Carlo Timbas", "FULL-STACK DEVELOPER", "Manila, PH", OPEN, "#3fb0a6", "PORTFOLIO INSIDE", "Java", "Spring Boot", "React"),
+                member(0, "santos", "santos", "Althea Lei Santos", "BSIT STUDENT", "Manila, PH", OPEN, "#b49cf0", "PORTFOLIO INSIDE", "Figma", "React", "Git"),
+                member(1, "timbas", "timbas", "Carlo Timbas", "FULL-STACK DEVELOPER", "Manila, PH", OPEN, "#3fb0a6", "PORTFOLIO INSIDE", "Java", "Spring Boot", "React"),
+                memberThree(2),
                 member(3, "venzon", "venzon", "Rieze Andrei Venzon", "FULL-STACK DEVELOPER", "Manila, PH", OPEN, "#ff6a4d", "OPEN TO AMBITIOUS PROBLEMS", "React", "Spring Boot", "Java"),
 
                 // cards 5-8: joke cards that open the real portfolios
@@ -39,6 +48,35 @@ public class DataSeeder implements CommandLineRunner {
                 member(6, "donny", "timbas", "Donny Pangilinan", "MYSTERY GUEST", "Manila, PH", "Do not judge a card by its name.", "#7cc99a", "PORTFOLIO INSIDE", "Surprise", "Plot twist", "Open me"),
                 member(7, "dwight", "venzon", "Dwight Ramos", "MYSTERY GUEST", "Manila, PH", "Plot twist: not who you think. Click to find out.", "#ffa24d", "PORTFOLIO INSIDE", "Surprise", "Plot twist", "Open me")
         ));
+    }
+
+    private void attachPhionaPortfolioToMemberThree() {
+        var memberThree = repo.findById("m3");
+        var phiona = repo.findById("garcia");
+
+        if (memberThree.isPresent()) {
+            Member member = memberThree.get();
+            member.setPortfolio("garcia");
+            repo.saveAndFlush(member);
+            phiona.ifPresent(repo::delete);
+            return;
+        }
+
+        if (phiona.isEmpty()) return;
+
+        repo.delete(phiona.get());
+        int order = 0;
+        for (Member member : repo.findAllByOrderBySortOrderAsc()) {
+            if (order == 2) repo.save(memberThree(order++));
+            member.setSortOrder(order++);
+            repo.save(member);
+        }
+        if (order <= 2) repo.save(memberThree(order));
+    }
+
+    private Member memberThree(int order) {
+        return member(order, "m3", "garcia", "Member Three", "FRONTEND DEVELOPER", "Manila, PH",
+                "Pixels are a love language.", "#b49cf0", "COFFEE-POWERED", "React", "Tailwind", "Any");
     }
 
     private Member member(int order, String id, String portfolio, String name, String role, String location,
@@ -61,8 +99,8 @@ public class DataSeeder implements CommandLineRunner {
                 new Project("Project B", "Built with " + tags[0] + " and " + tags[1] + ". Details coming soon.", P2))));
         m.setSlides(new ArrayList<>(List.of(
                 new Slide("Workspace", "Where the work happens.", "linear-gradient(160deg," + color + ",#2b2622)"),
-                new Slide("Campus life", "Life between classes.", GREEN),
-                new Slide("Off the clock", "What I do for fun.", BLUE))));
+                new Slide("Campus life", "Life between classes.", BLUE),
+                new Slide("Off the clock", "What I do for fun.", NAVY))));
         return m;
     }
 }
