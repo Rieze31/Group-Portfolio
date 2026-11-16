@@ -47,7 +47,7 @@ const FALLBACK_MEMBERS = [
   {
     id: "garcia",
     portfolio: "garcia",
-    name: "Phiona Garcia",
+    name: "Phiona Eunice Garcia",
     role: "BSIT STUDENT",
     location: "Manila, PH",
     quote: "Portfolio inside. Tap to open.",

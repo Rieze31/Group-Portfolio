@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import VenzonPortfolio from "./portfolios/VenzonPortfolio.jsx";
 import GarciaPortfolio from "./portfolios/GarciaPortfolio.jsx";
+import SantosPortfolio from "./portfolios/SantosPortfolio.jsx";
+import TimbasPortfolio from "./portfolios/TimbasPortfolio.jsx";
 
 let M = []; // filled from the Spring Boot API (see main.jsx)
 export function loadMembers(list) { M = list; }
@@ -10,25 +12,49 @@ const DW_TOOLS = [
   { n: "Git", c: "Tools", e: "🔀" }, { n: "Figma", c: "Tools", e: "🎨" },
 ];
 const PROFILE_STATS = {
+  venzon: [
+    ["📍", "Pamantasan ng Lungsod ng Maynila"],
+    ["💻", "3rd Year BSIT"],
+    ["☕", "99% Coffee Dependent"],
+    ["🚩", "Consistently forgets to close tags"],
+  ],
   dwight: [
     ["📍", "Pamantasan ng Lungsod ng Maynila"],
     ["💻", "3rd Year BSIT"],
     ["☕", "99% Coffee Dependent"],
     ["🚩", "Consistently forgets to close tags"],
   ],
-  m2: [
+  santos: [
     ["📍", "Pamantasan ng Lungsod ng Maynila"],
     ["💻", "3rd Year BSIT"],
     ["🎨", "Figma is the love language"],
     ["🚩", "Will nudge it one pixel to the left"],
   ],
-  m3: [
+  liza: [
+    ["📍", "Pamantasan ng Lungsod ng Maynila"],
+    ["💻", "3rd Year BSIT"],
+    ["🎨", "Figma is the love language"],
+    ["🚩", "Will nudge it one pixel to the left"],
+  ],
+  garcia: [
     ["📍", "Pamantasan ng Lungsod ng Maynila"],
     ["💻", "3rd Year BSIT"],
     ["☕", "Coffee-powered creative"],
     ["🚩", "Calls it a quick UI tweak"],
   ],
-  m4: [
+  bella: [
+    ["📍", "Pamantasan ng Lungsod ng Maynila"],
+    ["💻", "3rd Year BSIT"],
+    ["☕", "Coffee-powered creative"],
+    ["🚩", "Calls it a quick UI tweak"],
+  ],
+  timbas: [
+    ["📍", "Pamantasan ng Lungsod ng Maynila"],
+    ["💻", "3rd Year BSIT"],
+    ["⚙️", "API-first thinker"],
+    ["🚩", "Treats “works locally” as QA"],
+  ],
+  donny: [
     ["📍", "Pamantasan ng Lungsod ng Maynila"],
     ["💻", "3rd Year BSIT"],
     ["⚙️", "API-first thinker"],
@@ -38,8 +64,14 @@ const PROFILE_STATS = {
 const clamp = (v) => Math.max(0, Math.min(1, v));
 const scTo = (id) => document.getElementById(id).scrollIntoView({ behavior: "smooth" });
 const realNames = {
+  venzon: "Rieze Andrei Venzon",
   dwight: "Rieze Andrei Venzon",
   garcia: "Phiona Eunice Garcia",
+  bella: "Phiona Eunice Garcia",
+  santos: "Althea Lei Santos",
+  liza: "Althea Lei Santos",
+  timbas: "Carlo Timbas",
+  donny: "Carlo Timbas",
   m2: "Althea Lei Santos",
   m3: "Phiona Eunice Garcia",
   m4: "Carlo Timbas",
@@ -94,7 +126,7 @@ function ThemeBtn({ dark, toggle }) {
 function Flash({ onDone }) {
   return (
     <div className="flash" onClick={onDone} onAnimationEnd={(e) => e.target === e.currentTarget && onDone()}>
-      <img src="/sunshine.png" alt="Sunshine meme" />
+      <img src="./sunshine.png" alt="Sunshine meme" />
       <span>Light mode activated. Sorry for your eyes. </span>
     </div>
   );
@@ -148,7 +180,7 @@ function Stack({ go, onMatch, order, setOrder }) {
   const passSound = useRef(null);
 
   useEffect(() => {
-    const audio = new Audio("/OH%20HELL%20NAH%20-%20Sound%20Effect.mp3");
+    const audio = new Audio("./OH%20HELL%20NAH%20-%20Sound%20Effect.mp3");
     const resetAfterPlayback = () => { audio.currentTime = 0; };
     audio.addEventListener("ended", resetAfterPlayback);
     passSound.current = audio;
@@ -458,8 +490,8 @@ function MatchScreen({ member }) {
         <h1 id="match-title">It’s a <em>match!</em></h1>
         <img
           className="match-image"
-          src={member.id === "m4" ? "/empoy.jpg" : "/match-celebration.jpg"}
-          alt={member.id === "m4" ? "Empoy with Piolo Pascual" : "Celebrating when the school bell rings"}
+          src={member.id === "m4" || member.id === "timbas" || member.id === "donny" ? "./empoy.jpg" : "./match-celebration.jpg"}
+          alt={member.id === "m4" || member.id === "timbas" || member.id === "donny" ? "Empoy with Piolo Pascual" : "Celebrating when the school bell rings"}
         />
         <p className="match-copy">
           You and <strong>{member.name}</strong> (well, sort of... it’s actually {realNames[member.id]}) look like a great match for your next project.
@@ -493,9 +525,13 @@ function App() {
       {match ? <MatchScreen member={match} />
         : m ? m.portfolio === "venzon" || m.id === "dwight"
           ? <VenzonPortfolio key={m.id} member={m} next={M[(M.indexOf(m) + 1) % M.length]} go={go} dark={dark} toggle={toggle} />
-          : m.portfolio === "garcia" || m.id === "m3"
+          : m.portfolio === "garcia" || m.id === "garcia" || m.id === "bella" || m.id === "m3"
             ? <GarciaPortfolio key={m.id} go={go} dark={dark} toggle={toggle} />
-            : <Portfolio key={m.id} m={m} go={go} dark={dark} toggle={toggle} />
+            : m.portfolio === "santos" || m.id === "santos" || m.id === "liza" || m.id === "m2"
+              ? <SantosPortfolio key={m.id} member={m} next={M[(M.indexOf(m) + 1) % M.length]} go={go} dark={dark} toggle={toggle} />
+              : m.portfolio === "timbas" || m.id === "timbas" || m.id === "donny" || m.id === "m4"
+                ? <TimbasPortfolio key={m.id} member={m} next={M[(M.indexOf(m) + 1) % M.length]} go={go} dark={dark} toggle={toggle} />
+                : <Portfolio key={m.id} m={m} go={go} dark={dark} toggle={toggle} />
           : route === "deck"
             ? <Deck go={go} onMatch={setMatch} order={order} setOrder={setOrder} dark={dark} toggle={toggle} />
             : <Landing go={go} onMatch={setMatch} order={order} setOrder={setOrder} dark={dark} toggle={toggle} />}
