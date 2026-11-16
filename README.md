@@ -11,27 +11,26 @@
 ## Option A: run everything as one app (easiest)
 The React app is already built into `backend/src/main/resources/static`.
 
-From the repository root, run:
-
-    mvn -f .\backend\pom.xml spring-boot:run
+    cd backend
+    mvn spring-boot:run
 
 Open http://localhost:8080
 
 ## Option B: develop the React side with hot reload
-Open two terminals at the repository root.
+Terminal 1:
 
-Terminal 1 (backend):
+    cd backend
+    mvn spring-boot:run
 
-    mvn -f .\backend\pom.xml spring-boot:run
+Terminal 2:
 
-Terminal 2 (frontend):
+    cd frontend
+    npm install
+    npm run dev
 
-    npm --prefix .\frontend install
-    npm --prefix .\frontend run dev
+Open http://localhost:5173 (Vite proxies `/api` to port 8080).
 
-Open http://localhost:5173. Vite proxies `/api` requests to the backend on port 8080.
-
-When you are done editing React, run `npm --prefix .\frontend run build` from the repository root.
+When you are done editing React, run `npm run build` inside `frontend/`.
 It writes into `backend/src/main/resources/static`, so Option A serves your new version.
 
 ## API
