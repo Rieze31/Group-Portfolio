@@ -9,8 +9,8 @@ import java.util.List;
 
 @Component
 public class DataSeeder implements CommandLineRunner {
+    private static final String GREEN = "linear-gradient(160deg,#0f6b5c,#6fcf97)";
     private static final String BLUE = "linear-gradient(160deg,#2d8de0,#9b8cff)";
-    private static final String NAVY = "linear-gradient(160deg,#003f66,#002a45)";
     private static final String P1 = "linear-gradient(135deg,#1c2a3a,#4a3f2e)";
     private static final String P2 = "linear-gradient(135deg,#0d2b45,#1f6f8b)";
     private static final String SOON = "Portfolio coming soon. Replace this text with your story.";
@@ -24,15 +24,7 @@ public class DataSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        if (repo.count() > 0) {
-            repo.findById("m4").ifPresent(member -> {
-                if (!"Piolo Pascual".equals(member.getName())) {
-                    member.setName("Piolo Pascual");
-                    repo.save(member);
-                }
-            });
-            return;
-        }
+        if (repo.count() > 0) return;
 
         repo.saveAll(List.of(
                 // cards 1-4: the real members (portfolio = their own id)
@@ -69,8 +61,8 @@ public class DataSeeder implements CommandLineRunner {
                 new Project("Project B", "Built with " + tags[0] + " and " + tags[1] + ". Details coming soon.", P2))));
         m.setSlides(new ArrayList<>(List.of(
                 new Slide("Workspace", "Where the work happens.", "linear-gradient(160deg," + color + ",#2b2622)"),
-                new Slide("Campus life", "Life between classes.", BLUE),
-                new Slide("Off the clock", "What I do for fun.", NAVY))));
+                new Slide("Campus life", "Life between classes.", GREEN),
+                new Slide("Off the clock", "What I do for fun.", BLUE))));
         return m;
     }
 }
