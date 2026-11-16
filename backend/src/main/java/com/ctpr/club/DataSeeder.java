@@ -57,7 +57,7 @@ public class DataSeeder implements CommandLineRunner {
         if (memberThree.isPresent()) {
             Member member = memberThree.get();
             member.setPortfolio("garcia");
-            repo.save(member);
+            repo.saveAndFlush(member);
             phiona.ifPresent(repo::delete);
             return;
         }
