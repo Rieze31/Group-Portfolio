@@ -41,7 +41,7 @@ const realNames = {
   dwight: "Rieze Andrei Venzon",
   garcia: "Phiona Eunice Garcia",
   m2: "Althea Lei Santos",
-  m3: "Bela Padilla",
+  m3: "Phiona Eunice Garcia",
   m4: "Carlo Timbas",
 };
 const HEARTS = [
@@ -493,7 +493,7 @@ function App() {
       {match ? <MatchScreen member={match} />
         : m ? m.portfolio === "venzon" || m.id === "dwight"
           ? <VenzonPortfolio key={m.id} member={m} next={M[(M.indexOf(m) + 1) % M.length]} go={go} dark={dark} toggle={toggle} />
-          : m.portfolio === "garcia"
+          : m.portfolio === "garcia" || m.id === "m3"
             ? <GarciaPortfolio key={m.id} go={go} dark={dark} toggle={toggle} />
             : <Portfolio key={m.id} m={m} go={go} dark={dark} toggle={toggle} />
           : route === "deck"

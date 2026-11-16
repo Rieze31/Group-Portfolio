@@ -56,23 +56,5 @@ export function normalize(m, index) {
 export async function fetchMembers() {
   const res = await fetch("/api/members");
   if (!res.ok) throw new Error("API returned " + res.status);
-  const members = (await res.json()).slice(0, cardColors.length);
-  if (!members.some((member) => (member.portfolio || member.id) === "garcia")) {
-    members.push({
-      id: "garcia",
-      portfolio: "garcia",
-      name: "Phiona Eunice Garcia",
-      role: "BSIT STUDENT",
-      location: "Manila, PH",
-      quote: "Portfolio inside. Tap to open.",
-      color: "#7fb2e8",
-      caption: "PORTFOLIO INSIDE",
-      matchPercent: 96,
-      bio: "Third year IT student interested in web development.",
-      tags: ["React", "Java", "Git"],
-      projects: [],
-      slides: [],
-    });
-  }
-  return members.map(normalize);
+  return (await res.json()).slice(0, cardColors.length).map(normalize);
 }
