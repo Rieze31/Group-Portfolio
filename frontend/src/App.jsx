@@ -39,6 +39,7 @@ const clamp = (v) => Math.max(0, Math.min(1, v));
 const scTo = (id) => document.getElementById(id).scrollIntoView({ behavior: "smooth" });
 const realNames = {
   dwight: "Rieze Andrei Venzon",
+  garcia: "Phiona Eunice Garcia",
   m2: "Althea Lei Santos",
   m3: "Bela Padilla",
   m4: "Carlo Timbas",
@@ -490,7 +491,7 @@ function App() {
     <>
       {fk > 0 && <Flash key={fk} onDone={() => setFk(0)} />}
       {match ? <MatchScreen member={match} />
-        : m ? m.portfolio === "venzon"
+        : m ? m.portfolio === "venzon" || m.id === "dwight"
           ? <VenzonPortfolio key={m.id} member={m} next={M[(M.indexOf(m) + 1) % M.length]} go={go} dark={dark} toggle={toggle} />
           : m.portfolio === "garcia"
             ? <GarciaPortfolio key={m.id} go={go} dark={dark} toggle={toggle} />
