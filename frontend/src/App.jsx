@@ -58,6 +58,16 @@ const HEARTS = [
   [-120, 500, 14, 0.35, 4.2], [125, 500, 17, 0.31, 4.4], [-820, 470, 15, 0.3, 4.6],
   [820, -450, 16, 0.33, 4.8],
 ];
+const LAUNCH_HEARTS = [
+  [-310, -250, 34, 0], [-230, -350, 24, 70], [-125, -275, 40, 35],
+  [-35, -410, 28, 110], [80, -320, 36, 20], [205, -380, 26, 90],
+  [315, -245, 42, 55], [405, -130, 24, 125], [-390, -80, 26, 100],
+  [-330, 100, 40, 30], [-235, 250, 27, 140], [-145, 160, 35, 75],
+  [-50, 340, 25, 115], [65, 250, 42, 15], [170, 360, 28, 100],
+  [270, 210, 36, 50], [390, 120, 25, 130], [-430, 20, 32, 65],
+  [-280, -5, 23, 160], [330, -25, 30, 145], [-175, -440, 22, 180],
+  [145, -470, 32, 155], [-80, 430, 28, 190], [450, 270, 34, 175],
+];
 function useRoute() {
   const get = () => { const h = location.hash.replace("#", ""); return h === "deck" || M.some((m) => m.id === h) ? h : "home"; };
   const [r, setR] = useState(get);
@@ -252,19 +262,52 @@ function Stack({ go, onMatch, order, setOrder }) {
 }
 
 function Landing({ go, onMatch, order, setOrder, dark, toggle }) {
+  const [launching, setLaunching] = useState(false);
+  const launchTimer = useRef(null);
+  useEffect(() => () => window.clearTimeout(launchTimer.current), []);
+  const launch = () => {
+    if (launching) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      go("deck");
+      return;
+    }
+    setLaunching(true);
+    launchTimer.current = window.setTimeout(() => go("deck"), 850);
+  };
+
   return (
     <main className="home-screen">
       <HeartField />
       <div className="bar"><span className="mono">CTPR CLUB</span><ThemeBtn dark={dark} toggle={toggle} /></div>
       <div className="home-content">
-        <div className="mono">A VERY SERIOUS CODING COLLECTIVE</div>
+        <div className="mono">A VERY SERIOUS CODING COLLECTIVE LOL</div>
         <h1>Find your<br />dev <em>match.</em></h1>
-        <p className="sub">Eight charming profiles. Eight real portfolios. Zero awkward coffee chats. Swipe through the people behind the pixels.</p>
+        <p className="sub">Skip the "what are we?" stage and go straight to production. Swipe through the people behind the pixels.</p>
         <div className="trust">
           <span className="avs">{M.slice(0, 5).map((m) => <button key={m.id} className="av" title={m.name} style={{ background: m.color, color: m.textColor }} onClick={() => go(m.id)}>{m.photoUrl ? <img src={m.photoUrl} alt="" /> : m.init}</button>)}</span>
           <span className="mono">TRUSTED BY AT LEAST OUR PARENTS</span>
         </div>
-        <button className="find-match" onClick={() => go("deck")}>Find Your Match <span>→</span></button>
+        <div className={`match-launch${launching ? " is-bursting" : ""}`}>
+          {launching && (
+            <span className="launch-burst" aria-hidden="true">
+              {LAUNCH_HEARTS.map(([x, y, size, delay], index) => (
+                <HeartShape
+                  key={index}
+                  className="launch-heart"
+                  size={size}
+                  style={{
+                    "--launch-x": `${x}px`,
+                    "--launch-y": `${y}px`,
+                    "--launch-delay": `${delay}ms`,
+                  }}
+                />
+              ))}
+            </span>
+          )}
+          <button className="find-match" onClick={launch} disabled={launching}>
+            Find Your Match <span>→</span>
+          </button>
+        </div>
       </div>
     </main>
   );
