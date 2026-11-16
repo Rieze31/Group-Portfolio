@@ -41,6 +41,23 @@ const realNames = {
   m3: "Bela Padilla",
   m4: "Carlo Timbas",
 };
+const HEARTS = [
+  [-46, -250, 22, 0.24, 0.9], [104, -208, 17, 0.29, 1.2], [-270, -145, 14, 0.33, 1.5],
+  [290, -112, 19, 0.38, 1.7], [-385, -8, 24, 0.27, 1.1], [382, 34, 15, 0.36, 1.9],
+  [-320, 145, 18, 0.32, 1.3], [336, 188, 23, 0.36, 1.6], [-196, 275, 14, 0.29, 2],
+  [192, 286, 18, 0.34, 1.4], [-490, 250, 12, 0.38, 2.2], [472, -236, 13, 0.36, 2.1],
+  [-525, -275, 18, 0.33, 1.8], [530, 160, 16, 0.32, 2.3], [-95, 360, 20, 0.29, 1.7],
+  [82, 362, 14, 0.36, 2.4], [-610, 42, 15, 0.33, 2.5], [612, -44, 21, 0.29, 2.6],
+  [-245, -330, 13, 0.36, 2.1], [246, -330, 16, 0.34, 2.2], [-430, 365, 18, 0.32, 2.7],
+  [438, 350, 13, 0.37, 2.8], [-570, -370, 12, 0.38, 2.9], [575, 340, 17, 0.33, 3],
+  [-150, -420, 15, 0.3, 1.5], [155, -420, 19, 0.28, 1.8], [-675, -170, 16, 0.31, 2.4],
+  [680, 205, 18, 0.29, 2.6], [-690, 390, 14, 0.33, 3.1], [690, -385, 15, 0.32, 3.2],
+  [-350, 430, 17, 0.3, 3.4], [345, 440, 14, 0.34, 3.5],
+  [-760, -310, 18, 0.31, 2.7], [760, 330, 16, 0.3, 2.9], [-760, 80, 13, 0.34, 3.3],
+  [755, -95, 20, 0.29, 3.6], [-585, 470, 15, 0.32, 3.8], [580, 475, 18, 0.3, 4],
+  [-120, 500, 14, 0.35, 4.2], [125, 500, 17, 0.31, 4.4], [-820, 470, 15, 0.3, 4.6],
+  [820, -450, 16, 0.33, 4.8],
+];
 function useRoute() {
   const get = () => { const h = location.hash.replace("#", ""); return h === "deck" || M.some((m) => m.id === h) ? h : "home"; };
   const [r, setR] = useState(get);
@@ -70,6 +87,46 @@ function Flash({ onDone }) {
   );
 }
 
+function HeartShape({ className = "", size = 24, style }) {
+  return (
+    <svg className={className} style={style} width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78Z" />
+    </svg>
+  );
+}
+
+function HeartField() {
+  return (
+    <div className="heart-field" aria-hidden="true">
+      <svg className="heart-defs" width="0" height="0">
+        <defs>
+          <linearGradient id="heart-gradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#F2BA49" />
+            <stop offset="48%" stopColor="#E5A93C" />
+            <stop offset="100%" stopColor="#E5A93C" stopOpacity=".14" />
+          </linearGradient>
+        </defs>
+      </svg>
+      <span className="heart-burst-ring" />
+      <HeartShape className="heart-origin" size={124} />
+      {HEARTS.map(([x, y, size, opacity, delay], index) => (
+        <HeartShape
+          key={index}
+          className="ambient-heart"
+          size={Math.round(size * 1.7)}
+          style={{
+            "--heart-x": `${x}px`,
+            "--heart-y": `${y}px`,
+            "--heart-opacity": opacity,
+            "--heart-delay": `${delay}s`,
+            "--heart-duration": `${5.6 + (index % 4) * .8}s`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
 /* ---------- Landing ---------- */
 function Stack({ go, onMatch, order, setOrder }) {
   const [dx, setDx] = useState(0);
@@ -79,9 +136,11 @@ function Stack({ go, onMatch, order, setOrder }) {
 
   useEffect(() => {
     const audio = new Audio("/OH%20HELL%20NAH%20-%20Sound%20Effect.mp3");
-    audio.loop = true;
+    const resetAfterPlayback = () => { audio.currentTime = 0; };
+    audio.addEventListener("ended", resetAfterPlayback);
     passSound.current = audio;
     return () => {
+      audio.removeEventListener("ended", resetAfterPlayback);
       audio.pause();
       audio.currentTime = 0;
       passSound.current = null;
@@ -91,13 +150,19 @@ function Stack({ go, onMatch, order, setOrder }) {
   const startPassSound = () => {
     const audio = passSound.current;
     if (!audio || !audio.paused) return;
+    audio.loop = true;
     audio.play().catch((error) => console.warn("Unable to play pass sound:", error));
   };
   const stopPassSound = () => {
     const audio = passSound.current;
     if (!audio) return;
+    audio.loop = false;
     audio.pause();
     audio.currentTime = 0;
+  };
+  const finishPassSound = () => {
+    const audio = passSound.current;
+    if (audio) audio.loop = false;
   };
 
   const fly = (dir, cb) => {
@@ -107,6 +172,7 @@ function Stack({ go, onMatch, order, setOrder }) {
       cb();
       setDx(0);
       busy.current = false;
+      if (dir < 0) finishPassSound();
     }, 280);
   };
   const pass = () => {
@@ -188,6 +254,7 @@ function Stack({ go, onMatch, order, setOrder }) {
 function Landing({ go, onMatch, order, setOrder, dark, toggle }) {
   return (
     <main className="home-screen">
+      <HeartField />
       <div className="bar"><span className="mono">CTPR CLUB</span><ThemeBtn dark={dark} toggle={toggle} /></div>
       <div className="home-content">
         <div className="mono">A VERY SERIOUS CODING COLLECTIVE</div>

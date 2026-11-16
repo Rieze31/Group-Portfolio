@@ -1,5 +1,6 @@
 import ReactDOM from "react-dom/client";
-import App, { loadMembers } from "./App.jsx";
+import App from "./App.jsx";
+import { loadMembers } from "./state/members.js";
 import { fetchMembers } from "./api.js";
 import "./styles.css";
 

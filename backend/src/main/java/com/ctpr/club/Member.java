@@ -1,11 +1,18 @@
 package com.ctpr.club;
 
-import jakarta.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 
-import java.util.ArrayList;
-import java.util.List;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OrderColumn;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "members")
@@ -13,6 +20,7 @@ public class Member {
     @Id
     private String id;              // url-friendly id, e.g. "dwight"
     private int sortOrder;
+    private String portfolio;   // id of the portfolio this card opens
     private String name;
     @Column(name = "job_role")
     private String role;
@@ -66,4 +74,6 @@ public class Member {
     public void setProjects(List<Project> projects) { this.projects = projects; }
     public List<Slide> getSlides() { return slides; }
     public void setSlides(List<Slide> slides) { this.slides = slides; }
+    public String getPortfolio() { return portfolio; }
+    public void setPortfolio(String portfolio) { this.portfolio = portfolio; }
 }
