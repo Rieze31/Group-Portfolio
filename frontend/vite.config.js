@@ -4,7 +4,7 @@ import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
   plugins: [tailwindcss(), react()],
-  server: { proxy: { "/api": "http://localhost:8081" } },
+  server: { proxy: { "/api": "http://127.0.0.1:8080" } },
   // `npm run build` writes straight into Spring Boot's static folder
   build: { outDir: "../backend/src/main/resources/static", emptyOutDir: true },
 });
