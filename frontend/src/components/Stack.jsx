@@ -61,10 +61,14 @@ export default function Stack({ go, order, setOrder }) {
               {t && (
                 <>
                   {/* Photo area */}
-                  <div className="relative h-[56%] grid place-items-center"
+                  <div className="relative h-[56%] grid place-items-center overflow-hidden"
                        style={{ background: `linear-gradient(155deg,${m.color}cc,#2b2622)` }}>
-                    <b className="text-[120px] leading-none font-light tracking-tight text-white/90"
-                       style={{ fontFamily: "var(--sans)" }}>{m.init}</b>
+                    {m.photoUrl ? (
+                      <img src={m.photoUrl} alt={m.name} className="h-full w-full object-cover select-none pointer-events-none" />
+                    ) : (
+                      <b className="text-[120px] leading-none font-light tracking-tight text-white/90"
+                         style={{ fontFamily: "var(--sans)" }}>{m.init}</b>
+                    )}
                     <span className="absolute top-3.5 right-3.5 text-white text-[11px] font-bold px-3.5 py-2 rounded-full"
                           style={{ background: "rgba(30,28,26,.78)", fontFamily: "var(--mono)" }}>
                       {m.match}% YOUR TYPE

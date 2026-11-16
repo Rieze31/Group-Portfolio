@@ -1,5 +1,6 @@
 // Calls the Spring Boot API. In dev, vite.config.js proxies /api to http://localhost:8080.
 // In production the React build is served by Spring Boot itself, so /api is the same origin.
+<<<<<<< Updated upstream
 const paletteColors = {
   "#ff6a4d": "#EEA233",
   "#e9b93c": "#FFB915",
@@ -28,6 +29,17 @@ export function normalize(m, index) {
   const name = m.id === "m4" ? "Piolo Pascual" : m.name;
   const parts = name.split(" ");
   const color = cardColors[index % cardColors.length];
+=======
+const photos = {
+  dwight: "./dwight-ramos.png",
+  bella: "./bela-padilla.jpg",
+  liza: "./member-rose.jpg",
+  donny: "./piolo.jpg",
+};
+
+export function normalize(m) {
+  const parts = m.name.split(" ");
+>>>>>>> Stashed changes
   return {
     id: m.id,
     portfolio: m.portfolio || m.id,
@@ -36,9 +48,14 @@ export function normalize(m, index) {
     loc: m.location,
     quote: m.quote,
     tags: m.tags || [],
+<<<<<<< Updated upstream
     color,
     textColor: paletteTextColor(color),
     photoUrl: m.id === "dwight" ? "/dwight-ramos.png" : m.id === "m2" ? "/member-rose.jpg" : m.id === "m3" ? "/bela-padilla.jpg" : m.id === "m4" ? "/piolo.jpg" : null,
+=======
+    color: m.color,
+    photoUrl: photos[m.id] || m.photoUrl || null,
+>>>>>>> Stashed changes
     bio: m.bio,
     match: m.matchPercent,
     cap: m.caption,

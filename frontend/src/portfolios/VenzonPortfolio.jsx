@@ -20,7 +20,7 @@ const DATA = {
     { t: "Campus life", d: "3rd year BSIT student at Pamantasan ng Lungsod ng Maynila.", g: "linear-gradient(160deg,#0f6b5c,#6fcf97)" },
     { t: "Off the clock", d: "What I do for fun.", g: "linear-gradient(160deg,#2d8de0,#9b8cff)" },
   ],
-  headFolder: "/photos/venzon",
+  headFolder: "./photos/venzon",
   headBackText: "kalabitin mo ko",
 };
 
