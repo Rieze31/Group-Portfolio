@@ -140,7 +140,7 @@ function PageContent({ i }) {
   );
 }
 
-export default function GarciaPortfolio({ go, dark, toggle }) {
+export default function GarciaPortfolio({ next, go, dark, toggle }) {
   const [open, setOpen] = useState(false);
   const [page, setPage] = useState(0);
   const touchX = useRef(null);

@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 :root{--bg:#fff9e9;--ink:#331A04;--mute:#69523c;--line:#e8d8b8;--card:#fffdf5;--acc:#EEA233;--maize:#FFD358;--gold:#FFB915;--blue:#003F66;--deep-blue:#002A45;--navy:#001B2B;--bistre:#331A04;
 --mono:"Segoe UI",Arial,sans-serif;--sans:"Cormorant Garamond",Georgia,"Times New Roman",serif;--serif:"Cormorant Garamond",Georgia,"Times New Roman",serif;--script:"Allura","Segoe Script",cursive;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}

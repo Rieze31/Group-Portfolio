@@ -1,3 +1,5 @@
+import { PORTFOLIOS } from "./portfolios/index.js";
+import GenericPortfolio from "./portfolios/GenericPortfolio.jsx";
 import { useState, useEffect, useRef } from "react";
 
 let M = []; // filled from the Spring Boot API (see main.jsx)
@@ -7,12 +9,58 @@ const DW_TOOLS = [
   { n: "React", c: "Frontend", e: "⚛️" }, { n: "Tailwind", c: "Frontend", e: "🌬️" },
   { n: "Git", c: "Tools", e: "🔀" }, { n: "Figma", c: "Tools", e: "🎨" },
 ];
+const DEFAULT_PROFILE_STATS = [
+  ["📍", "Pamantasan ng Lungsod ng Maynila"],
+  ["💻", "3rd Year BSIT"],
+];
 const PROFILE_STATS = {
   dwight: [
     ["📍", "Pamantasan ng Lungsod ng Maynila"],
     ["💻", "3rd Year BSIT"],
     ["☕", "99% Coffee Dependent"],
     ["🚩", "Consistently forgets to close tags"],
+  ],
+  venzon: [
+    ["📍", "Pamantasan ng Lungsod ng Maynila"],
+    ["💻", "3rd Year BSIT"],
+    ["☕", "99% Coffee Dependent"],
+    ["🚩", "Consistently forgets to close tags"],
+  ],
+  garcia: [
+    ["📍", "Pamantasan ng Lungsod ng Maynila"],
+    ["💻", "3rd Year BSIT"],
+    ["🎨", "Figma is the love language"],
+    ["🚩", "Will nudge it one pixel to the left"],
+  ],
+  bella: [
+    ["📍", "Pamantasan ng Lungsod ng Maynila"],
+    ["💻", "3rd Year BSIT"],
+    ["🎨", "Figma is the love language"],
+    ["🚩", "Will nudge it one pixel to the left"],
+  ],
+  santos: [
+    ["📍", "Pamantasan ng Lungsod ng Maynila"],
+    ["💻", "3rd Year BSIT"],
+    ["☕", "Coffee-powered creative"],
+    ["🚩", "Calls it a quick UI tweak"],
+  ],
+  liza: [
+    ["📍", "Pamantasan ng Lungsod ng Maynila"],
+    ["💻", "3rd Year BSIT"],
+    ["☕", "Coffee-powered creative"],
+    ["🚩", "Calls it a quick UI tweak"],
+  ],
+  timbas: [
+    ["📍", "Pamantasan ng Lungsod ng Maynila"],
+    ["💻", "3rd Year BSIT"],
+    ["⚙️", "API-first thinker"],
+    ["🚩", "Treats \u201cworks locally\u201d as QA"],
+  ],
+  donny: [
+    ["📍", "Pamantasan ng Lungsod ng Maynila"],
+    ["💻", "3rd Year BSIT"],
+    ["⚙️", "API-first thinker"],
+    ["🚩", "Treats \u201cworks locally\u201d as QA"],
   ],
   m2: [
     ["📍", "Pamantasan ng Lungsod ng Maynila"],
@@ -30,13 +78,20 @@ const PROFILE_STATS = {
     ["📍", "Pamantasan ng Lungsod ng Maynila"],
     ["💻", "3rd Year BSIT"],
     ["⚙️", "API-first thinker"],
-    ["🚩", "Treats “works locally” as QA"],
+    ["🚩", "Treats \u201cworks locally\u201d as QA"],
   ],
 };
 const clamp = (v) => Math.max(0, Math.min(1, v));
 const scTo = (id) => document.getElementById(id).scrollIntoView({ behavior: "smooth" });
 const realNames = {
   dwight: "Rieze Andrei Venzon",
+  venzon: "Rieze Andrei Venzon",
+  garcia: "Phiona Garcia",
+  bella: "Phiona Garcia",
+  santos: "Althea Lei Santos",
+  liza: "Althea Lei Santos",
+  timbas: "Carlo Timbas",
+  donny: "Carlo Timbas",
   m2: "Althea Lei Santos",
   m3: "Bela Padilla",
   m4: "Carlo Timbas",
@@ -348,9 +403,10 @@ function Peek() {
   return <div className="peek" style={{ transform: `translateX(${140 - clamp(p * 1.4) * 90}px)` }}>peeking…</div>;
 }
 
-function Carousel({ slides }) {
+function Carousel({ slides = [] }) {
   const [i, setI] = useState(0);
-  const n = slides.length, s = slides[i];
+  if (!slides || slides.length === 0) return null;
+  const n = slides.length, s = slides[i] || slides[0];
   return (
     <div>
       <div className="car">
@@ -376,9 +432,10 @@ function Stack2({ tools }) {
 
 function Portfolio({ m, go, dark, toggle }) {
   const i = M.indexOf(m), nx = M[(i + 1) % M.length], isD = m.id === "dwight";
-  const tools = isD ? DW_TOOLS : m.tags.map((t) => ({ n: t, c: "Tools", e: "✦" }));
+  const tools = isD ? DW_TOOLS : (m.tags || []).map((t) => ({ n: t, c: "Tools", e: "✦" }));
   const bio = m.bio;
-  const slides = m.slides;
+  const slides = m.slides || [];
+  const stats = PROFILE_STATS[m.id] || DEFAULT_PROFILE_STATS;
   return (
     <div>
       <Cursor /><Peek />
@@ -398,7 +455,7 @@ function Portfolio({ m, go, dark, toggle }) {
             <div className="tag">~/HOME · {m.role}</div>
             <h1 style={{ fontSize: "clamp(40px,7vw,76px)" }}>Hi, I’m <em>{m.name}</em></h1>
             <ul className="profile-stats" aria-label={`${m.name} profile details`}>
-              {PROFILE_STATS[m.id].map(([icon, text]) => (
+              {stats.map(([icon, text]) => (
                 <li key={text}><span aria-hidden="true">{icon}</span>{text}</li>
               ))}
             </ul>
@@ -411,14 +468,14 @@ function Portfolio({ m, go, dark, toggle }) {
           <div className="tag">~/PROJECTS</div>
           <h2>Things I’ve <em>built.</em></h2>
           <p className="p">A collection of projects, each with its own stack.</p>
-          {m.projects.map((p, k) => (
+          {(m.projects || []).map((p, k) => (
             <div className={"proj" + (k ? " r" : "")} key={p.title}>
               <div className="pi" style={{ background: p.gradient }}>PREVIEW IMAGE</div>
               <div className="pt">
                 <div className="tag">0{k + 1} / {k ? "FULL-STACK" : "PROJECT"}</div>
                 <h2 style={{ fontSize: 28 }}>{p.title}</h2>
                 <p className="p">{p.description}</p>
-                {m.tags.slice(0, 2).map((t) => <span className="chip" key={t}>{t}</span>)}
+                {(m.tags || []).slice(0, 2).map((t) => <span className="chip" key={t}>{t}</span>)}
               </div>
             </div>
           ))}
@@ -459,7 +516,7 @@ function MatchScreen({ member }) {
           alt={member.id === "m4" ? "Empoy with Piolo Pascual" : "Celebrating when the school bell rings"}
         />
         <p className="match-copy">
-          You and <strong>{member.name}</strong> (well, sort of... it’s actually {realNames[member.id]}) look like a great match for your next project.
+          You and <strong>{member.name}</strong> (well, sort of... it’s actually {realNames[member.id] || member.name}) look like a great match for your next project.
           Your teacher might call it teamwork. We call it excellent timing.
         </p>
       </section>
@@ -484,14 +541,29 @@ function App() {
   }, [match]);
   const toggle = () => { if (dark) { setDark(false); setFk((k) => k + 1); } else setDark(true); };
   const m = M.find((x) => x.id === route);
+  const portfolioId = m ? (m.portfolio || m.id) : null;
+  const PortfolioComponent = portfolioId ? (PORTFOLIOS[portfolioId] || PORTFOLIOS[m?.id] || GenericPortfolio) : null;
+  const realMembers = M.filter((x) => (x.portfolio || x.id) === x.id);
+  const realIndex = realMembers.findIndex((x) => x.id === portfolioId || x.id === m?.id);
+  const nextMember = realMembers.length > 0 ? realMembers[(realIndex + 1) % realMembers.length] : null;
+
   return (
     <>
       {fk > 0 && <Flash key={fk} onDone={() => setFk(0)} />}
       {match ? <MatchScreen member={match} />
-        : m ? <Portfolio key={m.id} m={m} go={go} dark={dark} toggle={toggle} />
-          : route === "deck"
-            ? <Deck go={go} onMatch={setMatch} order={order} setOrder={setOrder} dark={dark} toggle={toggle} />
-            : <Landing go={go} onMatch={setMatch} order={order} setOrder={setOrder} dark={dark} toggle={toggle} />}
+        : m && PortfolioComponent ? (
+            <PortfolioComponent
+              key={portfolioId || m.id}
+              member={m}
+              next={nextMember}
+              go={go}
+              dark={dark}
+              toggle={toggle}
+            />
+          )
+        : route === "deck"
+          ? <Deck go={go} onMatch={setMatch} order={order} setOrder={setOrder} dark={dark} toggle={toggle} />
+          : <Landing go={go} onMatch={setMatch} order={order} setOrder={setOrder} dark={dark} toggle={toggle} />}
     </>
   );
 }

@@ -6,8 +6,12 @@ import SantosPortfolio from "./SantosPortfolio.jsx";
 import GarciaPortfolio from "./GarciaPortfolio.jsx";
 
 export const PORTFOLIOS = {
-  venzon: VenzonPortfolio,   // card: "Dwight Ramos"
-  garcia: GarciaPortfolio,   // card: "Bella Padilla"
-  santos: SantosPortfolio,   // card: "Liza Soberano"
-  timbas: TimbasPortfolio,   // card: "Donny Pangilinan"
+  venzon: VenzonPortfolio,
+  dwight: VenzonPortfolio,
+  garcia: GarciaPortfolio,
+  bella: GarciaPortfolio,
+  santos: SantosPortfolio,
+  liza: SantosPortfolio,
+  timbas: TimbasPortfolio,
+  donny: TimbasPortfolio,
 };
