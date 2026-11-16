@@ -1,128 +1,182 @@
 import { useEffect, useRef, useState } from "react";
 
 /*
-  CARLO TIMBAS — AI Automation Specialist & Full-Stack Developer
-  Cinematic Portfolio with Continuous 3D Automation Core
-  Image reference: ./photos/timbas/carlo.png
+  CARLO TIMBAS — AI Automation Specialist
+  Direct implementation inspired by rjv-automation-portfolio.vercel.app
+  Includes:
+   - 760vh Hero scroll track with smooth camera/character inertia
+   - carlo.png moving between Center -> Left -> Right -> Left -> Right -> Center
+   - Fading title ("CARLO TIMBAS"), tagline, and CTAs behind cutout layer
+   - 4 Scroll-synchronized Stories opposite the character (node, orb, pipe, tiles)
+   - Continuous 3D Automation Core canvas across About (right), Services (left), and Work (right)
+   - Process (4 steps) and Case Studies with customizable placeholder metrics
+   - Fully interactive Book a Call modal
 */
 
-// Color Palette
-const ACCENT = "#0f6b5c";      // Deep signature teal
-const ACCENT_GLOW = "#00f5d4"; // Electric cyan glow
-const ACCENT_LIGHT = "#38bdf8";// Soft sky blue highlight
-const BG_DARK = "#090d10";     // Deep charcoal studio
-const BG_CARD = "#12181d";     // Graphite surface
-const TEXT_MUTED = "#8fa3af";  // Soft metallic gray
-
 export default function TimbasPortfolio({ member, next, go, dark, toggle }) {
-  const [activeStory, setActiveStory] = useState(0);
   const [bookingOpen, setBookingOpen] = useState(false);
   const [copiedEmail, setCopiedEmail] = useState(false);
-  const [scrollProgress, setScrollProgress] = useState(0);
-  const [sectionInView, setSectionInView] = useState("about"); // 'about', 'services', 'cases'
+  const [navScrolled, setNavScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
-  // Canvas ref for the continuous shared 3D Automation Core
+  // Hero scroll state (drives character camera & story passages)
+  const heroRef = useRef(null);
+  const [heroProgress, setHeroProgress] = useState(0);
+
+  // Panels scroll state (drives 3D Core positioning)
+  const panelsRef = useRef(null);
+  const [coreState, setCoreState] = useState({ x: 0.28, y: 0, scale: 1.15, opacity: 0 });
+
+  // 3D Canvas ref
   const canvasRef = useRef(null);
-  const threeSceneRef = useRef({
-    targetX: 0.28,    // normalized screen X (-0.35 = left, 0.28 = right)
-    currentX: 0.28,
-    targetY: 0,
-    currentY: 0,
-    targetScale: 1.15,
-    currentScale: 1.15,
-    pulseEnergy: 1.0,
-    rotX: 0.25,
-    rotY: 0,
-    rotZ: 0,
-    speedY: 0.007,
+
+  // Character animation refs for smooth physics (LERP)
+  const characterAnimRef = useRef({
+    currentX: 0,      // percentage offset (-24% = left, +24% = right)
+    targetX: 0,
+    currentScale: 1,  // 1.0 to 1.3
+    targetScale: 1,
+    currentRotY: 0,   // degrees
+    targetRotY: 0,
   });
 
-  const sharedContainerRef = useRef(null);
+  const characterDomRef = useRef(null);
 
-  // Storytelling passages
-  const stories = [
-    {
-      quote: "Every repetitive task is a decision waiting to be automated.",
-      sub: "Human creativity shouldn't be consumed by copy-pasting data between disconnected spreadsheets.",
-      concept: "Glass Workflow-Node Cluster",
-      icon: "⚡",
-    },
-    {
-      quote: "Friction is just unorganized data between systems.",
-      sub: "We construct autonomous multi-agent systems that ingest, reason, and act with zero latency.",
-      concept: "Chrome AI-Agent Orb",
-      icon: "🌐",
-    },
-    {
-      quote: "Intelligent workflows turn operational drag into compound velocity.",
-      sub: "Replacing 40 hours of weekly manual operations with resilient event-driven pipelines.",
-      concept: "Interlocking Data Pipeline",
-      icon: "🔗",
-    },
-    {
-      quote: "The best automation feels like a quiet, flawless control room.",
-      sub: "Zero alarms, zero failed syncs — just clean execution that scales while you sleep.",
-      concept: "Connected App Ecosystem",
-      icon: "💎",
-    },
-  ];
-
-  // Rotate hero stories smoothly
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setActiveStory((prev) => (prev + 1) % stories.length);
-    }, 5500);
-    return () => clearInterval(timer);
-  }, [stories.length]);
-
-  // Smooth scroll handler
+  // Scroll smoothly to section
   const scrollTo = (id) => {
+    setMenuOpen(false);
+    if (id === "top") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
     const el = document.getElementById(id);
     if (el) el.scrollIntoView({ behavior: "smooth" });
   };
 
-  // Monitor scroll across shared 3D container
+  // ─────────────────────────────────────────────────────────────
+  // 1. HERO SCROLL TRACKER & CHARACTER LERP LOOP
+  // ─────────────────────────────────────────────────────────────
   useEffect(() => {
-    const handleScroll = () => {
-      if (!sharedContainerRef.current) return;
-      const rect = sharedContainerRef.current.getBoundingClientRect();
-      const winHeight = window.innerHeight;
-      const totalDist = rect.height - winHeight;
-      const currentScroll = -rect.top;
-      const progress = Math.max(0, Math.min(1, currentScroll / (totalDist || 1)));
-      setScrollProgress(progress);
+    let animFrameId;
+    let lastTime = performance.now();
 
-      // Section calculation
-      if (progress < 0.33) {
-        setSectionInView("about");
-        // About section: 3D model on RIGHT side, content on LEFT
-        threeSceneRef.current.targetX = 0.26;
-        threeSceneRef.current.targetScale = 1.15;
-        threeSceneRef.current.targetY = 0.02;
-        threeSceneRef.current.speedY = 0.009;
-      } else if (progress < 0.68) {
-        setSectionInView("services");
-        // Services section: 3D model glides to LEFT side, content on RIGHT
-        threeSceneRef.current.targetX = -0.26;
-        threeSceneRef.current.targetScale = 1.25;
-        threeSceneRef.current.targetY = -0.03;
-        threeSceneRef.current.speedY = 0.016; // Gears accelerate!
-      } else {
-        setSectionInView("cases");
-        // Case Studies section: 3D model glides back to RIGHT side, content on LEFT
-        threeSceneRef.current.targetX = 0.25;
-        threeSceneRef.current.targetScale = 1.12;
-        threeSceneRef.current.targetY = 0.04;
-        threeSceneRef.current.speedY = 0.012;
+    const handleScroll = () => {
+      const scrollY = window.scrollY;
+      const winH = window.innerHeight;
+
+      // Nav bar visibility: hidden during hero scroll, solid afterwards
+      if (heroRef.current) {
+        const heroRect = heroRef.current.getBoundingClientRect();
+        const heroH = heroRect.height;
+        const totalDist = heroH - winH;
+        const p = Math.max(0, Math.min(1, -heroRect.top / (totalDist || 1)));
+        setHeroProgress(p);
+        setNavScrolled(scrollY > winH * 0.4);
+
+        // Character camera tracking keyframes:
+        // p = 0.00 - 0.08: Center (scale 1.0, X 0%)
+        // p = 0.12 - 0.32: Slide LEFT  (scale 1.25, X -24%, Story 0 on Right)
+        // p = 0.36 - 0.54: Slide RIGHT (scale 1.25, X +24%, Story 1 on Left)
+        // p = 0.58 - 0.74: Slide LEFT  (scale 1.25, X -24%, Story 2 on Right)
+        // p = 0.78 - 0.94: Slide RIGHT (scale 1.25, X +22%, Story 3 on Left)
+        // p = 0.95 - 1.00: Return to Center
+        let tx = 0;
+        let ts = 1.0;
+        let ry = 0;
+
+        if (p < 0.08) {
+          tx = 0;
+          ts = 1.0;
+          ry = 0;
+        } else if (p >= 0.08 && p < 0.32) {
+          tx = -24; // Character glides to LEFT
+          ts = 1.24;
+          ry = -7;
+        } else if (p >= 0.32 && p < 0.54) {
+          tx = 24;  // Character glides to RIGHT
+          ts = 1.24;
+          ry = 7;
+        } else if (p >= 0.54 && p < 0.74) {
+          tx = -24; // Character glides to LEFT
+          ts = 1.24;
+          ry = -7;
+        } else if (p >= 0.74 && p < 0.94) {
+          tx = 22;  // Character glides to RIGHT
+          ts = 1.24;
+          ry = 6;
+        } else {
+          tx = 0;
+          ts = 1.05;
+          ry = 0;
+        }
+
+        characterAnimRef.current.targetX = tx;
+        characterAnimRef.current.targetScale = ts;
+        characterAnimRef.current.targetRotY = ry;
       }
+
+      // Panels scroll tracker for 3D Automation Core
+      if (panelsRef.current) {
+        const panelsRect = panelsRef.current.getBoundingClientRect();
+        const inPanels = panelsRect.top < winH && panelsRect.bottom > 0;
+        const coreOpacity = inPanels ? Math.min(1, Math.max(0, (winH - panelsRect.top) / 400)) : 0;
+
+        // Determine which section is currently active
+        const aboutEl = document.getElementById("about");
+        const servicesEl = document.getElementById("services");
+        const workEl = document.getElementById("work");
+
+        let targetX = 0.28; // Default right
+        let targetScale = 1.15;
+
+        if (servicesEl && servicesEl.getBoundingClientRect().top <= winH * 0.5 && (!workEl || workEl.getBoundingClientRect().top > winH * 0.5)) {
+          targetX = -0.28; // Left for services
+          targetScale = 1.25;
+        } else if (workEl && workEl.getBoundingClientRect().top <= winH * 0.5) {
+          targetX = 0.26;  // Right for case studies
+          targetScale = 1.12;
+        }
+
+        setCoreState((prev) => ({
+          ...prev,
+          x: targetX,
+          scale: targetScale,
+          opacity: coreOpacity,
+        }));
+      }
+    };
+
+    // Smooth inertia render loop (60fps)
+    const tick = (now) => {
+      const dt = Math.min((now - lastTime) / 1000, 0.1);
+      lastTime = now;
+
+      const c = characterAnimRef.current;
+      const lerpFactor = 1 - Math.exp(-dt * 6.5); // Buttery smooth spring inertia
+      c.currentX += (c.targetX - c.currentX) * lerpFactor;
+      c.currentScale += (c.targetScale - c.currentScale) * lerpFactor;
+      c.currentRotY += (c.targetRotY - c.currentRotY) * lerpFactor;
+
+      if (characterDomRef.current) {
+        characterDomRef.current.style.transform = `translate3d(${c.currentX}vw, 0, 0) scale(${c.currentScale}) rotateY(${c.currentRotY}deg)`;
+      }
+
+      animFrameId = requestAnimationFrame(tick);
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     handleScroll();
-    return () => window.removeEventListener("scroll", handleScroll);
+    animFrameId = requestAnimationFrame(tick);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      cancelAnimationFrame(animFrameId);
+    };
   }, []);
 
-  // Continuous 3D Automation Core Renderer (Brushed metal, frosted glass, emissive light paths)
+  // ─────────────────────────────────────────────────────────────
+  // 2. CONTINUOUS 3D AUTOMATION CORE CANVAS RENDERER
+  // ─────────────────────────────────────────────────────────────
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -140,366 +194,182 @@ export default function TimbasPortfolio({ member, next, go, dark, toggle }) {
     resize();
     window.addEventListener("resize", resize);
 
-    // 3D Math Utilities
+    // 3D Matrix Math
     const project = (x, y, z, cx, cy, fov, scale) => {
-      const distance = 480;
+      const distance = 460;
       const factor = (fov / (distance + z)) * scale;
-      return {
-        x: cx + x * factor,
-        y: cy + y * factor,
-        scale: factor,
-        z: z,
-      };
+      return { x: cx + x * factor, y: cy + y * factor, scale: factor, z };
     };
 
-    const rotateX = (x, y, z, angle) => {
-      const rad = angle;
-      const cos = Math.cos(rad);
-      const sin = Math.sin(rad);
-      return [x, y * cos - z * sin, y * sin + z * cos];
-    };
+    const rotateX = (x, y, z, a) => [x, y * Math.cos(a) - z * Math.sin(a), y * Math.sin(a) + z * Math.cos(a)];
+    const rotateY = (x, y, z, a) => [x * Math.cos(a) + z * Math.sin(a), y, -x * Math.sin(a) + z * Math.cos(a)];
+    const rotateZ = (x, y, z, a) => [x * Math.cos(a) - y * Math.sin(a), x * Math.sin(a) + y * Math.cos(a), z];
 
-    const rotateY = (x, y, z, angle) => {
-      const rad = angle;
-      const cos = Math.cos(rad);
-      const sin = Math.sin(rad);
-      return [x * cos + z * sin, y, -x * sin + z * cos];
-    };
+    let currentCoreX = 0.28;
+    let currentCoreScale = 1.15;
 
-    const rotateZ = (x, y, z, angle) => {
-      const rad = angle;
-      const cos = Math.cos(rad);
-      const sin = Math.sin(rad);
-      return [x * cos - y * sin, x * sin + y * cos, z];
-    };
-
-    // Render loop
     const render = () => {
       t += 0.016;
       const w = canvas.clientWidth;
       const h = canvas.clientHeight;
       ctx.clearRect(0, 0, w, h);
 
-      const state = threeSceneRef.current;
-      // Smooth lerp positions and scale
-      state.currentX += (state.targetX - state.currentX) * 0.06;
-      state.currentY += (state.targetY - state.currentY) * 0.06;
-      state.currentScale += (state.targetScale - state.currentScale) * 0.05;
+      // Lerp Core position smoothly between Left and Right
+      currentCoreX += (coreState.x - currentCoreX) * 0.06;
+      currentCoreScale += (coreState.scale - currentCoreScale) * 0.06;
 
-      // Base center
       const isMobile = w < 768;
-      const activeX = isMobile ? w * 0.5 : w * 0.5 + state.currentX * w;
-      const activeY = isMobile ? h * 0.35 : h * 0.5 + state.currentY * h;
+      const activeX = isMobile ? w * 0.5 : w * 0.5 + currentCoreX * w;
+      const activeY = isMobile ? h * 0.35 : h * 0.5;
       const fov = 380;
-      const scale = isMobile ? state.currentScale * 0.75 : state.currentScale;
+      const s = isMobile ? currentCoreScale * 0.75 : currentCoreScale;
 
-      state.rotY += state.speedY;
-      const baseRotX = 0.35 + Math.sin(t * 0.4) * 0.08;
-      const baseRotY = state.rotY;
-      const baseRotZ = Math.sin(t * 0.3) * 0.05;
+      const rotX = 0.35 + Math.sin(t * 0.35) * 0.08;
+      const rotY = t * 0.6;
+      const rotZ = Math.sin(t * 0.25) * 0.05;
+      const pulse = 0.8 + Math.sin(t * 2.8) * 0.2;
 
-      // Pulse glow intensity
-      const pulse = 0.8 + Math.sin(t * 2.5) * 0.2;
-
-      // 1. Ambient Volumetric Glow behind the Core
-      const bgGrad = ctx.createRadialGradient(activeX, activeY, 10, activeX, activeY, 260 * scale);
-      bgGrad.addColorStop(0, "rgba(0, 245, 212, 0.18)");
+      // Volumetric Core Glow
+      const bgGrad = ctx.createRadialGradient(activeX, activeY, 15, activeX, activeY, 260 * s);
+      bgGrad.addColorStop(0, "rgba(56, 220, 255, 0.22)");
       bgGrad.addColorStop(0.4, "rgba(15, 107, 92, 0.12)");
-      bgGrad.addColorStop(1, "rgba(9, 13, 16, 0)");
+      bgGrad.addColorStop(1, "rgba(10, 12, 15, 0)");
       ctx.fillStyle = bgGrad;
       ctx.beginPath();
-      ctx.arc(activeX, activeY, 260 * scale, 0, Math.PI * 2);
+      ctx.arc(activeX, activeY, 260 * s, 0, Math.PI * 2);
       ctx.fill();
 
-      // Collect render items for depth sorting
-      const renderList = [];
-
-      // A. OUTER BRUSHED METAL GIMBAL RING (Interlocking Gimbal Structure)
-      const outerRingSegments = 40;
-      const outerRadius = 160;
-      const outerPoints = [];
-
-      for (let i = 0; i < outerRingSegments; i++) {
-        const theta = (i / outerRingSegments) * Math.PI * 2;
-        const x = Math.cos(theta) * outerRadius;
-        const y = Math.sin(theta) * outerRadius;
-        const z = 0;
-
-        let [rx, ry, rz] = rotateZ(x, y, z, baseRotZ);
-        [rx, ry, rz] = rotateX(rx, ry, rz, baseRotX);
-        [rx, ry, rz] = rotateY(rx, ry, rz, baseRotY);
-
-        const proj = project(rx, ry, rz, activeX, activeY, fov, scale);
-        outerPoints.push(proj);
+      // Outer Brushed Metal Ring
+      ctx.save();
+      ctx.beginPath();
+      const ringPts = [];
+      const segs = 36;
+      for (let i = 0; i < segs; i++) {
+        const rad = (i / segs) * Math.PI * 2;
+        let [rx, ry, rz] = rotateZ(Math.cos(rad) * 160, Math.sin(rad) * 160, 0, rotZ);
+        [rx, ry, rz] = rotateX(rx, ry, rz, rotX);
+        [rx, ry, rz] = rotateY(rx, ry, rz, rotY);
+        const p = project(rx, ry, rz, activeX, activeY, fov, s);
+        ringPts.push(p);
+        if (i === 0) ctx.moveTo(p.x, p.y);
+        else ctx.lineTo(p.x, p.y);
       }
+      ctx.closePath();
+      const metalGrad = ctx.createLinearGradient(activeX - 100, activeY - 100, activeX + 100, activeY + 100);
+      metalGrad.addColorStop(0, "#4a5a64");
+      metalGrad.addColorStop(0.3, "#a0b2be");
+      metalGrad.addColorStop(0.7, "#8fa3af");
+      metalGrad.addColorStop(1, "#182329");
+      ctx.strokeStyle = metalGrad;
+      ctx.lineWidth = 3.5 * s;
+      ctx.stroke();
 
-      renderList.push({
-        type: "outerRing",
-        z: outerPoints.reduce((acc, p) => acc + p.z, 0) / outerPoints.length,
-        points: outerPoints,
+      // Ring nodes
+      ringPts.forEach((p, idx) => {
+        if (idx % 4 === 0) {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 2.5 * s, 0, Math.PI * 2);
+          ctx.fillStyle = idx % 8 === 0 ? "#38dcff" : "#ffffff";
+          ctx.fill();
+        }
       });
+      ctx.restore();
 
-      // B. MIDDLE FROSTED GLASS CIRCUIT PLATE (Hexagonal Circuit Disc)
-      const glassPoints = [];
-      const glassRadius = 125;
+      // Frosted Glass Hexagonal Plate
+      ctx.save();
+      ctx.beginPath();
       const hexSteps = 6;
       for (let i = 0; i <= hexSteps; i++) {
-        const theta = (i / hexSteps) * Math.PI * 2 + Math.PI / 6;
-        const x = Math.cos(theta) * glassRadius;
-        const y = Math.sin(theta) * glassRadius;
-        const z = 8;
-
-        let [rx, ry, rz] = rotateZ(x, y, z, -baseRotZ * 1.5);
-        [rx, ry, rz] = rotateX(rx, ry, rz, baseRotX + 0.1);
-        [rx, ry, rz] = rotateY(rx, ry, rz, -baseRotY * 0.8);
-
-        const proj = project(rx, ry, rz, activeX, activeY, fov, scale);
-        glassPoints.push(proj);
+        const rad = (i / hexSteps) * Math.PI * 2 + Math.PI / 6;
+        let [rx, ry, rz] = rotateZ(Math.cos(rad) * 125, Math.sin(rad) * 125, 8, -rotZ * 1.5);
+        [rx, ry, rz] = rotateX(rx, ry, rz, rotX + 0.1);
+        [rx, ry, rz] = rotateY(rx, ry, rz, -rotY * 0.8);
+        const p = project(rx, ry, rz, activeX, activeY, fov, s);
+        if (i === 0) ctx.moveTo(p.x, p.y);
+        else ctx.lineTo(p.x, p.y);
       }
+      ctx.closePath();
+      ctx.fillStyle = "rgba(15, 107, 92, 0.18)";
+      ctx.fill();
+      ctx.strokeStyle = "rgba(56, 220, 255, 0.4)";
+      ctx.lineWidth = 1.5 * s;
+      ctx.stroke();
+      ctx.restore();
 
-      renderList.push({
-        type: "glassPlate",
-        z: glassPoints.reduce((acc, p) => acc + p.z, 0) / glassPoints.length,
-        points: glassPoints,
-      });
-
-      // C. INTERLOCKING COUNTER-ROTATING METAL GEAR (Inner Gear teeth)
+      // Interlocking Metal Gear
+      ctx.save();
+      ctx.beginPath();
       const gearTeeth = 16;
-      const gearRInner = 65;
-      const gearROuter = 85;
-      const gearPoints = [];
-
       for (let i = 0; i < gearTeeth * 2; i++) {
-        const theta = (i / (gearTeeth * 2)) * Math.PI * 2;
-        const r = i % 2 === 0 ? gearROuter : gearRInner;
-        const x = Math.cos(theta) * r;
-        const y = Math.sin(theta) * r;
-        const z = -6;
-
-        let [rx, ry, rz] = rotateZ(x, y, z, baseRotZ);
-        [rx, ry, rz] = rotateX(rx, ry, rz, baseRotX);
-        [rx, ry, rz] = rotateY(rx, ry, rz, baseRotY * 1.6); // rotates faster
-
-        const proj = project(rx, ry, rz, activeX, activeY, fov, scale);
-        gearPoints.push(proj);
+        const rad = (i / (gearTeeth * 2)) * Math.PI * 2;
+        const r = i % 2 === 0 ? 85 : 68;
+        let [rx, ry, rz] = rotateZ(Math.cos(rad) * r, Math.sin(rad) * r, -6, rotZ);
+        [rx, ry, rz] = rotateX(rx, ry, rz, rotX);
+        [rx, ry, rz] = rotateY(rx, ry, rz, rotY * 1.8);
+        const p = project(rx, ry, rz, activeX, activeY, fov, s);
+        if (i === 0) ctx.moveTo(p.x, p.y);
+        else ctx.lineTo(p.x, p.y);
       }
+      ctx.closePath();
+      ctx.fillStyle = "#162026";
+      ctx.fill();
+      ctx.strokeStyle = "rgba(160, 178, 190, 0.6)";
+      ctx.lineWidth = 1.8 * s;
+      ctx.stroke();
+      ctx.restore();
 
-      renderList.push({
-        type: "metalGear",
-        z: gearPoints.reduce((acc, p) => acc + p.z, 0) / gearPoints.length,
-        points: gearPoints,
-      });
+      // Emissive Light Paths with glowing traveling packets
+      ctx.save();
+      for (let i = 0; i < 8; i++) {
+        const rad = (i / 8) * Math.PI * 2 + t * 0.7;
+        let [x1, y1, z1] = rotateY(Math.cos(rad) * 30, Math.sin(rad) * 30, 0, rotY);
+        let [x2, y2, z2] = rotateY(Math.cos(rad + 0.4) * 140, Math.sin(rad + 0.4) * 140, 20, rotY);
+        [x1, y1, z1] = rotateX(x1, y1, z1, rotX);
+        [x2, y2, z2] = rotateX(x2, y2, z2, rotX);
 
-      // D. EMISSIVE LIGHT PATHS & PHOTON PACKETS
-      const numPaths = 8;
-      const pathNodes = [];
-      for (let i = 0; i < numPaths; i++) {
-        const angle = (i / numPaths) * Math.PI * 2 + t * 0.8;
-        const r1 = 30;
-        const r2 = 140;
-        const zSpread = Math.sin(t * 1.5 + i) * 35;
+        const p1 = project(x1, y1, z1, activeX, activeY, fov, s);
+        const p2 = project(x2, y2, z2, activeX, activeY, fov, s);
 
-        let [x1, y1, z1] = [Math.cos(angle) * r1, Math.sin(angle) * r1, 0];
-        let [x2, y2, z2] = [Math.cos(angle + 0.4) * r2, Math.sin(angle + 0.4) * r2, zSpread];
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.strokeStyle = "rgba(56, 220, 255, 0.28)";
+        ctx.lineWidth = 1.2 * s;
+        ctx.stroke();
 
-        [x1, y1, z1] = rotateX(x1, y1, z1, baseRotX);
-        [x1, y1, z1] = rotateY(x1, y1, z1, baseRotY);
-        [x2, y2, z2] = rotateX(x2, y2, z2, baseRotX);
-        [x2, y2, z2] = rotateY(x2, y2, z2, baseRotY);
+        const prog = (t * 1.8 + i * 0.25) % 1;
+        const px = p1.x + (p2.x - p1.x) * prog;
+        const py = p1.y + (p2.y - p1.y) * prog;
 
-        const p1 = project(x1, y1, z1, activeX, activeY, fov, scale);
-        const p2 = project(x2, y2, z2, activeX, activeY, fov, scale);
-
-        // Packet along path
-        const packetProgress = (t * 1.8 + i * 0.3) % 1;
-        const px = p1.x + (p2.x - p1.x) * packetProgress;
-        const py = p1.y + (p2.y - p1.y) * packetProgress;
-
-        pathNodes.push({ p1, p2, px, py, z: (p1.z + p2.z) / 2 });
+        ctx.beginPath();
+        ctx.arc(px, py, 3 * s, 0, Math.PI * 2);
+        ctx.fillStyle = "#ffffff";
+        ctx.shadowColor = "#38dcff";
+        ctx.shadowBlur = 10;
+        ctx.fill();
       }
+      ctx.restore();
 
-      renderList.push({
-        type: "lightPaths",
-        z: 0,
-        paths: pathNodes,
-      });
+      // Central Quantum Core Sphere
+      ctx.save();
+      let [cx3, cy3, cz3] = rotateX(0, 0, 0, rotX);
+      [cx3, cy3, cz3] = rotateY(cx3, cy3, cz3, rotY);
+      const cp = project(cx3, cy3, cz3, activeX, activeY, fov, s);
 
-      // E. CENTRAL QUANTUM EMISSIVE REACTOR CORE
-      let [cx3, cy3, cz3] = rotateX(0, 0, 0, baseRotX);
-      [cx3, cy3, cz3] = rotateY(cx3, cy3, cz3, baseRotY);
-      const centerProj = project(cx3, cy3, cz3, activeX, activeY, fov, scale);
+      const coreR = 26 * s * pulse;
+      const coreGrad = ctx.createRadialGradient(cp.x - 4, cp.y - 4, 2, cp.x, cp.y, coreR);
+      coreGrad.addColorStop(0, "#ffffff");
+      coreGrad.addColorStop(0.3, "#38dcff");
+      coreGrad.addColorStop(0.7, "#0f6b5c");
+      coreGrad.addColorStop(1, "rgba(15, 107, 92, 0)");
 
-      renderList.push({
-        type: "coreSphere",
-        z: centerProj.z,
-        proj: centerProj,
-      });
-
-      // Sort by depth (farthest first)
-      renderList.sort((a, b) => a.z - b.z);
-
-      // Draw all items
-      renderList.forEach((item) => {
-        if (item.type === "outerRing") {
-          // Brushed Metal Ring with metallic specular sheen
-          ctx.save();
-          ctx.beginPath();
-          item.points.forEach((pt, idx) => {
-            if (idx === 0) ctx.moveTo(pt.x, pt.y);
-            else ctx.lineTo(pt.x, pt.y);
-          });
-          ctx.closePath();
-          ctx.lineWidth = 4 * scale;
-          // Metallic brushed steel gradient
-          const metalGrad = ctx.createLinearGradient(activeX - 100, activeY - 100, activeX + 100, activeY + 100);
-          metalGrad.addColorStop(0, "#4a5a64");
-          metalGrad.addColorStop(0.3, "#a0b2be");
-          metalGrad.addColorStop(0.5, "#25333a");
-          metalGrad.addColorStop(0.7, "#8fa3af");
-          metalGrad.addColorStop(1, "#182329");
-          ctx.strokeStyle = metalGrad;
-          ctx.stroke();
-
-          // Engraved tick marks on the ring
-          item.points.forEach((pt, idx) => {
-            if (idx % 4 === 0) {
-              ctx.beginPath();
-              ctx.arc(pt.x, pt.y, 2.5 * scale, 0, Math.PI * 2);
-              ctx.fillStyle = idx % 8 === 0 ? ACCENT_GLOW : "#cbd5e1";
-              ctx.fill();
-            }
-          });
-          ctx.restore();
-        }
-
-        if (item.type === "glassPlate") {
-          // Frosted Glass Hexagonal Circuit Plate with refraction & rim light
-          ctx.save();
-          ctx.beginPath();
-          item.points.forEach((pt, idx) => {
-            if (idx === 0) ctx.moveTo(pt.x, pt.y);
-            else ctx.lineTo(pt.x, pt.y);
-          });
-          ctx.closePath();
-          // Glass fill with subtle frosted opacity
-          ctx.fillStyle = "rgba(15, 107, 92, 0.16)";
-          ctx.fill();
-          ctx.lineWidth = 1.5 * scale;
-          ctx.strokeStyle = "rgba(0, 245, 212, 0.45)";
-          ctx.stroke();
-
-          // Glass specular rim gleam
-          ctx.beginPath();
-          ctx.moveTo(item.points[0].x, item.points[0].y);
-          ctx.lineTo(item.points[1].x, item.points[1].y);
-          ctx.strokeStyle = "rgba(255, 255, 255, 0.7)";
-          ctx.lineWidth = 2.5 * scale;
-          ctx.stroke();
-
-          // Inner circuit traces on the glass
-          for (let k = 0; k < item.points.length - 1; k += 2) {
-            ctx.beginPath();
-            ctx.moveTo(activeX, activeY);
-            ctx.lineTo(item.points[k].x, item.points[k].y);
-            ctx.strokeStyle = "rgba(56, 189, 248, 0.22)";
-            ctx.lineWidth = 1 * scale;
-            ctx.stroke();
-          }
-          ctx.restore();
-        }
-
-        if (item.type === "metalGear") {
-          // Interlocking Titanium Gear
-          ctx.save();
-          ctx.beginPath();
-          item.points.forEach((pt, idx) => {
-            if (idx === 0) ctx.moveTo(pt.x, pt.y);
-            else ctx.lineTo(pt.x, pt.y);
-          });
-          ctx.closePath();
-          const gearGrad = ctx.createRadialGradient(activeX, activeY, 10, activeX, activeY, 80 * scale);
-          gearGrad.addColorStop(0, "#2c3b42");
-          gearGrad.addColorStop(0.7, "#141d22");
-          gearGrad.addColorStop(1, "#0a1013");
-          ctx.fillStyle = gearGrad;
-          ctx.fill();
-          ctx.lineWidth = 1.8 * scale;
-          ctx.strokeStyle = "rgba(160, 178, 190, 0.65)";
-          ctx.stroke();
-
-          // Gear inner cutouts
-          ctx.beginPath();
-          ctx.arc(activeX, activeY, 28 * scale, 0, Math.PI * 2);
-          ctx.fillStyle = "#090d10";
-          ctx.fill();
-          ctx.strokeStyle = "rgba(0, 245, 212, 0.35)";
-          ctx.lineWidth = 1.5 * scale;
-          ctx.stroke();
-          ctx.restore();
-        }
-
-        if (item.type === "lightPaths") {
-          // Emissive light paths with glowing packets
-          ctx.save();
-          item.paths.forEach((p) => {
-            // Emissive line
-            ctx.beginPath();
-            ctx.moveTo(p.p1.x, p.p1.y);
-            ctx.lineTo(p.p2.x, p.p2.y);
-            ctx.strokeStyle = `rgba(0, 245, 212, ${0.28 * pulse})`;
-            ctx.lineWidth = 1.5 * scale;
-            ctx.stroke();
-
-            // High-energy photon packet traveling along the wire
-            ctx.beginPath();
-            ctx.arc(p.px, p.py, 3.2 * scale, 0, Math.PI * 2);
-            ctx.fillStyle = "#ffffff";
-            ctx.shadowColor = ACCENT_GLOW;
-            ctx.shadowBlur = 12;
-            ctx.fill();
-          });
-          ctx.restore();
-        }
-
-        if (item.type === "coreSphere") {
-          // Central Glowing Core Reactor (Pulsing Energy Sphere)
-          ctx.save();
-          const coreRadius = 26 * scale * pulse;
-          const coreGrad = ctx.createRadialGradient(
-            item.proj.x - 4,
-            item.proj.y - 4,
-            2,
-            item.proj.x,
-            item.proj.y,
-            coreRadius
-          );
-          coreGrad.addColorStop(0, "#ffffff");
-          coreGrad.addColorStop(0.3, ACCENT_GLOW);
-          coreGrad.addColorStop(0.7, ACCENT);
-          coreGrad.addColorStop(1, "rgba(15, 107, 92, 0.05)");
-
-          ctx.beginPath();
-          ctx.arc(item.proj.x, item.proj.y, coreRadius, 0, Math.PI * 2);
-          ctx.fillStyle = coreGrad;
-          ctx.shadowColor = ACCENT_GLOW;
-          ctx.shadowBlur = 24 * pulse;
-          ctx.fill();
-
-          // Floating orbit electron nodes around core
-          for (let m = 0; m < 3; m++) {
-            const orbAngle = t * 3 + (m * Math.PI * 2) / 3;
-            const ox = item.proj.x + Math.cos(orbAngle) * (42 * scale);
-            const oy = item.proj.y + Math.sin(orbAngle) * (20 * scale);
-            ctx.beginPath();
-            ctx.arc(ox, oy, 2.5 * scale, 0, Math.PI * 2);
-            ctx.fillStyle = "#ffffff";
-            ctx.shadowColor = "#38bdf8";
-            ctx.shadowBlur = 8;
-            ctx.fill();
-          }
-          ctx.restore();
-        }
-      });
+      ctx.beginPath();
+      ctx.arc(cp.x, cp.y, coreR, 0, Math.PI * 2);
+      ctx.fillStyle = coreGrad;
+      ctx.shadowColor = "#38dcff";
+      ctx.shadowBlur = 25 * pulse;
+      ctx.fill();
+      ctx.restore();
 
       animId = requestAnimationFrame(render);
     };
@@ -510,7 +380,35 @@ export default function TimbasPortfolio({ member, next, go, dark, toggle }) {
       cancelAnimationFrame(animId);
       window.removeEventListener("resize", resize);
     };
-  }, []);
+  }, [coreState]);
+
+  // Story opacity calculation based on hero scroll progress
+  // Story 0 (at 0.12 - 0.32, peak 0.22, right)
+  // Story 1 (at 0.34 - 0.54, peak 0.44, left)
+  // Story 2 (at 0.56 - 0.74, peak 0.65, right)
+  // Story 3 (at 0.76 - 0.94, peak 0.85, left)
+  const getStoryStyle = (start, end, side) => {
+    const p = heroProgress;
+    if (p < start || p > end) {
+      return { opacity: 0, visibility: "hidden", transform: "translateY(24px) scale(0.96)" };
+    }
+    const mid = (start + end) / 2;
+    const span = (end - start) / 2;
+    const dist = Math.abs(p - mid);
+    const opacity = Math.max(0, Math.min(1, 1 - dist / span));
+    const translateY = (1 - opacity) * (p < mid ? 28 : -28);
+
+    return {
+      opacity: opacity.toFixed(3),
+      visibility: opacity > 0.01 ? "visible" : "hidden",
+      transform: `translate3d(0, ${translateY.toFixed(1)}px, 0)`,
+      transition: "opacity 0.2s ease-out, transform 0.2s ease-out",
+    };
+  };
+
+  // Hero intro fade (fades out as user scrolls past 0.02 to 0.08)
+  const introOpacity = Math.max(0, Math.min(1, 1 - heroProgress / 0.07));
+  const introBlur = ((1 - introOpacity) * 12).toFixed(1);
 
   const copyEmail = () => {
     navigator.clipboard.writeText("carlo.timbas@automation.dev");
@@ -520,564 +418,584 @@ export default function TimbasPortfolio({ member, next, go, dark, toggle }) {
 
   return (
     <div
-      className="min-h-screen text-slate-100 selection:bg-emerald-500/30 selection:text-emerald-200 relative overflow-x-hidden"
+      className="min-h-screen text-[#eef3f7] selection:bg-[#38dcff]/30 selection:text-[#38dcff] relative overflow-x-hidden"
       style={{
-        backgroundColor: BG_DARK,
-        fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
+        backgroundColor: "#0a0c0f",
+        fontFamily: 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       }}
     >
-      {/* ── Background Subtle Studio Grid & Volumetric Ambience ── */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div
-          className="absolute inset-0 opacity-[0.035]"
-          style={{
-            backgroundImage: `radial-gradient(circle at 1px 1px, #ffffff 1px, transparent 0)`,
-            backgroundSize: "36px 36px",
-          }}
-        />
-        <div
-          className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[550px] rounded-full blur-[160px] opacity-25 pointer-events-none"
-          style={{ background: `radial-gradient(circle, ${ACCENT_GLOW} 0%, ${ACCENT} 40%, transparent 70%)` }}
-        />
-      </div>
+      {/* ─────────────────────────────────────────────────────────────
+          FIXED MINIMAL NAVIGATION (rjv style)
+         ───────────────────────────────────────────────────────────── */}
+      <header
+        className={`fixed top-0 left-0 right-0 z-50 h-[72px] px-[clamp(16px,4vw,56px)] flex items-center justify-between transition-all duration-500 ${
+          navScrolled
+            ? "bg-[#0a0c0f]/90 backdrop-blur-md border-b border-[#d6ecff1a]"
+            : "bg-transparent border-b border-transparent"
+        }`}
+      >
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => go("home")}
+            className="text-[13px] font-mono tracking-wider text-[#93a0ad] hover:text-[#38dcff] transition-colors flex items-center gap-1.5"
+          >
+            <span className="text-[#38dcff]">←</span> CTPR CLUB
+          </button>
+          <span className="text-slate-700">/</span>
+          <button
+            onClick={() => scrollTo("top")}
+            className="text-[17px] font-bold tracking-tight text-white hover:text-[#38dcff] transition-colors"
+          >
+            CARLO TIMBAS
+          </button>
+        </div>
 
-      {/* ── Fixed Minimal Navigation Header ── */}
-      <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-[#090d10]/80 border-b border-slate-800/60 transition-all duration-300">
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between">
-          {/* Brand Wordmark */}
-          <div className="flex items-center gap-3">
+        {/* Desktop Nav */}
+        <nav className="hidden md:flex items-center gap-8 text-[13px] font-mono text-[#93a0ad]">
+          <button onClick={() => scrollTo("about")} className="hover:text-white transition-colors">
+            About
+          </button>
+          <button onClick={() => scrollTo("services")} className="hover:text-white transition-colors">
+            Services
+          </button>
+          <button onClick={() => scrollTo("process")} className="hover:text-white transition-colors">
+            Process
+          </button>
+          <button onClick={() => scrollTo("work")} className="hover:text-white transition-colors">
+            Case Studies
+          </button>
+          <button onClick={() => scrollTo("contact")} className="hover:text-white transition-colors">
+            Contact
+          </button>
+        </nav>
+
+        {/* Right CTA */}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setBookingOpen(true)}
+            className="px-4 py-2 rounded-full text-[13px] font-mono font-medium text-[#0a0c0f] bg-[#38dcff] hover:bg-white transition-all shadow-[0_0_20px_rgba(56,220,255,0.3)] hover:shadow-[0_0_25px_rgba(255,255,255,0.5)]"
+          >
+            Book a Call
+          </button>
+          {toggle && (
             <button
-              onClick={() => go("home")}
-              className="text-xs tracking-wider text-slate-400 hover:text-emerald-400 transition-colors uppercase font-mono flex items-center gap-1.5 py-1"
+              onClick={toggle}
+              className="w-9 h-9 rounded-full border border-[#d6ecff1a] text-[#93a0ad] hover:text-white flex items-center justify-center text-xs transition-colors"
+              title="Toggle theme"
             >
-              <span className="text-emerald-400">←</span> CTPR CLUB
+              {dark ? "☀" : "☾"}
             </button>
-            <span className="text-slate-700">/</span>
-            <span className="text-sm font-semibold tracking-wider text-slate-100 font-mono">
-              CARLO TIMBAS
-            </span>
-            <span className="hidden sm:inline-block px-2 py-0.5 rounded-full text-[10px] font-mono tracking-widest bg-emerald-950/80 text-emerald-300 border border-emerald-500/30">
-              AI AUTOMATION
-            </span>
-          </div>
-
-          {/* Nav Links */}
-          <nav className="hidden md:flex items-center gap-7 text-xs font-mono tracking-widest text-slate-400">
-            <button onClick={() => scrollTo("about")} className="hover:text-emerald-300 transition-colors">
-              ~/ABOUT
-            </button>
-            <button onClick={() => scrollTo("services")} className="hover:text-emerald-300 transition-colors">
-              ~/SERVICES
-            </button>
-            <button onClick={() => scrollTo("case-studies")} className="hover:text-emerald-300 transition-colors">
-              ~/CASE-STUDIES
-            </button>
-          </nav>
-
-          {/* Action & Contact */}
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setBookingOpen(true)}
-              className="px-3.5 py-1.5 rounded-lg text-xs font-mono font-medium tracking-wide bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 transition-all shadow-[0_0_15px_rgba(0,245,212,0.1)] hover:shadow-[0_0_20px_rgba(0,245,212,0.25)]"
-            >
-              BOOK A CALL
-            </button>
-            {toggle && (
-              <button
-                onClick={toggle}
-                className="w-8 h-8 rounded-lg border border-slate-800 text-slate-400 hover:text-white hover:border-slate-700 flex items-center justify-center text-xs transition-colors"
-                title="Toggle visual theme"
-              >
-                {dark ? "☀" : "☾"}
-              </button>
-            )}
-          </div>
+          )}
         </div>
       </header>
 
-      {/* ── HERO SEQUENCE (Edge-to-edge dark studio, 16:9 portrait, orbital nodes, massive headline) ── */}
-      <section className="relative min-h-screen pt-24 pb-16 flex flex-col justify-between items-center z-10 px-4 sm:px-8 overflow-hidden">
-        {/* Massive 90% Typography Headline Behind the Character */}
-        <div className="absolute top-16 left-0 right-0 flex justify-center pointer-events-none select-none z-0">
-          <h1
-            className="text-[clamp(54px,14vw,210px)] font-black tracking-tighter leading-none uppercase text-transparent opacity-15"
+      {/* ─────────────────────────────────────────────────────────────
+          760vh HERO SCROLL SECTION (Directly matching rjv-automation)
+         ───────────────────────────────────────────────────────────── */}
+      <section ref={heroRef} id="hero" className="relative w-full h-[760vh] z-20">
+        {/* Sticky 100vh Viewport Stage */}
+        <div className="sticky top-0 h-screen w-full overflow-hidden isolation-auto flex items-center justify-center">
+          {/* Subtle Ambient Studio Glow */}
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(56,220,255,0.08),transparent_70%)] pointer-events-none" />
+
+          {/* Vignette Layer */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_40%,rgba(10,12,15,0.85)_100%)] pointer-events-none z-10" />
+
+          {/* GIANT HEADLINE: CARLO TIMBAS (Behind character cutout) */}
+          <div
+            className="absolute top-[18vh] left-0 right-0 flex justify-center pointer-events-none select-none z-0 px-4"
             style={{
-              WebkitTextStroke: "1px rgba(0, 245, 212, 0.4)",
-              fontFamily: '"Impact", "Arial Black", sans-serif',
+              opacity: introOpacity.toFixed(3),
+              filter: `blur(${introBlur}px)`,
+              visibility: introOpacity > 0.01 ? "visible" : "hidden",
+              transition: "opacity 0.2s ease-out, filter 0.2s ease-out",
             }}
           >
-            AUTOMATE
-          </h1>
-        </div>
-
-        {/* Hero Main Content */}
-        <div className="relative z-10 max-w-6xl w-full mx-auto my-auto flex flex-col items-center text-center">
-          {/* Status Badge */}
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900/90 border border-emerald-500/30 text-emerald-400 text-xs font-mono mb-6 backdrop-blur-sm shadow-[0_0_25px_rgba(15,107,92,0.3)]">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-            <span>AVAILABLE FOR ENTERPRISE AUTOMATION & AGENT WORK</span>
+            <h1 className="text-[clamp(44px,14vw,200px)] font-black tracking-[-0.055em] leading-[0.8] whitespace-nowrap text-transparent bg-clip-text bg-gradient-to-b from-[#f4f8fb] via-[#d6ecff]/70 to-[#d6ecff]/20">
+              CARLO TIMBAS
+            </h1>
           </div>
 
-          {/* Expanded 16:9 Studio Frame with Carlo's Portrait and Holographic Floating Nodes */}
-          <div className="relative w-full max-w-4xl aspect-[16/9] rounded-2xl overflow-hidden border border-slate-800/80 shadow-[0_20px_80px_rgba(0,0,0,0.85)] bg-gradient-to-b from-[#131b20] to-[#090d10] flex items-center justify-center group mb-8">
-            {/* Cinematic Volumetric Light Beam */}
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(0,245,212,0.15),transparent_65%)] pointer-events-none" />
-
-            {/* Orbiting Faint Holographic Workflow Nodes (Abstract Shapes Joined by Thin Light Paths) */}
-            <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-60">
-              <defs>
-                <linearGradient id="beam" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#00f5d4" stopOpacity="0.8" />
-                  <stop offset="100%" stopColor="#0f6b5c" stopOpacity="0.1" />
-                </linearGradient>
-              </defs>
-              <line x1="20%" y1="30%" x2="45%" y2="50%" stroke="url(#beam)" strokeWidth="1" strokeDasharray="4 4" />
-              <line x1="80%" y1="28%" x2="55%" y2="52%" stroke="url(#beam)" strokeWidth="1" strokeDasharray="4 4" />
-              <line x1="50%" y1="75%" x2="78%" y2="68%" stroke="url(#beam)" strokeWidth="1" strokeDasharray="4 4" />
-              <circle cx="20%" cy="30%" r="5" fill="#00f5d4" className="animate-pulse" />
-              <circle cx="80%" cy="28%" r="6" fill="#38bdf8" />
-              <circle cx="78%" cy="68%" r="4" fill="#00f5d4" />
-            </svg>
-
-            {/* The Portrait Image (Preserving face, identity, hair, outfit, holding tablet) */}
-            <div className="relative h-full w-full flex items-center justify-center p-4">
-              <img
-                src="./photos/timbas/carlo.png"
-                alt="Carlo Timbas - AI Automation Specialist"
-                className="h-full object-contain filter drop-shadow-[0_0_35px_rgba(0,245,212,0.22)] transform hover:scale-[1.02] transition-transform duration-700 select-none pointer-events-none"
-                style={{ maxHeight: "88%" }}
-                onError={(e) => {
-                  // Fallback visual avatar if path issues occur
-                  e.target.style.display = "none";
-                }}
-              />
-            </div>
-
-            {/* Subtle Studio Vignette Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-[#090d10] via-transparent to-transparent opacity-75 pointer-events-none" />
-            <div className="absolute inset-0 border border-emerald-500/10 rounded-2xl pointer-events-none" />
-
-            {/* Floating Live Telemetry Badge inside frame */}
-            <div className="absolute bottom-4 left-4 hidden sm:flex items-center gap-3 px-3 py-1.5 rounded-lg bg-[#090d10]/85 border border-slate-800 text-[11px] font-mono text-slate-400 backdrop-blur-md">
-              <span className="text-emerald-400">● LIVE RUNTIME</span>
-              <span>AGENT ORBIT: 60 FPS</span>
-              <span>LATENCY: 12ms</span>
-            </div>
+          {/* ─────────────────────────────────────────────────────────
+              ANIMATED CHARACTER LAYER (carlo.png)
+              Smoothly shifts Center -> Left -> Right -> Left -> Right
+              with 3D perspective, scale, and subtle rotation!
+             ───────────────────────────────────────────────────────── */}
+          <div
+            ref={characterDomRef}
+            className="relative z-10 w-full h-full max-h-[88vh] flex items-end justify-center pointer-events-none will-change-transform"
+            style={{
+              transform: "translate3d(0, 0, 0) scale(1)",
+              transformOrigin: "center 75%",
+            }}
+          >
+            <img
+              src="./photos/timbas/carlo.png"
+              alt="Carlo Timbas - AI Automation Specialist"
+              className="h-[80vh] max-h-[750px] object-contain filter drop-shadow-[0_15px_45px_rgba(0,0,0,0.85)] select-none pointer-events-none"
+              onError={(e) => {
+                // Fallback poster if needed
+                e.target.src = "./photos/timbas/hero-poster.webp";
+              }}
+            />
           </div>
 
-          {/* Understated CTA Buttons */}
-          <div className="flex flex-wrap items-center justify-center gap-4 mb-10">
-            <button
-              onClick={() => scrollTo("case-studies")}
-              className="px-6 py-3 rounded-xl font-mono text-xs tracking-wider font-semibold text-slate-900 bg-emerald-400 hover:bg-emerald-300 transition-all shadow-[0_0_25px_rgba(0,245,212,0.35)] hover:shadow-[0_0_35px_rgba(0,245,212,0.5)] transform hover:-translate-y-0.5"
-            >
-              VIEW CASE STUDIES →
-            </button>
-            <button
-              onClick={() => setBookingOpen(true)}
-              className="px-6 py-3 rounded-xl font-mono text-xs tracking-wider font-semibold text-slate-300 hover:text-white bg-slate-900/90 border border-slate-700 hover:border-emerald-500/50 transition-all transform hover:-translate-y-0.5"
-            >
-              BOOK A DISCOVERY CALL
-            </button>
-          </div>
-
-          {/* Dynamic Storytelling Passage Carousel (Opposite character visual) */}
-          <div className="w-full max-w-2xl bg-slate-900/60 border border-slate-800/80 rounded-2xl p-5 backdrop-blur-md relative overflow-hidden transition-all duration-500">
-            <div className="flex items-center justify-between border-b border-slate-800/80 pb-2.5 mb-3 text-[11px] font-mono text-slate-400">
-              <span className="text-emerald-400 flex items-center gap-1.5">
-                <span>{stories[activeStory].icon}</span>
-                <span>PHILOSOPHY // 0{activeStory + 1}</span>
-              </span>
-              <span>{stories[activeStory].concept}</span>
-            </div>
-            <p className="text-base sm:text-lg font-medium text-slate-100 tracking-tight transition-opacity duration-300">
-              "{stories[activeStory].quote}"
+          {/* INTRO FOOTER (Tagline, CTAs, and Scroll cue - fades out on scroll) */}
+          <div
+            className="absolute bottom-12 left-0 right-0 z-20 flex flex-col items-center text-center pointer-events-auto px-4"
+            style={{
+              opacity: introOpacity.toFixed(3),
+              filter: `blur(${introBlur}px)`,
+              visibility: introOpacity > 0.01 ? "visible" : "hidden",
+              transition: "opacity 0.2s ease-out, filter 0.2s ease-out",
+            }}
+          >
+            <p className="text-base sm:text-xl font-medium text-[#eef3f7] mb-6 tracking-tight">
+              I automate businesses for a living.
             </p>
-            <p className="text-xs text-slate-400 mt-1 font-mono">{stories[activeStory].sub}</p>
-            {/* Story Navigation Dots */}
-            <div className="flex items-center justify-center gap-2 mt-4">
-              {stories.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setActiveStory(i)}
-                  className={`h-1.5 rounded-full transition-all ${
-                    activeStory === i ? "w-8 bg-emerald-400" : "w-2 bg-slate-700 hover:bg-slate-500"
-                  }`}
-                  aria-label={`Go to philosophy ${i + 1}`}
-                />
-              ))}
+            <div className="flex flex-wrap items-center justify-center gap-4 mb-8">
+              <button
+                onClick={() => scrollTo("work")}
+                className="px-6 py-3 rounded-full text-[14px] font-medium text-white border border-[#d6ecff33] bg-[#0a0c0f]/60 backdrop-blur-md hover:bg-white/10 transition-all"
+              >
+                View Case Studies
+              </button>
+              <button
+                onClick={() => setBookingOpen(true)}
+                className="px-6 py-3 rounded-full text-[14px] font-medium text-[#0a0c0f] bg-[#38dcff] hover:bg-white transition-all shadow-[0_0_20px_rgba(56,220,255,0.3)]"
+              >
+                Book a Call
+              </button>
+            </div>
+            <div className="flex items-center gap-2 text-xs font-mono text-[#93a0ad] tracking-widest uppercase">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#38dcff] animate-ping" />
+              <span>Scroll to explore</span>
             </div>
           </div>
-        </div>
 
-        {/* Scroll indicator prompt */}
-        <div className="relative z-10 flex flex-col items-center gap-2 text-slate-500 text-[11px] font-mono tracking-widest pt-4">
-          <span>SCROLL TO EXPLORE ARCHITECTURE</span>
-          <div className="w-4 h-7 border border-slate-700 rounded-full flex justify-center pt-1">
-            <div className="w-1 h-2 bg-emerald-400 rounded-full animate-bounce" />
+          {/* ─────────────────────────────────────────────────────────
+              4 STORY PASSAGES OVERLAYING OPPOSITE THE MOVING CHARACTER
+             ───────────────────────────────────────────────────────── */}
+          <div className="absolute inset-0 pointer-events-none z-20 flex items-center justify-between px-[clamp(20px,6vw,80px)]">
+            {/* Story 0 (Appears on RIGHT while Carlo is on Left) */}
+            <div
+              className="absolute right-[clamp(24px,8vw,120px)] w-[min(38vw,480px)] space-y-4"
+              style={getStoryStyle(0.12, 0.32, "right")}
+            >
+              <img
+                src="./photos/timbas/node.webp"
+                alt="Glass workflow nodes"
+                className="w-24 sm:w-32 h-auto object-contain filter drop-shadow-[0_0_30px_rgba(56,220,255,0.4)]"
+              />
+              <p className="text-xl sm:text-2xl md:text-3xl font-medium text-white tracking-tight leading-snug">
+                Every repetitive task is a decision waiting to be automated.
+              </p>
+            </div>
+
+            {/* Story 1 (Appears on LEFT while Carlo is on Right) */}
+            <div
+              className="absolute left-[clamp(24px,8vw,120px)] w-[min(38vw,480px)] space-y-4"
+              style={getStoryStyle(0.34, 0.54, "left")}
+            >
+              <img
+                src="./photos/timbas/orb.webp"
+                alt="Chrome AI agent orb"
+                className="w-24 sm:w-32 h-auto object-contain filter drop-shadow-[0_0_30px_rgba(56,220,255,0.4)]"
+              />
+              <p className="text-xl sm:text-2xl md:text-3xl font-medium text-white tracking-tight leading-snug">
+                Let AI agents carry the busywork, so your people keep the judgment calls.
+              </p>
+            </div>
+
+            {/* Story 2 (Appears on RIGHT while Carlo is on Left) */}
+            <div
+              className="absolute right-[clamp(24px,8vw,120px)] w-[min(38vw,480px)] space-y-4"
+              style={getStoryStyle(0.56, 0.74, "right")}
+            >
+              <img
+                src="./photos/timbas/pipe.webp"
+                alt="Interlocking data pipeline"
+                className="w-24 sm:w-32 h-auto object-contain filter drop-shadow-[0_0_30px_rgba(56,220,255,0.4)]"
+              />
+              <p className="text-xl sm:text-2xl md:text-3xl font-medium text-white tracking-tight leading-snug">
+                Good automation is invisible. The data simply arrives where it’s needed.
+              </p>
+            </div>
+
+            {/* Story 3 (Appears on LEFT while Carlo is on Right) */}
+            <div
+              className="absolute left-[clamp(24px,8vw,120px)] w-[min(38vw,480px)] space-y-4"
+              style={getStoryStyle(0.76, 0.94, "left")}
+            >
+              <img
+                src="./photos/timbas/tiles.webp"
+                alt="Stack of connected app tiles"
+                className="w-24 sm:w-32 h-auto object-contain filter drop-shadow-[0_0_30px_rgba(56,220,255,0.4)]"
+              />
+              <p className="text-xl sm:text-2xl md:text-3xl font-medium text-white tracking-tight leading-snug">
+                Your tools already work. I make them work together.
+              </p>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════════════════════════════════════
-          SHARED 3D STAGE & CONTINUOUS SCENE (ABOUT → SERVICES → CASE STUDIES)
-          The 3D Automation Core canvas stays continuously mounted here!
-         ══════════════════════════════════════════════════════════════════════════ */}
-      <div ref={sharedContainerRef} className="relative w-full">
-        {/* Sticky 3D Canvas Layer spanning all three sections */}
-        <div className="sticky top-0 h-screen w-full pointer-events-none z-10 overflow-hidden">
+      {/* ─────────────────────────────────────────────────────────────
+          PANELS CONTAINER (ABOUT, SERVICES, PROCESS, WORK, CONTACT)
+          With Continuous 3D Automation Core Canvas in the background!
+         ───────────────────────────────────────────────────────────── */}
+      <div ref={panelsRef} className="relative z-30 bg-[#0a0c0f]">
+        {/* Sticky 3D Core Canvas Layer spanning all panels */}
+        <div
+          className="fixed inset-0 pointer-events-none z-10 transition-opacity duration-700 overflow-hidden"
+          style={{
+            opacity: coreState.opacity.toFixed(3),
+            visibility: coreState.opacity > 0.01 ? "visible" : "hidden",
+          }}
+        >
           <canvas
             ref={canvasRef}
             className="w-full h-full block"
-            style={{ filter: "drop-shadow(0 0 40px rgba(0,245,212,0.18))" }}
+            style={{ filter: "drop-shadow(0 0 50px rgba(56,220,255,0.25))" }}
           />
-
-          {/* Current Section Telemetry HUD in top right of 3D Canvas */}
-          <div className="absolute top-20 right-6 hidden lg:flex flex-col items-end gap-1 font-mono text-[10px] text-slate-400 bg-slate-950/70 border border-slate-800/80 px-3 py-2 rounded-xl backdrop-blur-md">
-            <span className="text-emerald-400">CORE STATUS: SYNCHRONIZED</span>
-            <span>SECTION: {sectionInView.toUpperCase()}</span>
-            <span>VECTOR PROGRESS: {Math.round(scrollProgress * 100)}%</span>
-          </div>
         </div>
 
-        {/* The Three Sections Content Overlaying Opposite the 3D Model */}
-        <div className="relative z-20 -mt-[100vh]">
-          {/* ───────────────────────────────────────────────────────────
-              SECTION 1: ABOUT (Content on Left, 3D Core on Right)
-             ─────────────────────────────────────────────────────────── */}
-          <section id="about" className="min-h-screen py-28 px-6 sm:px-12 flex items-center">
-            <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-              {/* Content Column (Left) */}
-              <div className="space-y-6 bg-slate-900/80 lg:bg-slate-900/60 p-6 sm:p-10 rounded-3xl border border-slate-800/90 backdrop-blur-xl shadow-2xl">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono bg-emerald-500/10 border border-emerald-500/30 text-emerald-300">
-                  <span>01 // IDENTITY & OPERATING SYSTEM</span>
-                </div>
+        {/* ── PANEL 1: ABOUT (Right-aligned 3D Model, Left-aligned content) ── */}
+        <section
+          id="about"
+          className="relative z-20 min-h-screen py-[max(140px,20vh)] px-[clamp(16px,4vw,56px)] flex items-center"
+        >
+          <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+            <div className="lg:col-span-6 space-y-7">
+              <p className="text-xs font-mono tracking-[0.18em] uppercase text-[#38dcff]">
+                About
+              </p>
+              <h2 className="text-3xl sm:text-5xl font-bold tracking-tight text-white leading-[1.1]">
+                Turning busywork into autonomous systems.
+              </h2>
+              <p className="text-[#93a0ad] text-base sm:text-lg leading-relaxed">
+                I’m <strong className="text-white">Carlo Timbas</strong>, an AI automation specialist and full-stack developer.
+                I build the workflows, AI agents, chatbots, and integrations that take manual work off your team’s plate, so
+                the work gets done without anyone having to do it.
+              </p>
+              <p className="text-[#93a0ad] text-base leading-relaxed">
+                You get systems that are documented, monitored, and easy to hand over. Not a pile of fragile zaps.
+              </p>
 
-                <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-white">
-                  Engineering Resilient <br />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">
-                    Autonomous Business Engines.
+              {/* Stats */}
+              <div className="flex items-center gap-8 pt-2">
+                <div className="flex flex-col">
+                  <span className="text-3xl sm:text-4xl font-bold text-white tracking-tight">
+                    3+<small className="text-xs font-mono text-[#38dcff] ml-1">years</small>
                   </span>
-                </h2>
-
-                <p className="text-slate-300 leading-relaxed text-sm sm:text-base">
-                  I'm <strong>Carlo Timbas</strong>, a 3rd year BSIT student at Pamantasan ng Lungsod ng Maynila and
-                  an AI Automation Specialist. With <strong>[3+] years</strong> of hands-on experience bridging robust
-                  backend software engineering with modern autonomous LLM workflows, I help fast-moving companies eliminate
-                  thousands of hours of manual labor.
-                </p>
-
-                <p className="text-slate-400 text-xs sm:text-sm leading-relaxed">
-                  Instead of fragile point-to-point Zapier triggers that break silently, I architect fault-tolerant
-                  event-driven pipelines with automated telemetry, idempotency keys, and self-healing LLM fallbacks.
-                </p>
-
-                {/* Tool Stack Badges */}
-                <div className="pt-2">
-                  <div className="text-xs font-mono text-emerald-400 uppercase tracking-wider mb-3">
-                    Validated Stack & Orchestration Toolkit
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {[
-                      { name: "n8n", cat: "Orchestration" },
-                      { name: "Make.com", cat: "Workflows" },
-                      { name: "Zapier Central", cat: "Automation" },
-                      { name: "Python", cat: "Code" },
-                      { name: "Claude 3.5 Sonnet", cat: "AI Models" },
-                      { name: "OpenAI GPT-4o", cat: "AI Models" },
-                      { name: "GoHighLevel", cat: "CRM" },
-                      { name: "HubSpot API", cat: "CRM" },
-                      { name: "Java / Spring Boot", cat: "Backend" },
-                      { name: "React", cat: "Frontend" },
-                      { name: "PostgreSQL", cat: "Database" },
-                      { name: "Docker", cat: "DevOps" },
-                    ].map((tool) => (
-                      <span
-                        key={tool.name}
-                        className="px-3 py-1 rounded-lg text-xs font-mono bg-slate-800/80 text-slate-200 border border-slate-700/60 hover:border-emerald-500/40 hover:text-emerald-300 transition-colors"
-                      >
-                        {tool.name}
-                      </span>
-                    ))}
-                  </div>
+                  <span className="text-xs text-[#93a0ad] font-mono mt-1">of development & automation</span>
                 </div>
-
-                <div className="flex items-center gap-4 pt-4 border-t border-slate-800">
-                  <button
-                    onClick={() => scrollTo("services")}
-                    className="text-xs font-mono text-emerald-400 hover:text-emerald-300 flex items-center gap-2 group"
-                  >
-                    <span>EXPLORE SERVICES</span>
-                    <span className="group-hover:translate-x-1 transition-transform">→</span>
-                  </button>
-                  <span className="text-slate-700">|</span>
-                  <button
-                    onClick={copyEmail}
-                    className="text-xs font-mono text-slate-400 hover:text-white transition-colors"
-                  >
-                    {copiedEmail ? "COPIED TO CLIPBOARD!" : "COPY EMAIL"}
-                  </button>
+                <div className="w-px h-12 bg-[#d6ecff1a]" />
+                <div className="flex flex-col">
+                  <span className="text-3xl sm:text-4xl font-bold text-white tracking-tight">
+                    5<small className="text-xs font-mono text-[#38dcff] ml-1">services</small>
+                  </span>
+                  <span className="text-xs text-[#93a0ad] font-mono mt-1">from audit to deployment</span>
                 </div>
               </div>
 
-              {/* Right Column is kept open for the 3D Automation Core to shine through! */}
-              <div className="hidden lg:block pointer-events-none" />
-            </div>
-          </section>
-
-          {/* ───────────────────────────────────────────────────────────
-              SECTION 2: SERVICES (Content on Right, 3D Core on Left)
-             ─────────────────────────────────────────────────────────── */}
-          <section id="services" className="min-h-screen py-28 px-6 sm:px-12 flex items-center">
-            <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-              {/* Left Column is kept open for the 3D Automation Core as it glides over! */}
-              <div className="hidden lg:block pointer-events-none" />
-
-              {/* Content Column (Right) */}
-              <div className="space-y-6 bg-slate-900/80 lg:bg-slate-900/60 p-6 sm:p-10 rounded-3xl border border-slate-800/90 backdrop-blur-xl shadow-2xl">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono bg-emerald-500/10 border border-emerald-500/30 text-emerald-300">
-                  <span>02 // CAPABILITIES & OFFERINGS</span>
-                </div>
-
-                <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-white">
-                  High-Impact Services <br />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">
-                    Designed to Multiply Margin.
-                  </span>
-                </h2>
-
-                <p className="text-slate-300 text-sm">
-                  We don't sell random scripts; we deliver end-to-end operational leverage. Every service includes
-                  full architecture documentation, observability dashboards, and post-deployment monitoring.
+              {/* Tool Stack Chips */}
+              <div className="pt-2">
+                <p className="text-xs font-mono tracking-[0.18em] uppercase text-[#38dcff] mb-3">
+                  Tool stack
                 </p>
-
-                {/* 5 Key Offerings */}
-                <div className="space-y-3 pt-1">
-                  {[
-                    {
-                      num: "01",
-                      title: "Workflow Automation",
-                      desc: "Multi-platform orchestration using n8n and Make with webhook validation, rate-limit protection, and zero data leakage.",
-                    },
-                    {
-                      num: "02",
-                      title: "AI Agents & Autonomous Chatbots",
-                      desc: "Context-aware agents armed with custom tool calling, vector memory (RAG), and multi-step reasoning capabilities.",
-                    },
-                    {
-                      num: "03",
-                      title: "CRM Setup & Integrations",
-                      desc: "Deep bi-directional syncs across HubSpot, GoHighLevel, and ERP databases. Automated lead scoring and dynamic routing.",
-                    },
-                    {
-                      num: "04",
-                      title: "RPA & Operational Process Audits",
-                      desc: "Forensic analysis of employee keystrokes and manual bottlenecks, followed by headless Python scripts and browser automation.",
-                    },
-                    {
-                      num: "05",
-                      title: "Corporate AI Enablement & Training",
-                      desc: "Hands-on workshops transforming non-technical teams into prompt engineers and self-sufficient automation operators.",
-                    },
-                  ].map((service) => (
-                    <div
-                      key={service.num}
-                      className="p-3.5 rounded-xl bg-slate-800/40 border border-slate-800 hover:border-emerald-500/30 hover:bg-slate-800/70 transition-all group"
+                <ul className="flex flex-wrap gap-2 text-xs font-mono">
+                  {["n8n", "Make", "Zapier", "Python", "Claude API", "OpenAI API", "GoHighLevel", "HubSpot", "Java", "Spring Boot", "React", "PostgreSQL"].map((chip) => (
+                    <li
+                      key={chip}
+                      className="px-3.5 py-2 rounded-full border border-[#d6ecff33] bg-[#111419]/60 text-[#eef3f7] hover:border-[#38dcff] transition-colors"
                     >
-                      <div className="flex items-center gap-3">
-                        <span className="text-emerald-400 font-mono text-xs font-bold">{service.num}</span>
-                        <h3 className="text-sm font-semibold text-white group-hover:text-emerald-300 transition-colors">
-                          {service.title}
-                        </h3>
-                      </div>
-                      <p className="text-xs text-slate-400 mt-1 pl-7 leading-relaxed">{service.desc}</p>
-                    </div>
+                      {chip}
+                    </li>
                   ))}
-                </div>
-
-                <div className="pt-2">
-                  <button
-                    onClick={() => scrollTo("case-studies")}
-                    className="w-full py-3 rounded-xl font-mono text-xs tracking-wider bg-slate-800 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 transition-all text-center"
-                  >
-                    SEE REAL MEASURABLE RESULTS →
-                  </button>
-                </div>
+                </ul>
               </div>
             </div>
-          </section>
 
-          {/* ───────────────────────────────────────────────────────────
-              SECTION 3: CASE STUDIES (Content on Left, 3D Core on Right)
-             ─────────────────────────────────────────────────────────── */}
-          <section id="case-studies" className="min-h-screen py-28 px-6 sm:px-12 flex items-center">
-            <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-              {/* Content Column (Left) */}
-              <div className="space-y-6 bg-slate-900/80 lg:bg-slate-900/60 p-6 sm:p-10 rounded-3xl border border-slate-800/90 backdrop-blur-xl shadow-2xl">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono bg-emerald-500/10 border border-emerald-500/30 text-emerald-300">
-                  <span>03 // EVIDENCE & BENCHMARKS</span>
-                </div>
-
-                <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-white">
-                  Case Studies & <br />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">
-                    Proven Production Outcomes.
-                  </span>
-                </h2>
-
-                <p className="text-slate-300 text-sm">
-                  Real client deployments with transparent problem statements, custom architectural remedies, and
-                  quantifiable ROI metrics.
-                </p>
-
-                {/* 3 Detailed Case Studies */}
-                <div className="space-y-4">
-                  {/* Case 1 */}
-                  <div className="p-4 rounded-2xl bg-slate-800/50 border border-slate-700/60 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-mono text-emerald-400 uppercase tracking-wider">
-                        FinTech & Underwriting Hub
-                      </span>
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/30">
-                        LOAN PROCESSING
-                      </span>
-                    </div>
-                    <p className="text-xs text-slate-300">
-                      <strong>Problem:</strong> Underwriters spent 22+ hours each week manually reading PDF bank statements and keying financial data into loan origination software.
-                    </p>
-                    <p className="text-xs text-slate-400">
-                      <strong>Solution:</strong> Automated ingestion webhook with Claude 3.5 Sonnet Vision OCR, strict JSON schema validation, and direct ERP pipeline sync.
-                    </p>
-                    <div className="pt-2 flex flex-wrap gap-2 text-xs font-mono">
-                      <span className="px-2.5 py-1 rounded bg-slate-900 text-emerald-300 border border-emerald-500/30">
-                        ⚡ [34 hrs/week] saved per officer
-                      </span>
-                      <span className="px-2.5 py-1 rounded bg-slate-900 text-cyan-300 border border-cyan-500/30">
-                        📉 [99.4%] entry error reduction
-                      </span>
-                      <span className="px-2.5 py-1 rounded bg-slate-900 text-amber-300 border border-amber-500/30">
-                        ⏱ [4.2x] faster turnaround
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Case 2 */}
-                  <div className="p-4 rounded-2xl bg-slate-800/50 border border-slate-700/60 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-mono text-emerald-400 uppercase tracking-wider">
-                        Omnichannel D2C Brand ($8M ARR)
-                      </span>
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/30">
-                        E-COMMERCE OPS
-                      </span>
-                    </div>
-                    <p className="text-xs text-slate-300">
-                      <strong>Problem:</strong> Flash-sale ticket volume caused 14-hour first response delays, resulting in cancelled checkouts and customer churn.
-                    </p>
-                    <p className="text-xs text-slate-400">
-                      <strong>Solution:</strong> Deployed autonomous Claude concierge with live Shopify API tool-calling for order changes, returns, and real-time inventory queries.
-                    </p>
-                    <div className="pt-2 flex flex-wrap gap-2 text-xs font-mono">
-                      <span className="px-2.5 py-1 rounded bg-slate-900 text-emerald-300 border border-emerald-500/30">
-                        ⚡ [82%] response time cut (&lt; 2 min)
-                      </span>
-                      <span className="px-2.5 py-1 rounded bg-slate-900 text-cyan-300 border border-cyan-500/30">
-                        💰 [$18,500/mo] support cost saved
-                      </span>
-                      <span className="px-2.5 py-1 rounded bg-slate-900 text-amber-300 border border-amber-500/30">
-                        🎯 [91%] automated resolution
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Case 3 */}
-                  <div className="p-4 rounded-2xl bg-slate-800/50 border border-slate-700/60 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-mono text-emerald-400 uppercase tracking-wider">
-                        B2B Enterprise SaaS (Series A)
-                      </span>
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/30">
-                        SALES PIPELINE
-                      </span>
-                    </div>
-                    <p className="text-xs text-slate-300">
-                      <strong>Problem:</strong> Inbound enterprise demo requests sat in rep inboxes for 4+ hours, slashing close rates by 60%.
-                    </p>
-                    <p className="text-xs text-slate-400">
-                      <strong>Solution:</strong> Instant enrichment via Apollo/Clearbit webhooks, algorithmic ICP scoring, Slack huddle alerts, and automated round-robin calendar booking.
-                    </p>
-                    <div className="pt-2 flex flex-wrap gap-2 text-xs font-mono">
-                      <span className="px-2.5 py-1 rounded bg-slate-900 text-emerald-300 border border-emerald-500/30">
-                        ⚡ [&lt; 90 seconds] contact speed
-                      </span>
-                      <span className="px-2.5 py-1 rounded bg-slate-900 text-cyan-300 border border-cyan-500/30">
-                        📈 [3.1x] booked demo rate
-                      </span>
-                      <span className="px-2.5 py-1 rounded bg-slate-900 text-amber-300 border border-amber-500/30">
-                        📉 [47%] lower customer CAC
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pt-2 flex items-center justify-between">
-                  <button
-                    onClick={() => setBookingOpen(true)}
-                    className="px-6 py-3 rounded-xl font-mono text-xs tracking-wider bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-bold transition-all shadow-[0_0_20px_rgba(0,245,212,0.3)]"
-                  >
-                    START YOUR AUTOMATION SPRINT →
-                  </button>
-                </div>
-              </div>
-
-              {/* Right Column is kept open for 3D Automation Core */}
-              <div className="hidden lg:block pointer-events-none" />
-            </div>
-          </section>
-        </div>
-      </div>
-
-      {/* ── Footer ── */}
-      <footer className="border-t border-slate-800 bg-[#070a0c] py-12 px-6 sm:px-12 relative z-20">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => go("home")}
-              className="text-xs font-mono text-slate-400 hover:text-emerald-400 transition-colors"
-            >
-              ← BACK TO CTPR CLUB
-            </button>
-            <span className="text-slate-700">|</span>
-            <span className="text-xs font-mono text-slate-500">
-              © {new Date().getFullYear()} CARLO TIMBAS · BUILT WITH REACT & TAILWIND
-            </span>
+            {/* Empty right column: 3D Core shines through here! */}
+            <div className="hidden lg:block lg:col-span-6 pointer-events-none" />
           </div>
+        </section>
 
-          <div className="flex items-center gap-4">
+        {/* ── PANEL 2: SERVICES (Left-aligned 3D Model, Right-aligned content) ── */}
+        <section
+          id="services"
+          className="relative z-20 min-h-screen py-[max(140px,20vh)] px-[clamp(16px,4vw,56px)] flex items-center"
+        >
+          <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+            {/* Empty left column: 3D Core glides across here! */}
+            <div className="hidden lg:block lg:col-span-6 pointer-events-none" />
+
+            <div className="lg:col-span-6 space-y-7">
+              <p className="text-xs font-mono tracking-[0.18em] uppercase text-[#38dcff]">
+                Services
+              </p>
+              <h2 className="text-3xl sm:text-5xl font-bold tracking-tight text-white leading-[1.1]">
+                What I build for you.
+              </h2>
+
+              <ol className="divide-y divide-[#d6ecff1a] border-t border-b border-[#d6ecff1a]">
+                {[
+                  {
+                    num: "01",
+                    title: "Workflow automation",
+                    desc: "Connect your apps and retire copy-paste. Built in n8n, Make or Zapier, whichever fits how your team works.",
+                  },
+                  {
+                    num: "02",
+                    title: "AI agents & chatbots",
+                    desc: "Assistants that answer, qualify and route, trained on your process, with a clean handoff to a human.",
+                  },
+                  {
+                    num: "03",
+                    title: "CRM setup & integrations",
+                    desc: "GoHighLevel or HubSpot set up around your pipeline, with clean data flowing in from every source.",
+                  },
+                  {
+                    num: "04",
+                    title: "RPA & process audits",
+                    desc: "I map where the hours go, then automate the steps that don’t need a person.",
+                  },
+                  {
+                    num: "05",
+                    title: "Corporate AI training",
+                    desc: "Hands-on sessions that get your team using AI confidently and safely, on their real work.",
+                  },
+                ].map((s) => (
+                  <li key={s.num} className="grid grid-cols-[48px_1fr] gap-4 py-5 group">
+                    <span className="font-mono text-sm text-[#38dcff] font-bold">{s.num}</span>
+                    <div>
+                      <h3 className="text-base font-semibold text-white group-hover:text-[#38dcff] transition-colors">
+                        {s.title}
+                      </h3>
+                      <p className="text-sm text-[#93a0ad] mt-1 leading-relaxed">{s.desc}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+
+              {/* Process Sub-Section */}
+              <div id="process" className="pt-4 space-y-4">
+                <h3 className="text-xs font-mono tracking-[0.18em] uppercase text-[#38dcff]">
+                  How it works
+                </h3>
+                <ol className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                  {[
+                    { num: "1", title: "Audit", text: "Find the highest-leverage tasks to automate first." },
+                    { num: "2", title: "Blueprint", text: "Map the data flow, tools, and edge cases." },
+                    { num: "3", title: "Build", text: "Ship the workflow, test with real data, handle errors." },
+                    { num: "4", title: "Handover", text: "Video walkthrough, documentation, and support." },
+                  ].map((step) => (
+                    <li
+                      key={step.num}
+                      className="p-4 rounded-xl border border-[#d6ecff1a] bg-[#111419]/60 text-xs space-y-1.5"
+                    >
+                      <span className="font-mono text-[#38dcff] font-bold text-sm block">#{step.num}</span>
+                      <strong className="text-white block text-sm">{step.title}</strong>
+                      <span className="text-[#93a0ad] block leading-relaxed">{step.text}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── PANEL 3: CASE STUDIES (Right-aligned 3D Model, Left-aligned content) ── */}
+        <section
+          id="work"
+          className="relative z-20 min-h-screen py-[max(140px,20vh)] px-[clamp(16px,4vw,56px)] flex items-center"
+        >
+          <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+            <div className="lg:col-span-6 space-y-7">
+              <p className="text-xs font-mono tracking-[0.18em] uppercase text-[#38dcff]">
+                Case Studies
+              </p>
+              <h2 className="text-3xl sm:text-5xl font-bold tracking-tight text-white leading-[1.1]">
+                Results, not just workflows.
+              </h2>
+              <p className="text-xs font-mono text-[#93a0ad]">
+                Sample projects. Numbers in dashed boxes are placeholders.
+              </p>
+
+              <div className="space-y-4">
+                {/* Case 1 */}
+                <article className="p-6 rounded-2xl border border-[#d6ecff1a] bg-gradient-to-br from-[#1a1f26]/75 to-[#0d1014]/75 backdrop-blur-md space-y-3">
+                  <p className="text-xs font-mono text-white flex items-center justify-between">
+                    <span>Real estate agency</span>
+                    <span className="px-2 py-0.5 rounded border border-[#d6ecff33] text-[10px] text-[#38dcff]">
+                      Sample
+                    </span>
+                  </p>
+                  <dl className="text-xs space-y-1.5 leading-relaxed">
+                    <div>
+                      <dt className="text-[#93a0ad] font-mono inline mr-2">Problem:</dt>
+                      <dd className="text-slate-300 inline">
+                        Leads from four sources sat in inboxes for hours before anyone replied.
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-[#93a0ad] font-mono inline mr-2">Solution:</dt>
+                      <dd className="text-slate-300 inline">
+                        An n8n and GoHighLevel pipeline that captures, enriches, and routes every lead, with an AI-drafted first reply.
+                      </dd>
+                    </div>
+                  </dl>
+                  <p className="pt-2 text-xs font-mono text-[#93a0ad]">
+                    <span className="text-white font-bold text-sm px-2 py-1 rounded border border-dashed border-[#38dcff] mr-2 text-[#38dcff]">
+                      15 min
+                    </span>
+                    response time, down from{" "}
+                    <span className="px-1.5 py-0.5 rounded border border-dashed border-[#d6ecff33] text-white">
+                      4 hrs
+                    </span>
+                  </p>
+                </article>
+
+                {/* Case 2 */}
+                <article className="p-6 rounded-2xl border border-[#d6ecff1a] bg-gradient-to-br from-[#1a1f26]/75 to-[#0d1014]/75 backdrop-blur-md space-y-3">
+                  <p className="text-xs font-mono text-white flex items-center justify-between">
+                    <span>E-commerce brand</span>
+                    <span className="px-2 py-0.5 rounded border border-[#d6ecff33] text-[10px] text-[#38dcff]">
+                      Sample
+                    </span>
+                  </p>
+                  <dl className="text-xs space-y-1.5 leading-relaxed">
+                    <div>
+                      <dt className="text-[#93a0ad] font-mono inline mr-2">Problem:</dt>
+                      <dd className="text-slate-300 inline">
+                        The support team answered the same repetitive order questions all day.
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-[#93a0ad] font-mono inline mr-2">Solution:</dt>
+                      <dd className="text-slate-300 inline">
+                        An AI chatbot connected to live Shopify data, handing complex cases to a human with full context.
+                      </dd>
+                    </div>
+                  </dl>
+                  <p className="pt-2 text-xs font-mono text-[#93a0ad]">
+                    <span className="text-white font-bold text-sm px-2 py-1 rounded border border-dashed border-[#38dcff] mr-2 text-[#38dcff]">
+                      35 hrs
+                    </span>
+                    saved per week
+                  </p>
+                </article>
+
+                {/* Case 3 */}
+                <article className="p-6 rounded-2xl border border-[#d6ecff1a] bg-gradient-to-br from-[#1a1f26]/75 to-[#0d1014]/75 backdrop-blur-md space-y-3">
+                  <p className="text-xs font-mono text-white flex items-center justify-between">
+                    <span>Professional services firm</span>
+                    <span className="px-2 py-0.5 rounded border border-[#d6ecff33] text-[10px] text-[#38dcff]">
+                      Sample
+                    </span>
+                  </p>
+                  <dl className="text-xs space-y-1.5 leading-relaxed">
+                    <div>
+                      <dt className="text-[#93a0ad] font-mono inline mr-2">Problem:</dt>
+                      <dd className="text-slate-300 inline">
+                        Invoicing and reporting meant manual copy-paste across three separate tools.
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-[#93a0ad] font-mono inline mr-2">Solution:</dt>
+                      <dd className="text-slate-300 inline">
+                        A Make and Python workflow that syncs CRM, accounting, and reporting on an automated schedule.
+                      </dd>
+                    </div>
+                  </dl>
+                  <p className="pt-2 text-xs font-mono text-[#93a0ad]">
+                    <span className="text-white font-bold text-sm px-2 py-1 rounded border border-dashed border-[#38dcff] mr-2 text-[#38dcff]">
+                      $4,200
+                    </span>
+                    monthly operating cost reduced
+                  </p>
+                </article>
+              </div>
+            </div>
+
+            {/* Empty right column: 3D Core shines through here! */}
+            <div className="hidden lg:block lg:col-span-6 pointer-events-none" />
+          </div>
+        </section>
+
+        {/* ── PANEL 4: CONTACT / CTA (Full-width centered, rjv style) ── */}
+        <section
+          id="contact"
+          className="relative z-20 min-h-[90vh] py-32 px-[clamp(16px,4vw,56px)] text-center flex flex-col items-center justify-center overflow-hidden"
+        >
+          {/* Cyan Glow background */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[min(1100px,130vw)] aspect-[2] pointer-events-none bg-[radial-gradient(closest-side,rgba(56,220,255,0.18),transparent)]" />
+
+          <div className="relative z-10 max-w-2xl mx-auto space-y-6">
+            <h2 className="text-3xl sm:text-5xl font-bold tracking-tight text-white">
+              Let’s Automate Your Business
+            </h2>
+            <p className="text-base sm:text-lg text-[#93a0ad] leading-relaxed">
+              Book a free automation audit. We’ll find the work your team shouldn’t be doing, and what to automate first.
+            </p>
+            <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
+              <button
+                onClick={() => setBookingOpen(true)}
+                className="px-8 py-4 rounded-full text-base font-semibold text-[#0a0c0f] bg-[#38dcff] hover:bg-white transition-all shadow-[0_0_30px_rgba(56,220,255,0.4)] hover:shadow-[0_0_40px_rgba(255,255,255,0.6)]"
+              >
+                Book a Free Automation Audit
+              </button>
+              <button
+                onClick={copyEmail}
+                className="px-6 py-4 rounded-full text-sm font-mono text-[#93a0ad] hover:text-white border border-[#d6ecff1a] bg-[#111419]/60 hover:bg-[#111419] transition-all"
+              >
+                {copiedEmail ? "Copied Email!" : "carlo.timbas@automation.dev"}
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {/* ── FOOTER ── */}
+        <footer className="border-t border-[#d6ecff1a] bg-[#07090c] py-10 px-[clamp(16px,4vw,56px)] relative z-20">
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6 text-xs font-mono text-[#93a0ad]">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => go("home")}
+                className="hover:text-[#38dcff] transition-colors"
+              >
+                ← BACK TO CTPR CLUB
+              </button>
+              <span className="text-slate-700">|</span>
+              <span>© {new Date().getFullYear()} CARLO TIMBAS</span>
+            </div>
+
             {next && (
               <button
                 onClick={() => go(next.id)}
-                className="px-4 py-2 rounded-lg text-xs font-mono bg-slate-800/80 hover:bg-slate-800 text-slate-300 hover:text-emerald-300 border border-slate-700 transition-colors"
+                className="px-4 py-2 rounded-lg bg-[#111419] hover:bg-[#1a1f26] text-white border border-[#d6ecff1a] hover:border-[#38dcff] transition-colors"
               >
-                NEXT PORTFOLIO: {next.name} →
+                Next: {next.name} →
               </button>
             )}
           </div>
-        </div>
-      </footer>
+        </footer>
+      </div>
 
-      {/* ── Booking / Contact Modal ── */}
+      {/* ─────────────────────────────────────────────────────────────
+          BOOKING AUDIT MODAL
+         ───────────────────────────────────────────────────────────── */}
       {bookingOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-          <div className="relative w-full max-w-lg bg-[#0e1419] border border-slate-700 rounded-2xl p-6 sm:p-8 shadow-2xl space-y-6">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+          <div className="relative w-full max-w-md bg-[#111419] border border-[#d6ecff33] rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6">
+            <div className="flex items-center justify-between border-b border-[#d6ecff1a] pb-4">
               <div>
-                <h3 className="text-lg font-bold text-white">Book an Automation Consultation</h3>
-                <p className="text-xs text-slate-400 font-mono mt-0.5">DIRECT ENGINEERING SESSION · 30 MIN</p>
+                <h3 className="text-xl font-bold text-white">Book an Automation Audit</h3>
+                <p className="text-xs font-mono text-[#38dcff] mt-0.5">30-MIN STRATEGY SESSION</p>
               </div>
               <button
                 onClick={() => setBookingOpen(false)}
-                className="w-8 h-8 rounded-lg bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-sm"
+                className="w-8 h-8 rounded-full bg-[#1a1f26] text-[#93a0ad] hover:text-white flex items-center justify-center text-sm"
               >
                 ✕
               </button>
@@ -1085,52 +1003,48 @@ export default function TimbasPortfolio({ member, next, go, dark, toggle }) {
 
             <div className="space-y-4 text-xs font-mono">
               <div>
-                <label className="block text-slate-400 mb-1">YOUR NAME</label>
+                <label className="block text-[#93a0ad] mb-1.5 uppercase">Your Name</label>
                 <input
                   type="text"
-                  placeholder="Alex Mercer"
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-emerald-400"
+                  placeholder="Jane Doe"
+                  className="w-full bg-[#0a0c0f] border border-[#d6ecff33] rounded-xl p-3 text-white focus:outline-none focus:border-[#38dcff]"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-400 mb-1">WORK EMAIL</label>
+                <label className="block text-[#93a0ad] mb-1.5 uppercase">Work Email</label>
                 <input
                   type="email"
-                  placeholder="alex@company.com"
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-emerald-400"
+                  placeholder="jane@company.com"
+                  className="w-full bg-[#0a0c0f] border border-[#d6ecff33] rounded-xl p-3 text-white focus:outline-none focus:border-[#38dcff]"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-400 mb-1">PRIMARY BOTTLENECK / GOAL</label>
+                <label className="block text-[#93a0ad] mb-1.5 uppercase">What manual process hurts most?</label>
                 <textarea
                   rows="3"
-                  placeholder="We are spending 20+ hours weekly moving lead data from Hubspot into our billing platform..."
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-emerald-400"
+                  placeholder="We spend 15+ hours weekly copying CRM data into accounting..."
+                  className="w-full bg-[#0a0c0f] border border-[#d6ecff33] rounded-xl p-3 text-white focus:outline-none focus:border-[#38dcff]"
                 />
-              </div>
-
-              <div className="p-3 rounded-lg bg-emerald-950/40 border border-emerald-500/20 text-emerald-300 text-[11px]">
-                💡 Direct contact: carlo.timbas@automation.dev or click "Copy Email" to message directly.
               </div>
             </div>
 
             <div className="flex items-center justify-end gap-3 pt-2">
               <button
                 onClick={() => setBookingOpen(false)}
-                className="px-4 py-2 text-xs font-mono text-slate-400 hover:text-white"
+                className="px-4 py-2.5 text-xs font-mono text-[#93a0ad] hover:text-white"
               >
-                CANCEL
+                Cancel
               </button>
               <button
                 onClick={() => {
-                  alert("Thank you! Carlo will review your bottleneck details and respond within 24 hours.");
+                  alert("Thank you! Carlo will review your details and send a calendar invite.");
                   setBookingOpen(false);
                 }}
-                className="px-5 py-2.5 rounded-lg text-xs font-mono font-bold bg-emerald-400 hover:bg-emerald-300 text-slate-950 shadow-[0_0_15px_rgba(0,245,212,0.3)] transition-all"
+                className="px-6 py-3 rounded-full text-xs font-mono font-bold bg-[#38dcff] hover:bg-white text-[#0a0c0f] transition-all shadow-[0_0_20px_rgba(56,220,255,0.3)]"
               >
-                SUBMIT REQUEST →
+                Confirm Booking →
               </button>
             </div>
           </div>
