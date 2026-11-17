@@ -13,8 +13,9 @@ const DATA = {
   intro: "Third year IT student interested in web development, from the interface people see to the backend that supports it.",
   projects: [
     { title: "CTPR Club Group Portfolio", text: "A group portfolio website with a card landing page, one portfolio per member, and a Spring Boot backend.", stack: "React, Spring Boot, Java, Tailwind CSS" },
-    { title: "Student Record System", text: "A database project with create, read, update and delete features and a REST API.", stack: "Java, Spring Data JPA, H2 / MySQL" },
-    { title: "Web Development Activities", text: "Forms and interface components built for web development coursework.", stack: "JavaScript, React, CSS" },
+    { title: "EaseAccess", text: "A barangay document request system."},
+    { title: "ReadAble", text: "A web-based interactive reading comprehension support application for children with autism spectrum disorder (ASD)"},
+    { title: "Adobe Photoshop Projects ", text: "A series of graphic design projects created using Adobe Photoshop.", stack: "Adobe Photoshop" },
   ],
   stack: [
     ["Frontend", "React, JavaScript, HTML, CSS, Tailwind, CSS"],
