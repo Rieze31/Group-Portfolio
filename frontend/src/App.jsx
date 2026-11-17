@@ -3,7 +3,6 @@ import VenzonPortfolio from "./portfolios/VenzonPortfolio.jsx";
 import GarciaPortfolio from "./portfolios/GarciaPortfolio.jsx";
 import SantosPortfolio from "./portfolios/SantosPortfolio.jsx";
 import TimbasPortfolio from "./portfolios/TimbasPortfolio.jsx";
-import DateMePrank from "./components/DateMePrank.jsx";
 
 let M = []; // filled from the Spring Boot API (see main.jsx)
 export function loadMembers(list) { M = list; }
@@ -124,15 +123,11 @@ function ThemeBtn({ dark, toggle }) {
   );
 }
 
-function Flash({ onDone, type = "light" }) {
-  const portfolioTransition = type === "portfolio";
+function Flash({ onDone }) {
   return (
     <div className="flash" onClick={onDone} onAnimationEnd={(e) => e.target === e.currentTarget && onDone()}>
-      <img
-        src={portfolioTransition ? "./portfolio-transition.jpg" : "./sunshine.png"}
-        alt={portfolioTransition ? "Baby looking at the camera" : "Sunshine meme"}
-      />
-      <span>{portfolioTransition ? "Wait lang guys" : "Light mode activated. Sorry for your eyes. "}</span>
+      <img src="./sunshine.png" alt="Sunshine meme" />
+      <span>Light mode activated. Sorry for your eyes. </span>
     </div>
   );
 }
@@ -511,10 +506,8 @@ function App() {
   const [route, go] = useRoute();
   const [order, setOrder] = useState(M.map((_, i) => i));
   const [match, setMatch] = useState(null);
-  const [prank, setPrank] = useState(null);
   const [dark, setDark] = useState(() => matchMedia("(prefers-color-scheme: dark)").matches);
   const [fk, setFk] = useState(0);
-  const [flashType, setFlashType] = useState("light");
   useEffect(() => { document.documentElement.setAttribute("data-theme", dark ? "dark" : "light"); }, [dark]);
   useEffect(() => {
     if (!match) return undefined;
@@ -524,28 +517,12 @@ function App() {
     }, 3600);
     return () => window.clearTimeout(timeout);
   }, [match]);
-  const acceptMember = (member) => {
-    if (member.id === M[1]?.id) setPrank(member);
-    else setMatch(member);
-  };
-  const toggle = () => {
-    if (dark) {
-      setDark(false);
-      setFlashType("light");
-      setFk((k) => k + 1);
-    } else setDark(true);
-  };
+  const toggle = () => { if (dark) { setDark(false); setFk((k) => k + 1); } else setDark(true); };
   const m = M.find((x) => x.id === route);
   return (
     <>
-      {fk > 0 && <Flash key={fk} type={flashType} onDone={() => setFk(0)} />}
-      {prank ? <DateMePrank member={prank} onOpenPortfolio={() => {
-        go(prank.id);
-        setPrank(null);
-        setFlashType("portfolio");
-        setFk((k) => k + 1);
-      }} />
-        : match ? <MatchScreen member={match} />
+      {fk > 0 && <Flash key={fk} onDone={() => setFk(0)} />}
+      {match ? <MatchScreen member={match} />
         : m ? m.portfolio === "venzon" || m.id === "dwight"
           ? <VenzonPortfolio key={m.id} member={m} next={M[(M.indexOf(m) + 1) % M.length]} go={go} dark={dark} toggle={toggle} />
           : m.portfolio === "garcia" || m.id === "garcia" || m.id === "bella" || m.id === "m3"
@@ -556,8 +533,8 @@ function App() {
                 ? <TimbasPortfolio key={m.id} member={m} next={M[(M.indexOf(m) + 1) % M.length]} go={go} dark={dark} toggle={toggle} />
                 : <Portfolio key={m.id} m={m} go={go} dark={dark} toggle={toggle} />
           : route === "deck"
-            ? <Deck go={go} onMatch={acceptMember} order={order} setOrder={setOrder} dark={dark} toggle={toggle} />
-            : <Landing go={go} onMatch={acceptMember} order={order} setOrder={setOrder} dark={dark} toggle={toggle} />}
+            ? <Deck go={go} onMatch={setMatch} order={order} setOrder={setOrder} dark={dark} toggle={toggle} />
+            : <Landing go={go} onMatch={setMatch} order={order} setOrder={setOrder} dark={dark} toggle={toggle} />}
     </>
   );
 }
