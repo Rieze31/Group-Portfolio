@@ -17,7 +17,7 @@ const DATA = {
     { title: "Web Development Activities", text: "Forms and interface components built for web development coursework.", stack: "JavaScript, React, CSS" },
   ],
   stack: [
-    ["Frontend", "React, JavaScript, HTML, CSS, Tailwind CSS"],
+    ["Frontend", "React, JavaScript, HTML, CSS, Tailwind, CSS"],
     ["Backend", "Java, Spring Boot, REST APIs"],
     ["Database and tools", "MySQL, H2, Git, GitHub, Vite, VS Code"],
     ["Design", "Figma, wireframing, responsive layout"],
@@ -28,7 +28,7 @@ const DATA = {
   ],
 };
 
-const PAGES = ["Home", "Projects", "Tech Stack", "About Me"];
+const PAGES = ["Home", "Projects", "Tech Stack", "Facts About Me"];
 const SANS = { fontFamily: '"Inter Tight", system-ui, sans-serif' };
 const SERIF = { fontFamily: '"Times New Roman", Times, serif' };
 const HIDE_BACK = { backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" };
