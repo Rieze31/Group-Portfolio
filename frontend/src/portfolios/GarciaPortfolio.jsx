@@ -26,9 +26,14 @@ const DATA = {
     "I am a third year BSIT student at Pamantasan ng Lungsod ng Maynila. I enjoy building web pages and learning how the backend behind them works.",
     "This portfolio is part of the CTPR Club group portfolio.",
   ],
+  hobbies: [
+    ["Online Shopping:", " sale items are my weakness"],
+    ["Solo Dates:", " matcha and me "],
+    ["Dressing up:", " When i look good, I feel good."],
+  ],
 };
 
-const PAGES = ["Home", "Projects", "Tech Stack", "Facts About Me"];
+const PAGES = ["Home", "Projects", "Tech Stack", "Facts About Me", "Hobbies and Interests"];
 const SANS = { fontFamily: '"Inter Tight", system-ui, sans-serif' };
 const SERIF = { fontFamily: '"Times New Roman", Times, serif' };
 const HIDE_BACK = { backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" };
@@ -129,6 +134,14 @@ function PageContent({ i }) {
         <ul className={T + " list-disc space-y-1.5 pl-5"}>
           {DATA.stack.map(([k, v]) => <li key={k}><b>{k}:</b> {v}</li>)}
         </ul>
+      </>
+    );
+  }
+    if (i === 4) {
+    return (
+      <>
+        <h3 className={H}>Hobbies and Interests</h3>
+        {DATA.hobbies.map((p, k) => <p key={k} className={T + " mb-2"}>{p}</p>)}
       </>
     );
   }
