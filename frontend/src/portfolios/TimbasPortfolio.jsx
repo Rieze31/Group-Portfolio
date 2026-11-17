@@ -4,8 +4,8 @@ import { useEffect, useRef, useState } from "react";
   CARLO TIMBAS — AI Automation Specialist
   Direct implementation inspired by rjv-automation-portfolio.vercel.app
   Includes:
-   - 760vh Hero scroll track with smooth camera/character inertia
-   - carlo.png moving between Center -> Left -> Right -> Left -> Right -> Center
+   - 760vh Hero scroll track with continuous 60fps frame-scrubbing canvas (180 frames)
+   - Carlo moving, orbiting, and turning in the minimal volumetric studio as you scroll
    - Fading title ("CARLO TIMBAS"), tagline, and CTAs behind cutout layer
    - 4 Scroll-synchronized Stories opposite the character (node, orb, pipe, tiles)
    - Continuous 3D Automation Core canvas across About (right), Services (left), and Work (right)
@@ -13,34 +13,29 @@ import { useEffect, useRef, useState } from "react";
    - Fully interactive Book a Call modal
 */
 
+const TOTAL_FRAMES = 180;
+
 export default function TimbasPortfolio({ member, next, go, dark, toggle }) {
   const [bookingOpen, setBookingOpen] = useState(false);
   const [copiedEmail, setCopiedEmail] = useState(false);
   const [navScrolled, setNavScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  // Hero scroll state (drives character camera & story passages)
+  // Hero scroll state (drives frame scrubber & story passages)
   const heroRef = useRef(null);
   const [heroProgress, setHeroProgress] = useState(0);
+
+  // Hero Canvas ref & frames cache
+  const heroCanvasRef = useRef(null);
+  const framesRef = useRef(new Array(TOTAL_FRAMES));
+  const smoothProgressRef = useRef(0);
 
   // Panels scroll state (drives 3D Core positioning)
   const panelsRef = useRef(null);
   const [coreState, setCoreState] = useState({ x: 0.28, y: 0, scale: 1.15, opacity: 0 });
 
-  // 3D Canvas ref
-  const canvasRef = useRef(null);
-
-  // Character animation refs for smooth physics (LERP)
-  const characterAnimRef = useRef({
-    currentX: 0,      // percentage offset (-24% = left, +24% = right)
-    targetX: 0,
-    currentScale: 1,  // 1.0 to 1.3
-    targetScale: 1,
-    currentRotY: 0,   // degrees
-    targetRotY: 0,
-  });
-
-  const characterDomRef = useRef(null);
+  // 3D Canvas ref for Automation Core
+  const coreCanvasRef = useRef(null);
 
   // Scroll smoothly to section
   const scrollTo = (id) => {
@@ -54,17 +49,79 @@ export default function TimbasPortfolio({ member, next, go, dark, toggle }) {
   };
 
   // ─────────────────────────────────────────────────────────────
-  // 1. HERO SCROLL TRACKER & CHARACTER LERP LOOP
+  // 1. PRELOAD HERO VIDEO FRAMES (f_0001.webp - f_0180.webp)
+  // ─────────────────────────────────────────────────────────────
+  useEffect(() => {
+    const frames = framesRef.current;
+
+    const loadFrame = (index) => {
+      const img = new Image();
+      img.src = `./photos/timbas/frames/f_${String(index + 1).padStart(4, "0")}.webp`;
+      img.onload = () => {
+        frames[index] = img;
+        // If it's frame 0, draw it immediately on load
+        if (index === 0 && heroCanvasRef.current) {
+          const canvas = heroCanvasRef.current;
+          const ctx = canvas.getContext("2d");
+          if (ctx) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawCover(ctx, img);
+          }
+        }
+      };
+    };
+
+    // Helper: draw image centered with cover aspect ratio
+    const drawCover = (ctx, img) => {
+      const cw = ctx.canvas.width;
+      const ch = ctx.canvas.height;
+      const r = Math.max(cw / img.width, ch / img.height);
+      const nw = img.width * r;
+      const nh = img.height * r;
+      const cx = (cw - nw) * 0.5;
+      const cy = (ch - nh) * 0.5;
+      ctx.drawImage(img, cx, cy, nw, nh);
+    };
+
+    // Load first 20 frames immediately for instant rendering
+    for (let i = 0; i < Math.min(25, TOTAL_FRAMES); i++) {
+      loadFrame(i);
+    }
+
+    // Load remaining frames asynchronously
+    const timer = setTimeout(() => {
+      for (let i = 25; i < TOTAL_FRAMES; i++) {
+        loadFrame(i);
+      }
+    }, 120);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // ─────────────────────────────────────────────────────────────
+  // 2. HERO SCROLL TRACKER & 60FPS FRAME SCRUBBING RENDER LOOP
   // ─────────────────────────────────────────────────────────────
   useEffect(() => {
     let animFrameId;
     let lastTime = performance.now();
 
+    const canvas = heroCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d", { alpha: false });
+
+    const resize = () => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = canvas.clientWidth * dpr;
+      canvas.height = canvas.clientHeight * dpr;
+    };
+    resize();
+    window.addEventListener("resize", resize);
+
     const handleScroll = () => {
       const scrollY = window.scrollY;
       const winH = window.innerHeight;
 
-      // Nav bar visibility: hidden during hero scroll, solid afterwards
+      // Hero scroll calculation
       if (heroRef.current) {
         const heroRect = heroRef.current.getBoundingClientRect();
         const heroH = heroRect.height;
@@ -72,47 +129,6 @@ export default function TimbasPortfolio({ member, next, go, dark, toggle }) {
         const p = Math.max(0, Math.min(1, -heroRect.top / (totalDist || 1)));
         setHeroProgress(p);
         setNavScrolled(scrollY > winH * 0.4);
-
-        // Character camera tracking keyframes:
-        // p = 0.00 - 0.08: Center (scale 1.0, X 0%)
-        // p = 0.12 - 0.32: Slide LEFT  (scale 1.25, X -24%, Story 0 on Right)
-        // p = 0.36 - 0.54: Slide RIGHT (scale 1.25, X +24%, Story 1 on Left)
-        // p = 0.58 - 0.74: Slide LEFT  (scale 1.25, X -24%, Story 2 on Right)
-        // p = 0.78 - 0.94: Slide RIGHT (scale 1.25, X +22%, Story 3 on Left)
-        // p = 0.95 - 1.00: Return to Center
-        let tx = 0;
-        let ts = 1.0;
-        let ry = 0;
-
-        if (p < 0.08) {
-          tx = 0;
-          ts = 1.0;
-          ry = 0;
-        } else if (p >= 0.08 && p < 0.32) {
-          tx = -24; // Character glides to LEFT
-          ts = 1.24;
-          ry = -7;
-        } else if (p >= 0.32 && p < 0.54) {
-          tx = 24;  // Character glides to RIGHT
-          ts = 1.24;
-          ry = 7;
-        } else if (p >= 0.54 && p < 0.74) {
-          tx = -24; // Character glides to LEFT
-          ts = 1.24;
-          ry = -7;
-        } else if (p >= 0.74 && p < 0.94) {
-          tx = 22;  // Character glides to RIGHT
-          ts = 1.24;
-          ry = 6;
-        } else {
-          tx = 0;
-          ts = 1.05;
-          ry = 0;
-        }
-
-        characterAnimRef.current.targetX = tx;
-        characterAnimRef.current.targetScale = ts;
-        characterAnimRef.current.targetRotY = ry;
       }
 
       // Panels scroll tracker for 3D Automation Core
@@ -121,7 +137,6 @@ export default function TimbasPortfolio({ member, next, go, dark, toggle }) {
         const inPanels = panelsRect.top < winH && panelsRect.bottom > 0;
         const coreOpacity = inPanels ? Math.min(1, Math.max(0, (winH - panelsRect.top) / 400)) : 0;
 
-        // Determine which section is currently active
         const aboutEl = document.getElementById("about");
         const servicesEl = document.getElementById("services");
         const workEl = document.getElementById("work");
@@ -146,19 +161,33 @@ export default function TimbasPortfolio({ member, next, go, dark, toggle }) {
       }
     };
 
-    // Smooth inertia render loop (60fps)
+    // Smooth inertia render loop (60fps) for scrubbing video frames
+    let lastDrawnFrame = -1;
+
     const tick = (now) => {
       const dt = Math.min((now - lastTime) / 1000, 0.1);
       lastTime = now;
 
-      const c = characterAnimRef.current;
-      const lerpFactor = 1 - Math.exp(-dt * 6.5); // Buttery smooth spring inertia
-      c.currentX += (c.targetX - c.currentX) * lerpFactor;
-      c.currentScale += (c.targetScale - c.currentScale) * lerpFactor;
-      c.currentRotY += (c.targetRotY - c.currentRotY) * lerpFactor;
+      // Damped smooth progress with spring inertia (just like rjv site)
+      const lerpSpeed = 1 - Math.exp(-dt * 8.0);
+      smoothProgressRef.current += (heroProgress - smoothProgressRef.current) * lerpSpeed;
 
-      if (characterDomRef.current) {
-        characterDomRef.current.style.transform = `translate3d(${c.currentX}vw, 0, 0) scale(${c.currentScale}) rotateY(${c.currentRotY}deg)`;
+      const p = smoothProgressRef.current;
+      const targetFrame = Math.max(0, Math.min(TOTAL_FRAMES - 1, Math.floor(p * TOTAL_FRAMES)));
+
+      if (targetFrame !== lastDrawnFrame) {
+        const frameImg = framesRef.current[targetFrame] || framesRef.current[0];
+        if (frameImg) {
+          const cw = canvas.width;
+          const ch = canvas.height;
+          const r = Math.max(cw / frameImg.width, ch / frameImg.height);
+          const nw = frameImg.width * r;
+          const nh = frameImg.height * r;
+          const cx = (cw - nw) * 0.5;
+          const cy = (ch - nh) * 0.5;
+          ctx.drawImage(frameImg, cx, cy, nw, nh);
+          lastDrawnFrame = targetFrame;
+        }
       }
 
       animFrameId = requestAnimationFrame(tick);
@@ -170,15 +199,16 @@ export default function TimbasPortfolio({ member, next, go, dark, toggle }) {
 
     return () => {
       window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", resize);
       cancelAnimationFrame(animFrameId);
     };
-  }, []);
+  }, [heroProgress]);
 
   // ─────────────────────────────────────────────────────────────
-  // 2. CONTINUOUS 3D AUTOMATION CORE CANVAS RENDERER
+  // 3. CONTINUOUS 3D AUTOMATION CORE CANVAS RENDERER
   // ─────────────────────────────────────────────────────────────
   useEffect(() => {
-    const canvas = canvasRef.current;
+    const canvas = coreCanvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     let animId;
@@ -214,7 +244,6 @@ export default function TimbasPortfolio({ member, next, go, dark, toggle }) {
       const h = canvas.clientHeight;
       ctx.clearRect(0, 0, w, h);
 
-      // Lerp Core position smoothly between Left and Right
       currentCoreX += (coreState.x - currentCoreX) * 0.06;
       currentCoreScale += (coreState.scale - currentCoreScale) * 0.06;
 
@@ -264,7 +293,6 @@ export default function TimbasPortfolio({ member, next, go, dark, toggle }) {
       ctx.lineWidth = 3.5 * s;
       ctx.stroke();
 
-      // Ring nodes
       ringPts.forEach((p, idx) => {
         if (idx % 4 === 0) {
           ctx.beginPath();
@@ -517,28 +545,14 @@ export default function TimbasPortfolio({ member, next, go, dark, toggle }) {
           </div>
 
           {/* ─────────────────────────────────────────────────────────
-              ANIMATED CHARACTER LAYER (carlo.png)
-              Smoothly shifts Center -> Left -> Right -> Left -> Right
-              with 3D perspective, scale, and subtle rotation!
+              DYNAMIC 60FPS HERO VIDEO CANVAS (Scrubbed with scroll)
+              Draws the 180 video frames f_0001.webp - f_0180.webp!
+              Carlo turns, orbits, and moves seamlessly forward/backward!
              ───────────────────────────────────────────────────────── */}
-          <div
-            ref={characterDomRef}
-            className="relative z-10 w-full h-full max-h-[88vh] flex items-end justify-center pointer-events-none will-change-transform"
-            style={{
-              transform: "translate3d(0, 0, 0) scale(1)",
-              transformOrigin: "center 75%",
-            }}
-          >
-            <img
-              src="./photos/timbas/carlo.png"
-              alt="Carlo Timbas - AI Automation Specialist"
-              className="h-[80vh] max-h-[750px] object-contain filter drop-shadow-[0_15px_45px_rgba(0,0,0,0.85)] select-none pointer-events-none"
-              onError={(e) => {
-                // Fallback poster if needed
-                e.target.src = "./photos/timbas/hero-poster.webp";
-              }}
-            />
-          </div>
+          <canvas
+            ref={heroCanvasRef}
+            className="absolute inset-0 w-full h-full object-cover z-10 pointer-events-none"
+          />
 
           {/* INTRO FOOTER (Tagline, CTAs, and Scroll cue - fades out on scroll) */}
           <div
@@ -654,7 +668,7 @@ export default function TimbasPortfolio({ member, next, go, dark, toggle }) {
           }}
         >
           <canvas
-            ref={canvasRef}
+            ref={coreCanvasRef}
             className="w-full h-full block"
             style={{ filter: "drop-shadow(0 0 50px rgba(56,220,255,0.25))" }}
           />
