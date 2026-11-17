@@ -147,16 +147,25 @@ export default function PortfolioPage({ data, member, next, go, dark, toggle }) 
               className={`flex flex-col sm:flex-row gap-6 sm:gap-8 items-start sm:items-center my-8 ${k % 2 ? "sm:flex-row-reverse" : ""}`}
             >
               <div
-                className="w-full sm:flex-[1_1_280px] h-[180px] sm:h-[200px] rounded-[18px] grid place-items-center text-white text-xs"
+                className="relative w-full sm:flex-[1_1_280px] h-[180px] sm:h-[200px] rounded-[18px] overflow-hidden grid place-items-center text-white text-xs"
                 style={{ background: p.gradient, fontFamily: "var(--mono)" }}
               >
-                PREVIEW IMAGE
+                {p.image ? (
+                  <img
+                    src={p.image}
+                    alt={`${p.title} preview`}
+                    className="absolute inset-0 h-full w-full object-cover"
+                    style={{ objectPosition: p.imagePosition || "center" }}
+                  />
+                ) : (
+                  "PREVIEW IMAGE"
+                )}
               </div>
               <div className="w-full sm:flex-[1_1_260px]">
                 <div className="text-[11px] tracking-widest text-[var(--acc)]" style={{ fontFamily: "var(--mono)" }}>
                   0{k + 1} / PROJECT
                 </div>
-                <h2 className="font-medium mt-2 mb-2 tracking-tight" style={{ fontSize: 26, fontFamily: "var(--sans)" }}>{p.title}</h2>
+                <h2 className="font-medium mt-2 mb-2 tracking-tight" style={{ fontSize: 20, fontFamily: "var(--sans)" }}>{p.title}</h2>
                 <p className="text-[var(--mute)] leading-relaxed mb-3 text-[15px]">{p.description}</p>
                 {(p.tags || []).map((t) => (
                   <span
