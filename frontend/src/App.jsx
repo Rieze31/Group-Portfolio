@@ -380,6 +380,15 @@ function Stack2({ tools }) {
 function Portfolio({ m, go, dark, toggle }) {
   const i = M.indexOf(m), nx = M[(i + 1) % M.length], isD = m.id === "dwight";
   const tools = isD ? DW_TOOLS : m.tags.map((t) => ({ n: t, c: "Tools", e: "✦" }));
+  const projects = m.id === "santos" || m.id === "m2" || m.portfolio === "santos"
+    ? m.projects.map((p, k) => k === 0 ? {
+      ...p,
+      title: "A Web-Based Order Management and Service Reservation System with Predictive Analytics for Ermel’s Glass and Aluminum Works.",
+      description: "A web-based system for managing orders and service reservations, with predictive analytics for Ermel’s Glass and Aluminum Works.",
+      image: "/ermels-glass-aluminum.png",
+      tags: ["Figma", "Canva"],
+    } : p)
+    : m.projects;
   const bio = m.bio;
   const slides = m.slides;
   return (
@@ -414,14 +423,16 @@ function Portfolio({ m, go, dark, toggle }) {
           <div className="tag">~/PROJECTS</div>
           <h2>Things I’ve <em>built.</em></h2>
           <p className="p">A collection of projects, each with its own stack.</p>
-          {m.projects.map((p, k) => (
+          {projects.map((p, k) => (
             <div className={"proj" + (k ? " r" : "")} key={p.title}>
-              <div className="pi" style={{ background: p.gradient }}>PREVIEW IMAGE</div>
+              <div className="pi" style={{ background: p.gradient }}>
+                {p.image ? <img src={p.image} alt={`${p.title} preview`} className="h-full w-full rounded-[18px] object-cover" /> : "PREVIEW IMAGE"}
+              </div>
               <div className="pt">
                 <div className="tag">0{k + 1} / {k ? "FULL-STACK" : "PROJECT"}</div>
                 <h2 style={{ fontSize: 28 }}>{p.title}</h2>
                 <p className="p">{p.description}</p>
-                {m.tags.slice(0, 2).map((t) => <span className="chip" key={t}>{t}</span>)}
+                {(p.tags || m.tags.slice(0, 2)).map((t) => <span className="chip" key={t}>{t}</span>)}
               </div>
             </div>
           ))}
