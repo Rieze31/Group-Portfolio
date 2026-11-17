@@ -127,9 +127,9 @@ function ThemeBtn({ dark, toggle }) {
 function Flash({ onDone, type = "light" }) {
   const portfolioTransition = type === "portfolio";
   return (
-    <div className="flash" onClick={onDone} onAnimationEnd={(e) => e.target === e.currentTarget && onDone()}>
+    <div className={`flash${portfolioTransition ? " portfolio-flash" : ""}`} onClick={onDone} onAnimationEnd={(e) => e.target === e.currentTarget && onDone()}>
       <img
-        src={portfolioTransition ? "./portfolio-transition.jpg" : "./sunshine.png"}
+        src={portfolioTransition ? "./portfolio-transition-cutout.png" : "./sunshine.png"}
         alt={portfolioTransition ? "Baby looking at the camera" : "Sunshine meme"}
       />
       <span>{portfolioTransition ? "Wait lang guys" : "Light mode activated. Sorry for your eyes. "}</span>
