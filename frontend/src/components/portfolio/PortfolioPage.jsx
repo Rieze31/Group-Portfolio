@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Cursor from "./Cursor.jsx";
 import Peek from "./Peek.jsx";
 import Carousel from "./Carousel.jsx";
@@ -17,22 +17,42 @@ export default function PortfolioPage({ data, member, next, go, dark, toggle }) 
   const accStyle = { "--acc": data.color, "--on-acc": data.onAcc || "#151515" };
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const navLinks = ["projects", "stack", "about"];
+  const isVenzon = Boolean(data.portrait);
+  const navLinks = isVenzon ? ["home", "projects", "stack", "about"] : ["projects", "stack", "about"];
+
+  useEffect(() => {
+    if (!isVenzon) return;
+    const nodes = document.querySelectorAll(".venzon-reveal");
+    if (!("IntersectionObserver" in window)) {
+      nodes.forEach((node) => node.classList.add("is-visible"));
+      return;
+    }
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("is-visible");
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12 });
+    nodes.forEach((node) => observer.observe(node));
+    return () => observer.disconnect();
+  }, [isVenzon, data.projects]);
 
   return (
-    <div style={accStyle}>
-      <Peek />
+    <div className={isVenzon ? "venzon-page" : undefined} style={accStyle}>
+      <Peek portrait={data.portrait} />
 
       {/* ── Sticky nav ── */}
       <nav className="sticky top-[env(safe-area-inset-top,0px)] z-20 bg-[var(--bg)] border-b border-[var(--line)]">
         <div className="max-w-[960px] mx-auto px-5 flex justify-between items-center h-[58px]">
           {/* Back button */}
           <button
-            onClick={() => go("home")}
+            onClick={() => isVenzon ? scTo("home") : go("home")}
             className="bg-transparent border-0 text-[var(--ink)] font-medium text-sm cursor-pointer px-2 py-1.5 hover:text-[var(--acc)] transition-colors shrink-0"
-            style={{ fontFamily: "var(--sans)" }}
+            style={{ fontFamily: "var(--sans)", color: isVenzon ? "var(--acc)" : undefined }}
           >
-            ← CTPR Club
+            {isVenzon ? "Rieze" : "← CTPR Club"}
           </button>
 
           {/* Desktop nav links */}
@@ -47,12 +67,12 @@ export default function PortfolioPage({ data, member, next, go, dark, toggle }) 
                 {s[0].toUpperCase() + s.slice(1)}
               </button>
             ))}
-            <ThemeBtn dark={dark} toggle={toggle} />
+            <ThemeBtn dark={dark} toggle={toggle} compact />
           </div>
 
           {/* Mobile: theme btn + hamburger */}
           <div className="flex sm:hidden items-center gap-2">
-            <ThemeBtn dark={dark} toggle={toggle} />
+            <ThemeBtn dark={dark} toggle={toggle} compact />
             <button
               onClick={() => setMenuOpen((v) => !v)}
               aria-label="Toggle menu"
@@ -81,14 +101,14 @@ export default function PortfolioPage({ data, member, next, go, dark, toggle }) 
       </nav>
 
       {/* ── Page content ── */}
-      <div className="max-w-[960px] mx-auto px-5 sm:px-6">
+      <div className={`${isVenzon ? "max-w-[1152px]" : "max-w-[960px]"} mx-auto px-5 sm:px-6`}>
 
         {/* ── Hero / intro section ── */}
-        <section className="py-14 sm:py-[72px] flex flex-col sm:flex-row gap-10 sm:gap-14 items-center">
+        <section id={isVenzon ? "home" : undefined} className={`py-14 sm:py-[72px] flex flex-col sm:flex-row gap-10 sm:gap-14 items-center${isVenzon ? " venzon-section" : ""}`}>
           {/* Headshot — interactive mouse-following Cursor widget */}
           {data.headFolder ? (
             <div className="flex-none self-center sm:self-auto">
-              <Cursor folder={data.headFolder} alt={data.name} backText={data.headBackText} />
+              <Cursor folder={data.headFolder} alt={data.name} backText={data.headBackText} interactive={Boolean(data.portrait)} />
             </div>
           ) : (
             <div
@@ -124,14 +144,14 @@ export default function PortfolioPage({ data, member, next, go, dark, toggle }) 
                 className="bg-transparent border border-[var(--ink)] text-[var(--ink)] rounded-full px-5 py-2.5 text-sm font-bold cursor-pointer hover:opacity-70 transition-opacity"
                 style={{ fontFamily: "var(--sans)" }}
               >
-                ← Back to the club
+                Back to the club
               </button>
             </div>
           </div>
         </section>
 
         {/* ── Projects ── */}
-        <section className="py-14 sm:py-[72px]" id="projects">
+        <section className={`py-14 sm:py-[72px]${isVenzon ? " venzon-section" : ""}`} id="projects">
           <div className="text-[11px] tracking-widest text-[var(--acc)]" style={{ fontFamily: "var(--mono)" }}>~/PROJECTS</div>
           <h2
             className="font-medium mt-2 mb-2.5 tracking-tight leading-none"
@@ -144,24 +164,17 @@ export default function PortfolioPage({ data, member, next, go, dark, toggle }) 
           {data.projects.map((p, k) => (
             <div
               key={p.title}
-              className={`flex flex-col sm:flex-row gap-6 sm:gap-8 items-start sm:items-center my-8 ${k % 2 ? "sm:flex-row-reverse" : ""}`}
+              className={`flex flex-col sm:flex-row gap-6 sm:gap-8 items-start sm:items-center my-8 ${k % 2 ? "sm:flex-row-reverse" : ""}${isVenzon ? " venzon-reveal" : ""}`}
             >
               <div
-                className="relative w-full sm:flex-[1_1_280px] h-[180px] sm:h-[200px] rounded-[18px] overflow-hidden grid place-items-center text-white text-xs"
+                className={`relative w-full sm:flex-[1_1_280px] h-[180px] sm:h-[200px] rounded-[18px] overflow-hidden grid place-items-center text-white text-xs${isVenzon ? " venzon-project-image" : ""}`}
                 style={{ background: p.gradient, fontFamily: "var(--mono)" }}
               >
                 {p.image ? (
-                  <img
-                    src={p.image}
-                    alt={`${p.title} preview`}
-                    className="absolute inset-0 h-full w-full object-cover"
-                    style={{ objectPosition: p.imagePosition || "center" }}
-                  />
-                ) : (
-                  "PREVIEW IMAGE"
-                )}
+                  <img src={p.image} alt={`${p.title} project screenshot`} loading="lazy" className="absolute inset-0 block h-full w-full object-cover" style={{ objectPosition: p.imagePosition || "center" }} />
+                ) : <div className="absolute inset-0 grid place-items-center text-white text-xs">PREVIEW IMAGE</div>}
               </div>
-              <div className="w-full sm:flex-[1_1_260px]">
+              <div className={`w-full sm:flex-[1_1_260px]${isVenzon ? " venzon-project-copy" : ""}`}>
                 <div className="text-[11px] tracking-widest text-[var(--acc)]" style={{ fontFamily: "var(--mono)" }}>
                   0{k + 1} / PROJECT
                 </div>
@@ -173,13 +186,23 @@ export default function PortfolioPage({ data, member, next, go, dark, toggle }) 
                     className="inline-block text-xs border border-[var(--line)] text-[var(--mute)] px-3 py-0.5 rounded-full mr-1.5 mb-2"
                   >{t}</span>
                 ))}
+                {isVenzon && p.action && (p.action.url ? (
+                  <a className="venzon-project-action" href={p.action.url} target="_blank" rel="noreferrer">
+                    {p.action.label === "PRIVATE" ? <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg> : <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9"/><path d="M18 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h6"/></svg>}
+                    {p.action.label}
+                  </a>
+                ) : (
+                  <span className="venzon-project-action is-disabled" aria-label={`${p.action.label} link not provided`}>
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9"/><path d="M18 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h6"/></svg>{p.action.label}
+                  </span>
+                ))}
               </div>
             </div>
           ))}
         </section>
 
         {/* ── Stack ── */}
-        <section className="py-14 sm:py-[72px]" id="stack">
+        <section className={`py-14 sm:py-[72px]${isVenzon ? " venzon-section" : ""}`} id="stack">
           <div className="text-[11px] tracking-widest text-[var(--acc)]" style={{ fontFamily: "var(--mono)" }}>~/STACK</div>
           <h2
             className="font-medium mt-2 mb-2.5 tracking-tight leading-none"
@@ -188,11 +211,11 @@ export default function PortfolioPage({ data, member, next, go, dark, toggle }) 
             The tools I <em>reach for.</em>
           </h2>
           <p className="text-[var(--mute)] leading-relaxed mb-0 text-[15px]">The languages and frameworks in my toolkit.</p>
-          <ToolGrid tools={data.tools} />
+          <ToolGrid tools={data.tools} categories={data.portrait ? ["Frontend", "Backend", "Languages", "Databases", "Tools", "Game Dev"] : undefined} brandedIcons={Boolean(data.portrait)} />
         </section>
 
         {/* ── About ── */}
-        <section className="py-14 sm:py-[72px] flex flex-col sm:flex-row gap-10 sm:gap-14 items-start" id="about">
+        <section className={`py-14 sm:py-[72px] flex flex-col sm:flex-row gap-10 sm:gap-14 items-start${isVenzon ? " venzon-section" : ""}`} id="about">
           <div className="flex-1 min-w-0">
             <div className="text-[11px] tracking-widest text-[var(--acc)]" style={{ fontFamily: "var(--mono)" }}>~/ABOUT</div>
             <h2
@@ -201,15 +224,17 @@ export default function PortfolioPage({ data, member, next, go, dark, toggle }) 
             >
               A bit about <em>me.</em>
             </h2>
-            <p className="text-[var(--mute)] leading-relaxed text-[15px]">{data.bio}</p>
+            {(data.about || [data.bio]).map((paragraph) => <p key={paragraph} className="text-[var(--mute)] leading-relaxed text-[15px]">{paragraph}</p>)}
           </div>
           <div className="w-full sm:flex-[1_1_280px]">
-            <Carousel slides={data.slides} />
+            {isVenzon && data.aboutImage ? (
+              <img className="venzon-about-image" src={data.aboutImage} alt="Rieze Andrei Venzon" loading="lazy" />
+            ) : <Carousel slides={data.slides} />}
           </div>
         </section>
 
         {/* ── Footer ── */}
-        <footer className="border-t border-[var(--line)] py-6 flex flex-wrap justify-between gap-2.5">
+        {!isVenzon && <footer className="border-t border-[var(--line)] py-6 flex flex-wrap justify-between gap-2.5">
           <button
             onClick={() => go("home")}
             className="bg-transparent border-0 text-[var(--ink)] font-medium text-sm cursor-pointer px-2.5 py-1.5 hover:text-[var(--acc)] transition-colors"
@@ -226,7 +251,7 @@ export default function PortfolioPage({ data, member, next, go, dark, toggle }) 
               Next: {next.name} →
             </button>
           )}
-        </footer>
+        </footer>}
       </div>
     </div>
   );

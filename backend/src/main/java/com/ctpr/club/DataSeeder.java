@@ -26,28 +26,50 @@ public class DataSeeder implements CommandLineRunner {
     public void run(String... args) {
         if (repo.count() > 0) {
             attachPhionaPortfolioToMemberThree();
+            updateMember("santos", "Althea Lei Santos", "BSIT STUDENT", "Navotas, Philippines");
+            updateMember("timbas", "Carlo Timbas", "BSIT STUDENT", "Navotas, Philippines");
+            updateMember("m3", "Phiona Eunice Garcia", "BSIT STUDENT", "Navotas, Philippines");
+            updateMember("venzon", "Rieze Andrei Venzon", "BSIT STUDENT", "Manila, Philippines");
             repo.findById("m4").ifPresent(member -> {
                 if (!"Piolo Pascual".equals(member.getName())) {
                     member.setName("Piolo Pascual");
                     repo.save(member);
                 }
             });
+            seedGuest(4, "bella", "garcia", "Bella Padilla", "Same name energy, different portfolio.", "#f29bb6");
+            seedGuest(5, "liza", "santos", "Rose", "A little plot twist, with a portfolio inside.", "#e9b93c");
+            seedGuest(6, "donny", "timbas", "Piolo Pascual", "Plot twist: swipe right to meet the developer.", "#7cc99a");
+            seedGuest(7, "dwight", "venzon", "Dwight Ramos", "Plot twist: not who you think. Click to find out.", "#ffa24d");
             return;
         }
 
         repo.saveAll(List.of(
                 // cards 1-4: the real members (portfolio = their own id)
-                member(0, "santos", "santos", "Althea Lei Santos", "BSIT STUDENT", "Manila, PH", OPEN, "#b49cf0", "PORTFOLIO INSIDE", "Figma", "React", "Git"),
-                member(1, "timbas", "timbas", "Carlo Timbas", "FULL-STACK DEVELOPER", "Manila, PH", OPEN, "#3fb0a6", "PORTFOLIO INSIDE", "Java", "Spring Boot", "React"),
+                member(0, "santos", "santos", "Althea Lei Santos", "BSIT STUDENT", "Navotas, Philippines", OPEN, "#b49cf0", "PORTFOLIO INSIDE", "Figma", "React", "Git"),
+                member(1, "timbas", "timbas", "Carlo Timbas", "BSIT STUDENT", "Navotas, Philippines", OPEN, "#3fb0a6", "PORTFOLIO INSIDE", "Java", "Spring Boot", "React"),
                 memberThree(2),
-                member(3, "venzon", "venzon", "Rieze Andrei Venzon", "FULL-STACK DEVELOPER", "Manila, PH", OPEN, "#ff6a4d", "OPEN TO AMBITIOUS PROBLEMS", "React", "Spring Boot", "Java"),
+                member(3, "venzon", "venzon", "Rieze Andrei Venzon", "BSIT STUDENT", "Manila, Philippines", OPEN, "#ff6a4d", "OPEN TO AMBITIOUS PROBLEMS", "React", "Spring Boot", "Java"),
 
                 // cards 5-8: joke cards that open the real portfolios
                 member(4, "bella", "garcia", "Bella Padilla", "MYSTERY GUEST", "Manila, PH", "Same name energy, different portfolio.", "#f29bb6", "PORTFOLIO INSIDE", "Surprise", "Plot twist", "Open me"),
-                member(5, "liza", "santos", "Liza Soberano", "MYSTERY GUEST", "Manila, PH", "Is it who you think? Only one way to find out.", "#e9b93c", "PORTFOLIO INSIDE", "Surprise", "Plot twist", "Open me"),
-                member(6, "donny", "timbas", "Donny Pangilinan", "MYSTERY GUEST", "Manila, PH", "Do not judge a card by its name.", "#7cc99a", "PORTFOLIO INSIDE", "Surprise", "Plot twist", "Open me"),
+                member(5, "liza", "santos", "Rose", "MYSTERY GUEST", "Manila, PH", "A little plot twist, with a portfolio inside.", "#e9b93c", "PORTFOLIO INSIDE", "Surprise", "Plot twist", "Open me"),
+                member(6, "donny", "timbas", "Piolo Pascual", "MYSTERY GUEST", "Manila, PH", "Plot twist: swipe right to meet the developer.", "#7cc99a", "PORTFOLIO INSIDE", "Surprise", "Plot twist", "Open me"),
                 member(7, "dwight", "venzon", "Dwight Ramos", "MYSTERY GUEST", "Manila, PH", "Plot twist: not who you think. Click to find out.", "#ffa24d", "PORTFOLIO INSIDE", "Surprise", "Plot twist", "Open me")
         ));
+    }
+
+    private void seedGuest(int order, String id, String portfolio, String name, String quote, String color) {
+        repo.save(member(order, id, portfolio, name, "MYSTERY GUEST", "Manila, PH", quote,
+                color, "PORTFOLIO INSIDE", "Surprise", "Plot twist", "Open me"));
+    }
+
+    private void updateMember(String id, String name, String role, String location) {
+        repo.findById(id).ifPresent(member -> {
+            member.setName(name);
+            member.setRole(role);
+            member.setLocation(location);
+            repo.save(member);
+        });
     }
 
     private void attachPhionaPortfolioToMemberThree() {
@@ -75,7 +97,7 @@ public class DataSeeder implements CommandLineRunner {
     }
 
     private Member memberThree(int order) {
-        return member(order, "m3", "garcia", "Member Three", "FRONTEND DEVELOPER", "Manila, PH",
+        return member(order, "m3", "garcia", "Phiona Eunice Garcia", "BSIT STUDENT", "Navotas, Philippines",
                 "Pixels are a love language.", "#b49cf0", "COFFEE-POWERED", "React", "Tailwind", "Any");
     }
 

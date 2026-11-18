@@ -4,6 +4,7 @@ import GarciaPortfolio from "./portfolios/GarciaPortfolio.jsx";
 import SantosPortfolio from "./portfolios/SantosPortfolio.jsx";
 import TimbasPortfolio from "./portfolios/TimbasPortfolio.jsx";
 import DateMePrank from "./components/DateMePrank.jsx";
+import Flash from "./components/Flash.jsx";
 
 let M = []; // filled from the Spring Boot API (see main.jsx)
 export function loadMembers(list) { M = list; }
@@ -121,19 +122,6 @@ function ThemeBtn({ dark, toggle }) {
     <button className="tb" onClick={toggle} aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}>
       <span className={dark ? "tb-icon" : "tb-icon moon"}>{dark ? "☀" : "☾"}</span>
     </button>
-  );
-}
-
-function Flash({ onDone, type = "light" }) {
-  const portfolioTransition = type === "portfolio";
-  return (
-    <div className={`flash${portfolioTransition ? " portfolio-flash" : ""}`} onClick={onDone} onAnimationEnd={(e) => e.target === e.currentTarget && onDone()}>
-      <img
-        src={portfolioTransition ? "./portfolio-transition-cutout.png" : "./sunshine.png"}
-        alt={portfolioTransition ? "Baby looking at the camera" : "Sunshine meme"}
-      />
-      <span>{portfolioTransition ? "Wait lang guys" : "Light mode activated. Sorry for your eyes. "}</span>
-    </div>
   );
 }
 
@@ -273,7 +261,7 @@ function Stack({ go, onMatch, order, setOrder }) {
               {t && (
                 <>
                   <div className="photo" style={{ background: `linear-gradient(155deg,${m.color}cc,#001B2B)` }}>
-                    {m.photoUrl ? <img src={m.photoUrl} alt={m.name} /> : <b>{m.init}</b>}
+                    {m.photoUrl ? <img src={m.photoUrl} alt={m.name} draggable={false} /> : <b>{m.init}</b>}
                     <span className="badge">{m.match}% YOUR TYPE</span>
                     <span className="cap">{m.cap}</span>
                     <span className="stamp" style={{ opacity: clamp(Math.abs(dx) / 90), transform: dx < 0 ? "rotate(10deg)" : undefined,
@@ -284,7 +272,7 @@ function Stack({ go, onMatch, order, setOrder }) {
                     <div><div className="name">{m.name}</div><div className="loc">{m.loc}</div></div>
                     <div className="quote">{m.quote}</div>
                     <div className="tags">{m.tags.map((x) => <span key={x}>{x}</span>)}</div>
-                    <button className="view" onClick={look}>View portfolio <span>→</span></button>
+                    <button className="view" onClick={look}>View portfolio</button>
                   </div>
                 </>
               )}
@@ -292,7 +280,7 @@ function Stack({ go, onMatch, order, setOrder }) {
           );
         })}
       </div>
-      <p className="hint">DRAG THE CARD OR USE YOUR ARROW KEYS</p>
+      <p className="hint">DRAG THE CARD TO SWIPE</p>
       <div className="acts">
         <button className="act" onClick={pass}><i style={{ background: "#331A04", color: "#F8E964" }}>✕</i>OH HELL NAHHH</button>
         <button className="act" onClick={look}><i style={{ background: "#EEA233", color: "#331A04" }}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78Z" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg></i>ALAM MO HAAA</button>
@@ -320,13 +308,8 @@ function Landing({ go, onMatch, order, setOrder, dark, toggle }) {
       <HeartField />
       <div className="bar"><span className="mono">CTPR CLUB</span><ThemeBtn dark={dark} toggle={toggle} /></div>
       <div className="home-content">
-        <div className="mono">A VERY SERIOUS CODING COLLECTIVE LOL</div>
         <h1>Find your<br />dev <em>match.</em></h1>
         <p className="sub">Skip the "what are we?" stage and go straight to production. Swipe through the people behind the pixels.</p>
-        <div className="trust">
-          <span className="avs">{M.slice(0, 5).map((m) => <button key={m.id} className="av" title={m.name} style={{ background: m.color, color: m.textColor }} onClick={() => go(m.id)}>{m.photoUrl ? <img src={m.photoUrl} alt="" /> : m.init}</button>)}</span>
-          <span className="mono">TRUSTED BY AT LEAST OUR PARENTS</span>
-        </div>
         <div className={`match-launch${launching ? " is-bursting" : ""}`}>
           {launching && (
             <span className="launch-burst" aria-hidden="true">
@@ -345,7 +328,7 @@ function Landing({ go, onMatch, order, setOrder, dark, toggle }) {
             </span>
           )}
           <button className="find-match" onClick={launch} disabled={launching}>
-            Find Your Match <span>→</span>
+            Find Your Match
           </button>
         </div>
       </div>
@@ -357,7 +340,7 @@ function Deck({ go, onMatch, order, setOrder, dark, toggle }) {
   return (
     <main className="deck-screen">
       <div className="deck-bar">
-        <button className="back-home" onClick={() => go("home")}>← Back to Home</button>
+        <button className="back-home" onClick={() => go("home")}>Back to Home</button>
         <ThemeBtn dark={dark} toggle={toggle} />
       </div>
       <Stack go={go} onMatch={onMatch} order={order} setOrder={setOrder} />
@@ -426,7 +409,7 @@ function Portfolio({ m, go, dark, toggle }) {
         <button className="back" onClick={() => go("home")}>← CTPR Club</button>
         <div className="links">
           {["projects", "stack", "about"].map((s) => <button key={s} onClick={() => scTo(s)}>{s[0].toUpperCase() + s.slice(1)}</button>)}
-          <ThemeBtn dark={dark} toggle={toggle} />
+          <ThemeBtn dark={dark} toggle={toggle} compact />
         </div>
       </div></nav>
       <div className="w">
@@ -525,7 +508,7 @@ function App() {
     return () => window.clearTimeout(timeout);
   }, [match]);
   const acceptMember = (member) => {
-    if (member.id === M[1]?.id) setPrank(member);
+    if (member.portfolio === "santos" || member.id === "santos" || member.id === "liza" || member.id === "m2") setPrank(member);
     else setMatch(member);
   };
   const toggle = () => {

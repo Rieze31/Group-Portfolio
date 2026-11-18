@@ -1,1069 +1,303 @@
 import { useEffect, useRef, useState } from "react";
+import "@google/model-viewer";
 
-/*
-  CARLO TIMBAS — AI Automation Specialist
-  Direct implementation inspired by rjv-automation-portfolio.vercel.app
-  Includes:
-   - 760vh Hero scroll track with continuous 60fps frame-scrubbing canvas (180 frames)
-   - Carlo moving, orbiting, and turning in the minimal volumetric studio as you scroll
-   - Fading title ("CARLO TIMBAS"), tagline, and CTAs behind cutout layer
-   - 4 Scroll-synchronized Stories opposite the character (node, orb, pipe, tiles)
-   - Continuous 3D Automation Core canvas across About (right), Services (left), and Work (right)
-   - Process (4 steps) and Case Studies with customizable placeholder metrics
-   - Fully interactive Book a Call modal
-*/
+const ACCENT = "#3fb0a6";
+const HERO_STILL = "/photos/timbas/carlo-reference.png";
+const HERO_FRAME_COUNT = 480;
+const ASSET = "/photos/timbas/";
+const STORIES = [
+  { title: "Make the repeatable automatic.", text: "Good automation gives people more room to focus on the work that needs them.", image: "workflow-node.webp", side: "left" },
+  { title: "Let useful agents do the busywork.", text: "AI can move routine tasks forward while people stay in control of the decisions.", image: "automation-orb.png", side: "left" },
+  { title: "Connect the steps between tools.", text: "A thoughtful workflow keeps information moving without the manual handoffs.", image: "connected-pipeline.png", side: "left" },
+  { title: "Build systems that work together.", text: "Small, clear connections can make a whole process feel simpler.", image: "tiles.webp", side: "left" },
+];
+const CASES = [
+  { n: "01", title: "Lead follow-up flow", client: "LEAD MANAGEMENT", problem: "A new inquiry needs a quick, consistent handoff.", solution: "Capture a form entry, organize the lead, and prepare a follow-up draft for review.", result: "Review-first follow-up concept" },
+  { n: "02", title: "Support question triage", client: "CUSTOMER SUPPORT", problem: "Incoming questions need a useful first pass without losing human judgement.", solution: "Group requests, suggest a response, and route uncertain cases to a person.", result: "Human-in-the-loop assistant concept" },
+  { n: "03", title: "Cross-tool status sync", client: "TEAM OPERATIONS", problem: "Project updates can get scattered across the tools a team uses.", solution: "Connect status changes and surface the latest update in one clear place.", result: "Connected workflow concept" },
+];
+const STACK = [
+  ["Frontend", "React · JavaScript"],
+  ["Backend", "Java · Spring Boot"],
+  ["Workflow design", "APIs · Integrations · Process mapping"],
+  ["Tools", "Git · GitHub · Vite"],
+];
+const SERVICES = ["Workflow automation", "AI agents and chatbots", "CRM and app integrations", "Process audits and RPA"];
 
-const TOTAL_FRAMES = 180;
+const CAMERA_ZOOM = [[0,1.02],[2,1.04],[4.2,1.18],[6.8,1.26],[8,1.14],[10.4,1.24],[11.6,1.16],[13.6,1.28],[17.2,1.16],[19,1.22],[20.04,1.02]];
+const CAMERA_X = [[0,.42],[4,.47],[7,.55],[11,.46],[14,.57],[15,.47],[20.04,.42]];
+const CAMERA_Y = [[0,.46],[2,.46],[4.2,.34],[6.8,.34],[8,.62],[10.4,.62],[11.6,.36],[13.6,.36],[17.2,.62],[19,.62],[20.04,.46]];
+function sampleTrack(track, time) {
+  if (time <= track[0][0]) return track[0][1];
+  for (let i = 1; i < track.length; i += 1) {
+    const [end, value] = track[i];
+    if (time <= end) {
+      const [start, from] = track[i - 1];
+      const t = (time - start) / (end - start);
+      return from + (value - from) * t;
+    }
+  }
+  return track[track.length - 1][1];
+}
+function applyHeroCamera(media, progress, reducedMotion) {
+  if (!media) return;
+  const time = Math.max(0, Math.min(1, progress)) * 20.04;
+  const zoom = sampleTrack(CAMERA_ZOOM, time);
+  const focusX = 50;
+  const focusY = sampleTrack(CAMERA_Y, time) * 100;
+  const panX = (sampleTrack(CAMERA_X, time) - .5) * (reducedMotion ? 42 : 90);
+  media.style.setProperty("--tb-camera-zoom", zoom.toFixed(3));
+  media.style.setProperty("--tb-camera-pan-x", panX.toFixed(2) + "vw");
+  media.style.setProperty("--tb-camera-focus-x", focusX.toFixed(2) + "%");
+  media.style.setProperty("--tb-camera-focus-y", focusY.toFixed(2) + "%");
+}
+function paintFrame(ctx, image, width, height) {
+  if (!ctx || !image || !width || !height) return;
+  const scale = Math.max(width / image.naturalWidth, height / image.naturalHeight);
+  const drawWidth = image.naturalWidth * scale;
+  const drawHeight = image.naturalHeight * scale;
+  ctx.clearRect(0, 0, width, height);
+  ctx.drawImage(image, (width - drawWidth) / 2, (height - drawHeight) / 2, drawWidth, drawHeight);
+}
 
-export default function TimbasPortfolio({ member, next, go, dark, toggle }) {
-  const [bookingOpen, setBookingOpen] = useState(false);
-  const [copiedEmail, setCopiedEmail] = useState(false);
-  const [navScrolled, setNavScrolled] = useState(false);
+const CSS = `
+.timbas-page{--tb-accent:${ACCENT};--tb-bg:#101614;--tb-panel:#151e1b;--tb-ink:#f5f5ef;--tb-muted:#aab4ad;--tb-line:rgba(212,236,224,.14);min-height:100vh;background:var(--tb-bg);color:var(--tb-ink);font-family:var(--sans,Georgia,serif);overflow:clip}
+.timbas-page *{box-sizing:border-box}.tb-sans{font-family:var(--sans,Georgia,serif)}.tb-mono{font-family:var(--mono,Arial,sans-serif)}
+.tb-nav{position:fixed;inset:0 0 auto;z-index:50;padding:10px clamp(18px,5vw,72px);background:linear-gradient(180deg,rgba(9,14,12,.72),rgba(9,14,12,.16));backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,.08)}
+.tb-nav-inner{max-width:1440px;margin:auto;min-height:56px;display:flex;align-items:center;justify-content:space-between;gap:20px}.tb-logo{font-size:20px;color:#fff;text-decoration:none;font-weight:600;letter-spacing:-.02em}.tb-logo span{color:var(--tb-accent)}.tb-links{display:flex;align-items:center;gap:clamp(12px,2.2vw,32px)}.tb-links a,.tb-menu a{font:500 13px var(--mono,Arial,sans-serif);letter-spacing:.03em;color:rgba(255,255,255,.8);text-decoration:none;transition:color .2s}.tb-links a:hover,.tb-menu a:hover{color:#9be3d3}.tb-menu-btn{display:none;color:white;border:1px solid var(--tb-line);background:rgba(10,15,13,.5);border-radius:999px;padding:9px 13px}.tb-menu{display:none}
+.tb-home-track{height:760vh;position:relative;background:#0d1210}.tb-home-sticky{height:100vh;height:100svh;position:sticky;top:0;overflow:hidden;isolation:isolate;background:#0d1210}.tb-hero-media{--tb-hero-base-y:clamp(96px,10vh,124px);position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:78% center;transform:translate3d(var(--tb-camera-pan-x,0vw),var(--tb-hero-base-y),0) scale(var(--tb-camera-zoom,1.02));transform-origin:var(--tb-camera-focus-x,78%) var(--tb-camera-focus-y,50%);filter:saturate(.8);will-change:transform;transition:none}.tb-hero-tint{position:absolute;inset:0;background:linear-gradient(90deg,rgba(5,10,8,.70) 0%,rgba(5,10,8,.40) 45%,rgba(5,10,8,.14) 100%),linear-gradient(0deg,rgba(5,10,8,.7),transparent 48%,rgba(5,10,8,.18));z-index:1}.tb-hero-grain{position:absolute;inset:0;z-index:2;pointer-events:none;opacity:.12;background-image:radial-gradient(rgba(255,255,255,.3) .5px,transparent .8px);background-size:5px 5px;mix-blend-mode:overlay}
+.tb-hero-intro{position:absolute;z-index:3;top:17vh;left:clamp(24px,8vw,120px);max-width:min(680px,70vw);transition:opacity .4s,filter .4s,transform .5s;transform:translateY(var(--tb-intro-y,0px))}.tb-eyebrow{font:600 10px var(--mono,Arial,sans-serif);letter-spacing:.22em;text-transform:uppercase;color:#9be3d3}.tb-hero-title{margin:.18em 0 0;font:500 clamp(56px,12vw,172px)/.82 var(--sans,Georgia,serif);letter-spacing:-.065em;color:#f7f8f3}.tb-hero-title em{font-weight:400;color:#9be3d3}.tb-hero-copy{max-width:460px;margin:25px 0 0;color:rgba(244,247,242,.78);font:16px/1.65 var(--sans,Georgia,serif)}.tb-hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:26px}.tb-button{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 19px;border:1px solid rgba(240,255,250,.48);border-radius:999px;color:white;text-decoration:none;background:rgba(12,18,15,.32);font:500 12px var(--mono,Arial,sans-serif);letter-spacing:.04em;transition:transform .2s,background .2s,border-color .2s}.tb-button:hover{transform:translateY(-2px);background:rgba(63,176,166,.22);border-color:#9be3d3}.tb-button.primary{background:var(--tb-accent);border-color:var(--tb-accent);color:#07110f}.tb-scroll-hint{position:absolute;z-index:3;bottom:26px;left:clamp(24px,8vw,120px);display:flex;align-items:center;gap:12px;color:rgba(255,255,255,.68);font:10px var(--mono,Arial,sans-serif);letter-spacing:.14em;text-transform:uppercase}.tb-scroll-line{width:54px;height:1px;background:#9be3d3;transform-origin:left;animation:tb-pulse 1.8s ease-in-out infinite}@keyframes tb-pulse{50%{transform:scaleX(.42);opacity:.5}}
+.tb-story{position:absolute;z-index:4;left:clamp(24px,8vw,120px);bottom:15vh;width:min(400px,42vw);display:grid;grid-template-columns:94px 1fr;gap:22px;align-items:center;opacity:0;transform:translateY(14px);transition:opacity .65s,transform .65s;pointer-events:none}.tb-story.active{opacity:1;transform:translateY(0)}.tb-story-img{width:94px;height:94px;object-fit:contain;filter:drop-shadow(0 16px 36px rgba(0,0,0,.5)) hue-rotate(-16deg) saturate(.78)}.tb-story h2{font:500 clamp(23px,3vw,34px)/1.03 var(--sans,Georgia,serif);margin:0 0 8px}.tb-story p{font:14px/1.5 var(--sans,Georgia,serif);color:rgba(244,247,242,.72);margin:0}.tb-story-count{font:10px var(--mono,Arial,sans-serif);color:#9be3d3;letter-spacing:.15em;margin-bottom:8px}
+.tb-section{position:relative;z-index:2;padding:clamp(82px,11vw,148px) clamp(22px,7vw,104px);scroll-margin-top:74px;background:transparent}.tb-section-inner{position:relative;z-index:2;max-width:1280px;margin:0 auto}.tb-section-kicker{font:600 10px var(--mono,Arial,sans-serif);text-transform:uppercase;letter-spacing:.22em;color:#9be3d3}.tb-section-title{font:500 clamp(38px,7vw,84px)/.92 var(--sans,Georgia,serif);letter-spacing:-.045em;margin:14px 0 18px}.tb-section-lede{font:17px/1.6 var(--sans,Georgia,serif);color:var(--tb-muted);max-width:640px;margin:0 0 42px}.tb-projects{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.tb-project{padding:24px 22px 26px;background:linear-gradient(145deg,rgba(255,255,255,.045),rgba(255,255,255,.015));border:1px solid var(--tb-line);border-radius:16px;min-height:310px;display:flex;flex-direction:column}.tb-project-top{display:flex;justify-content:space-between;align-items:center;color:#9be3d3;font:10px var(--mono,Arial,sans-serif);letter-spacing:.12em;text-transform:uppercase}.tb-project-art{height:102px;margin:10px 0 13px;display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--tb-line)}.tb-project-art img{width:88px;height:88px;object-fit:contain;filter:hue-rotate(-18deg) saturate(.75);opacity:.9}.tb-project h3{font:500 27px/1.04 var(--sans,Georgia,serif);margin:0 0 16px}.tb-project dl{margin:0;display:grid;gap:11px}.tb-project dt{font:600 9px var(--mono,Arial,sans-serif);letter-spacing:.15em;text-transform:uppercase;color:#9be3d3;margin-bottom:3px}.tb-project dd{font:13px/1.45 var(--sans,Georgia,serif);color:var(--tb-muted);margin:0}.tb-project .metric{font-size:17px;color:#eff9f2}
+.tb-stack-layout{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(28px,7vw,110px);align-items:start}.tb-stack-grid{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--tb-line)}.tb-stack-item{padding:19px 14px 19px 0;border-bottom:1px solid var(--tb-line)}.tb-stack-item small{display:block;color:#9be3d3;font:10px var(--mono,Arial,sans-serif);letter-spacing:.12em;text-transform:uppercase;margin-bottom:7px}.tb-stack-item strong{font:500 20px var(--sans,Georgia,serif)}.tb-services{border-top:1px solid var(--tb-line)}.tb-service{display:flex;justify-content:space-between;gap:14px;align-items:center;padding:15px 0;border-bottom:1px solid var(--tb-line);font:18px var(--sans,Georgia,serif)}.tb-service span{font:10px var(--mono,Arial,sans-serif);color:#9be3d3}
+.tb-about-grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(28px,7vw,110px);align-items:center}.tb-about-copy{max-width:560px}.tb-about-copy p{color:var(--tb-muted);font:17px/1.72 var(--sans,Georgia,serif)}.tb-about-note{margin-top:28px;padding-top:18px;border-top:1px solid var(--tb-line);color:#c1d0c7;font:12px/1.6 var(--mono,Arial,sans-serif)}.tb-about-art{min-height:380px;display:grid;place-items:center;perspective:900px}.tb-core{position:relative;width:min(390px,82vw);aspect-ratio:1;transform-style:preserve-3d;transition:transform .9s cubic-bezier(.2,.7,.2,1);filter:drop-shadow(0 24px 55px rgba(0,0,0,.4))}.tb-core img{position:absolute;inset:8%;width:84%;height:84%;object-fit:contain;mix-blend-mode:screen;filter:hue-rotate(-18deg) saturate(.78);animation:tb-core-float 8s ease-in-out infinite}.tb-core:before,.tb-core:after{content:"";position:absolute;inset:13%;border:1px solid rgba(131,227,204,.45);border-radius:34%;transform:rotateX(65deg) rotateZ(18deg);box-shadow:0 0 38px rgba(63,176,166,.12);animation:tb-orbit 16s linear infinite}.tb-core:after{inset:18%;border-color:rgba(235,246,239,.28);transform:rotateY(66deg) rotateZ(-22deg);animation-duration:21s;animation-direction:reverse}@keyframes tb-orbit{to{rotate:0 0 1 360deg}}@keyframes tb-core-float{50%{transform:translateY(-8px) rotateY(8deg)}}
+.tb-core-float{position:fixed;z-index:1;pointer-events:none;top:50%;width:min(32vw,390px);aspect-ratio:1;perspective:900px;transition:left .9s cubic-bezier(.2,.7,.2,1),opacity .5s;transform:translateY(-50%);filter:drop-shadow(0 24px 55px rgba(0,0,0,.4))}.tb-core-float .tb-core{width:100%;height:100%;transform-style:preserve-3d;transition:transform .9s cubic-bezier(.2,.7,.2,1)}.tb-core-float .tb-core img{position:absolute;inset:8%;width:84%;height:84%;object-fit:contain;mix-blend-mode:screen;filter:hue-rotate(-18deg) saturate(.78);animation:tb-core-float 8s ease-in-out infinite}.tb-core-float .tb-core:before,.tb-core-float .tb-core:after{content:"";position:absolute;inset:13%;border:1px solid rgba(131,227,204,.45);border-radius:34%;transform:rotateX(65deg) rotateZ(18deg);box-shadow:0 0 38px rgba(63,176,166,.12);animation:tb-orbit 16s linear infinite}.tb-core-float .tb-core:after{inset:18%;border-color:rgba(235,246,239,.28);transform:rotateY(66deg) rotateZ(-22deg);animation-duration:21s;animation-direction:reverse}
+.tb-final-cta{margin-top:clamp(46px,8vw,100px);padding:clamp(26px,5vw,54px);border:1px solid rgba(155,227,211,.38);border-radius:20px;background:radial-gradient(ellipse at 90% 0%,rgba(63,176,166,.14),transparent 55%),#121a17;display:flex;align-items:center;justify-content:space-between;gap:24px}.tb-final-cta h3{font:500 clamp(30px,5vw,55px)/.98 var(--sans,Georgia,serif);margin:0}.tb-final-cta p{font:14px/1.5 var(--sans,Georgia,serif);color:var(--tb-muted);margin:11px 0 0}.tb-footer{position:relative;z-index:2;padding:24px clamp(22px,7vw,104px);border-top:1px solid var(--tb-line);display:flex;justify-content:space-between;gap:16px;align-items:center;color:var(--tb-muted);font:10px var(--mono,Arial,sans-serif);letter-spacing:.08em}.tb-footer button{background:none;border:0;color:var(--tb-muted);cursor:pointer;font:inherit}.tb-mobile-note{display:none}
+@media(max-width:850px){.tb-core-float{width:min(38vw,270px);opacity:.28!important}.tb-projects{grid-template-columns:1fr}.tb-project{min-height:auto}.tb-project-art{height:82px}.tb-stack-layout,.tb-about-grid{grid-template-columns:1fr}.tb-about-art{min-height:270px}.tb-story{width:min(420px,75vw);bottom:10vh}.tb-section{padding-top:78px;padding-bottom:78px}}
+@media(max-width:640px){.tb-core-float{width:170px;top:34%;left:auto!important;right:-38px!important;opacity:.22!important}.tb-links{display:none}.tb-menu-btn{display:block}.tb-menu.open{display:flex;position:absolute;top:calc(100% + 1px);left:0;right:0;padding:16px 22px 20px;background:rgba(13,18,16,.96);border-bottom:1px solid var(--tb-line);flex-direction:column;align-items:flex-start;gap:18px}.tb-hero-intro{top:18vh;left:22px;max-width:calc(100vw - 44px)}.tb-hero-title{font-size:clamp(58px,19vw,104px)}.tb-hero-copy{max-width:310px;font-size:15px}.tb-hero-media{--tb-hero-base-y:clamp(82px,10vh,100px);object-position:center center}.tb-hero-tint{background:linear-gradient(90deg,rgba(5,10,8,.72),rgba(5,10,8,.24)),linear-gradient(0deg,rgba(5,10,8,.78),transparent 70%)}.tb-story{left:22px;bottom:10vh;width:calc(100vw - 44px);grid-template-columns:68px 1fr;gap:15px}.tb-story-img{width:68px;height:68px}.tb-story h2{font-size:24px}.tb-story p{font-size:13px}.tb-scroll-hint{left:22px;bottom:22px}.tb-section{padding-left:22px;padding-right:22px}.tb-section-title{font-size:clamp(42px,13vw,62px)}.tb-stack-grid{grid-template-columns:1fr 1fr}.tb-stack-item strong{font-size:17px}.tb-final-cta{align-items:flex-start;flex-direction:column}.tb-footer{padding:20px 22px;flex-wrap:wrap}.tb-about-art{min-height:240px}.tb-mobile-note{display:block;color:var(--tb-muted);font:10px/1.5 var(--mono,Arial,sans-serif);letter-spacing:.1em;text-transform:uppercase}}
+@media(prefers-reduced-motion:reduce){.tb-scroll-line,.tb-core img,.tb-core:before,.tb-core:after{animation:none}.tb-button{transition:none}.tb-hero-intro{transition:none}.tb-story{transition:opacity .2s}}
+.tb-core-float .tb-core>model-viewer{position:absolute;inset:0;width:100%;height:100%;background:transparent;--poster-color:transparent}
+`;
+
+export default function TimbasPortfolio({ member, next, go }) {
+  const pageRef = useRef(null);
+  const homeRef = useRef(null);
+  const stillRef = useRef(null);
+  const canvasRef = useRef(null);
+  const frameImages = useRef([]);
+  const renderedFrame = useRef(-1);
+  const [progress, setProgress] = useState(0);
+  const [motionReduced, setMotionReduced] = useState(false);
+  const [storyIndex, setStoryIndex] = useState(-1);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [coreView, setCoreView] = useState({ side: "right", rotate: -7, visible: false });
+  const reducedMotion = useRef(false);
+  const progressTarget = useRef(0);
+  const progressSmooth = useRef(0);
 
-  // Hero scroll state (drives frame scrubber & story passages)
-  const heroRef = useRef(null);
-  const [heroProgress, setHeroProgress] = useState(0);
-
-  // Hero Canvas ref & frames cache
-  const heroCanvasRef = useRef(null);
-  const framesRef = useRef(new Array(TOTAL_FRAMES));
-  const smoothProgressRef = useRef(0);
-
-  // Panels scroll state (drives 3D Core positioning)
-  const panelsRef = useRef(null);
-  const [coreState, setCoreState] = useState({ x: 0.28, y: 0, scale: 1.15, opacity: 0 });
-
-  // 3D Canvas ref for Automation Core
-  const coreCanvasRef = useRef(null);
-
-  // Scroll smoothly to section
-  const scrollTo = (id) => {
-    setMenuOpen(false);
-    if (id === "top") {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      return;
-    }
-    const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: "smooth" });
-  };
-
-  // ─────────────────────────────────────────────────────────────
-  // 1. PRELOAD HERO VIDEO FRAMES (f_0001.webp - f_0180.webp)
-  // ─────────────────────────────────────────────────────────────
   useEffect(() => {
-    const frames = framesRef.current;
-
-    const loadFrame = (index) => {
-      const img = new Image();
-      img.src = `./photos/timbas/frames/f_${String(index + 1).padStart(4, "0")}.webp`;
-      img.onload = () => {
-        frames[index] = img;
-        // If it's frame 0, draw it immediately on load
-        if (index === 0 && heroCanvasRef.current) {
-          const canvas = heroCanvasRef.current;
-          const ctx = canvas.getContext("2d");
-          if (ctx) {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawCover(ctx, img);
-          }
-        }
-      };
-    };
-
-    // Helper: draw image centered with cover aspect ratio
-    const drawCover = (ctx, img) => {
-      const cw = ctx.canvas.width;
-      const ch = ctx.canvas.height;
-      const r = Math.max(cw / img.width, ch / img.height);
-      const nw = img.width * r;
-      const nh = img.height * r;
-      const cx = (cw - nw) * 0.5;
-      const cy = (ch - nh) * 0.5;
-      ctx.drawImage(img, cx, cy, nw, nh);
-    };
-
-    // Load first 20 frames immediately for instant rendering
-    for (let i = 0; i < Math.min(25, TOTAL_FRAMES); i++) {
-      loadFrame(i);
-    }
-
-    // Load remaining frames asynchronously
-    const timer = setTimeout(() => {
-      for (let i = 25; i < TOTAL_FRAMES; i++) {
-        loadFrame(i);
+    reducedMotion.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    setMotionReduced(reducedMotion.current);
+    let raf = 0;
+    const requested = new Uint8Array(HERO_FRAME_COUNT);
+    const queue = [];
+    const cache = new Array(HERO_FRAME_COUNT);
+    frameImages.current = cache;
+    renderedFrame.current = -1;
+    for (let i = 0; i < Math.min(24, HERO_FRAME_COUNT); i += 1) queue.push(i);
+    for (const stride of [32, 16, 8, 4, 2, 1]) {
+      for (let i = 0; i < HERO_FRAME_COUNT; i += stride) {
+        if (!queue.includes(i)) queue.push(i);
       }
-    }, 120);
-
-    return () => clearTimeout(timer);
+    }
+    let activeLoads = 0;
+    let disposed = false;
+    const loadFrames = () => {
+      while (!disposed && activeLoads < 8 && queue.length) {
+        const index = queue.shift();
+        if (requested[index]) continue;
+        requested[index] = 1;
+        activeLoads += 1;
+        const image = new Image();
+        image.decoding = "async";
+        image.onload = () => { cache[index] = image; activeLoads -= 1; loadFrames(); };
+        image.onerror = () => { activeLoads -= 1; loadFrames(); };
+        image.src = `${ASSET}hero-frames/frame-${String(index).padStart(4, "0")}.webp`;
+      }
+    };
+    const resizeCanvas = () => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.max(1, Math.round(rect.width * dpr));
+      canvas.height = Math.max(1, Math.round(rect.height * dpr));
+      renderedFrame.current = -1;
+    };
+    resizeCanvas();
+    loadFrames();
+    const readScroll = () => {
+      const track = homeRef.current;
+      const vh = window.innerHeight || 1;
+      if (track) {
+        const rect = track.getBoundingClientRect();
+        const range = Math.max(1, rect.height - vh);
+        const p = Math.max(0, Math.min(1, -rect.top / range));
+        progressTarget.current = p;
+        setProgress(p);
+        setStoryIndex(p < .1 ? -1 : Math.min(STORIES.length - 1, Math.floor((p - .1) / .9 * STORIES.length)));
+      }
+      const sections = ["projects", "stack", "about"].map((id) => document.getElementById(id));
+      const active = sections.find((section) => {
+        if (!section) return false;
+        const r = section.getBoundingClientRect();
+        return r.top < vh * .72 && r.bottom > vh * .28;
+      });
+      if (active) {
+        const idx = ["projects", "stack", "about"].indexOf(active.id);
+        setCoreView({ side: idx === 1 ? "left" : "right", rotate: [-7, 8, -4][idx], visible: true });
+        if (active.id === "about" && active.getBoundingClientRect().bottom < vh * .68) setCoreView((v) => ({ ...v, visible: false }));
+      } else setCoreView((v) => v.visible ? { ...v, visible: false } : v);
+    };
+    const tick = () => {
+      const target = progressTarget.current;
+      progressSmooth.current += (target - progressSmooth.current) * (reducedMotion.current ? 1 : .12);
+      const still = stillRef.current;
+      const canvas = canvasRef.current;
+      applyHeroCamera(still, progressSmooth.current, reducedMotion.current);
+      applyHeroCamera(canvas, progressSmooth.current, reducedMotion.current);
+      const targetFrame = Math.round(progressSmooth.current * (HERO_FRAME_COUNT - 1));
+      let frame = targetFrame;
+      while (frame >= 0 && !cache[frame]) frame -= 1;
+      if (frame < 0) {
+        frame = targetFrame + 1;
+        while (frame < HERO_FRAME_COUNT && !cache[frame]) frame += 1;
+      }
+      if (canvas && frame >= 0 && frame < HERO_FRAME_COUNT && renderedFrame.current !== frame) {
+        paintFrame(canvas.getContext("2d"), cache[frame], canvas.width, canvas.height);
+        canvas.style.opacity = "1";
+        renderedFrame.current = frame;
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    readScroll();
+    window.addEventListener("scroll", readScroll, { passive: true });
+    window.addEventListener("resize", readScroll);
+    window.addEventListener("resize", resizeCanvas);
+    raf = requestAnimationFrame(tick);
+    return () => { disposed = true; cancelAnimationFrame(raf); window.removeEventListener("scroll", readScroll); window.removeEventListener("resize", readScroll); window.removeEventListener("resize", resizeCanvas); };
   }, []);
 
-  // ─────────────────────────────────────────────────────────────
-  // 2. HERO SCROLL TRACKER & 60FPS FRAME SCRUBBING RENDER LOOP
-  // ─────────────────────────────────────────────────────────────
-  useEffect(() => {
-    let animFrameId;
-    let lastTime = performance.now();
-
-    const canvas = heroCanvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d", { alpha: false });
-
-    const resize = () => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      canvas.width = canvas.clientWidth * dpr;
-      canvas.height = canvas.clientHeight * dpr;
-    };
-    resize();
-    window.addEventListener("resize", resize);
-
-    const handleScroll = () => {
-      const scrollY = window.scrollY;
-      const winH = window.innerHeight;
-
-      // Hero scroll calculation
-      if (heroRef.current) {
-        const heroRect = heroRef.current.getBoundingClientRect();
-        const heroH = heroRect.height;
-        const totalDist = heroH - winH;
-        const p = Math.max(0, Math.min(1, -heroRect.top / (totalDist || 1)));
-        setHeroProgress(p);
-        setNavScrolled(scrollY > winH * 0.4);
-      }
-
-      // Panels scroll tracker for 3D Automation Core
-      if (panelsRef.current) {
-        const panelsRect = panelsRef.current.getBoundingClientRect();
-        const inPanels = panelsRect.top < winH && panelsRect.bottom > 0;
-        const coreOpacity = inPanels ? Math.min(1, Math.max(0, (winH - panelsRect.top) / 400)) : 0;
-
-        const aboutEl = document.getElementById("about");
-        const servicesEl = document.getElementById("services");
-        const workEl = document.getElementById("work");
-
-        let targetX = 0.28; // Default right
-        let targetScale = 1.15;
-
-        if (servicesEl && servicesEl.getBoundingClientRect().top <= winH * 0.5 && (!workEl || workEl.getBoundingClientRect().top > winH * 0.5)) {
-          targetX = -0.28; // Left for services
-          targetScale = 1.25;
-        } else if (workEl && workEl.getBoundingClientRect().top <= winH * 0.5) {
-          targetX = 0.26;  // Right for case studies
-          targetScale = 1.12;
-        }
-
-        setCoreState((prev) => ({
-          ...prev,
-          x: targetX,
-          scale: targetScale,
-          opacity: coreOpacity,
-        }));
-      }
-    };
-
-    // Smooth inertia render loop (60fps) for scrubbing video frames
-    let lastDrawnFrame = -1;
-
-    const tick = (now) => {
-      const dt = Math.min((now - lastTime) / 1000, 0.1);
-      lastTime = now;
-
-      // Damped smooth progress with spring inertia (just like rjv site)
-      const lerpSpeed = 1 - Math.exp(-dt * 8.0);
-      smoothProgressRef.current += (heroProgress - smoothProgressRef.current) * lerpSpeed;
-
-      const p = smoothProgressRef.current;
-      const targetFrame = Math.max(0, Math.min(TOTAL_FRAMES - 1, Math.floor(p * TOTAL_FRAMES)));
-
-      if (targetFrame !== lastDrawnFrame) {
-        const frameImg = framesRef.current[targetFrame] || framesRef.current[0];
-        if (frameImg) {
-          const cw = canvas.width;
-          const ch = canvas.height;
-          const r = Math.max(cw / frameImg.width, ch / frameImg.height);
-          const nw = frameImg.width * r;
-          const nh = frameImg.height * r;
-          const cx = (cw - nw) * 0.5;
-          const cy = (ch - nh) * 0.5;
-          ctx.drawImage(frameImg, cx, cy, nw, nh);
-          lastDrawnFrame = targetFrame;
-        }
-      }
-
-      animFrameId = requestAnimationFrame(tick);
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    handleScroll();
-    animFrameId = requestAnimationFrame(tick);
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-      window.removeEventListener("resize", resize);
-      cancelAnimationFrame(animFrameId);
-    };
-  }, [heroProgress]);
-
-  // ─────────────────────────────────────────────────────────────
-  // 3. CONTINUOUS 3D AUTOMATION CORE CANVAS RENDERER
-  // ─────────────────────────────────────────────────────────────
-  useEffect(() => {
-    const canvas = coreCanvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    let animId;
-    let t = 0;
-
-    const resize = () => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      canvas.width = canvas.clientWidth * dpr;
-      canvas.height = canvas.clientHeight * dpr;
-      ctx.scale(dpr, dpr);
-    };
-
-    resize();
-    window.addEventListener("resize", resize);
-
-    // 3D Matrix Math
-    const project = (x, y, z, cx, cy, fov, scale) => {
-      const distance = 460;
-      const factor = (fov / (distance + z)) * scale;
-      return { x: cx + x * factor, y: cy + y * factor, scale: factor, z };
-    };
-
-    const rotateX = (x, y, z, a) => [x, y * Math.cos(a) - z * Math.sin(a), y * Math.sin(a) + z * Math.cos(a)];
-    const rotateY = (x, y, z, a) => [x * Math.cos(a) + z * Math.sin(a), y, -x * Math.sin(a) + z * Math.cos(a)];
-    const rotateZ = (x, y, z, a) => [x * Math.cos(a) - y * Math.sin(a), x * Math.sin(a) + y * Math.cos(a), z];
-
-    let currentCoreX = 0.28;
-    let currentCoreScale = 1.15;
-
-    const render = () => {
-      t += 0.016;
-      const w = canvas.clientWidth;
-      const h = canvas.clientHeight;
-      ctx.clearRect(0, 0, w, h);
-
-      currentCoreX += (coreState.x - currentCoreX) * 0.06;
-      currentCoreScale += (coreState.scale - currentCoreScale) * 0.06;
-
-      const isMobile = w < 768;
-      const activeX = isMobile ? w * 0.5 : w * 0.5 + currentCoreX * w;
-      const activeY = isMobile ? h * 0.35 : h * 0.5;
-      const fov = 380;
-      const s = isMobile ? currentCoreScale * 0.75 : currentCoreScale;
-
-      const rotX = 0.35 + Math.sin(t * 0.35) * 0.08;
-      const rotY = t * 0.6;
-      const rotZ = Math.sin(t * 0.25) * 0.05;
-      const pulse = 0.8 + Math.sin(t * 2.8) * 0.2;
-
-      // Volumetric Core Glow
-      const bgGrad = ctx.createRadialGradient(activeX, activeY, 15, activeX, activeY, 260 * s);
-      bgGrad.addColorStop(0, "rgba(56, 220, 255, 0.22)");
-      bgGrad.addColorStop(0.4, "rgba(15, 107, 92, 0.12)");
-      bgGrad.addColorStop(1, "rgba(10, 12, 15, 0)");
-      ctx.fillStyle = bgGrad;
-      ctx.beginPath();
-      ctx.arc(activeX, activeY, 260 * s, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Outer Brushed Metal Ring
-      ctx.save();
-      ctx.beginPath();
-      const ringPts = [];
-      const segs = 36;
-      for (let i = 0; i < segs; i++) {
-        const rad = (i / segs) * Math.PI * 2;
-        let [rx, ry, rz] = rotateZ(Math.cos(rad) * 160, Math.sin(rad) * 160, 0, rotZ);
-        [rx, ry, rz] = rotateX(rx, ry, rz, rotX);
-        [rx, ry, rz] = rotateY(rx, ry, rz, rotY);
-        const p = project(rx, ry, rz, activeX, activeY, fov, s);
-        ringPts.push(p);
-        if (i === 0) ctx.moveTo(p.x, p.y);
-        else ctx.lineTo(p.x, p.y);
-      }
-      ctx.closePath();
-      const metalGrad = ctx.createLinearGradient(activeX - 100, activeY - 100, activeX + 100, activeY + 100);
-      metalGrad.addColorStop(0, "#4a5a64");
-      metalGrad.addColorStop(0.3, "#a0b2be");
-      metalGrad.addColorStop(0.7, "#8fa3af");
-      metalGrad.addColorStop(1, "#182329");
-      ctx.strokeStyle = metalGrad;
-      ctx.lineWidth = 3.5 * s;
-      ctx.stroke();
-
-      ringPts.forEach((p, idx) => {
-        if (idx % 4 === 0) {
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, 2.5 * s, 0, Math.PI * 2);
-          ctx.fillStyle = idx % 8 === 0 ? "#38dcff" : "#ffffff";
-          ctx.fill();
-        }
-      });
-      ctx.restore();
-
-      // Frosted Glass Hexagonal Plate
-      ctx.save();
-      ctx.beginPath();
-      const hexSteps = 6;
-      for (let i = 0; i <= hexSteps; i++) {
-        const rad = (i / hexSteps) * Math.PI * 2 + Math.PI / 6;
-        let [rx, ry, rz] = rotateZ(Math.cos(rad) * 125, Math.sin(rad) * 125, 8, -rotZ * 1.5);
-        [rx, ry, rz] = rotateX(rx, ry, rz, rotX + 0.1);
-        [rx, ry, rz] = rotateY(rx, ry, rz, -rotY * 0.8);
-        const p = project(rx, ry, rz, activeX, activeY, fov, s);
-        if (i === 0) ctx.moveTo(p.x, p.y);
-        else ctx.lineTo(p.x, p.y);
-      }
-      ctx.closePath();
-      ctx.fillStyle = "rgba(15, 107, 92, 0.18)";
-      ctx.fill();
-      ctx.strokeStyle = "rgba(56, 220, 255, 0.4)";
-      ctx.lineWidth = 1.5 * s;
-      ctx.stroke();
-      ctx.restore();
-
-      // Interlocking Metal Gear
-      ctx.save();
-      ctx.beginPath();
-      const gearTeeth = 16;
-      for (let i = 0; i < gearTeeth * 2; i++) {
-        const rad = (i / (gearTeeth * 2)) * Math.PI * 2;
-        const r = i % 2 === 0 ? 85 : 68;
-        let [rx, ry, rz] = rotateZ(Math.cos(rad) * r, Math.sin(rad) * r, -6, rotZ);
-        [rx, ry, rz] = rotateX(rx, ry, rz, rotX);
-        [rx, ry, rz] = rotateY(rx, ry, rz, rotY * 1.8);
-        const p = project(rx, ry, rz, activeX, activeY, fov, s);
-        if (i === 0) ctx.moveTo(p.x, p.y);
-        else ctx.lineTo(p.x, p.y);
-      }
-      ctx.closePath();
-      ctx.fillStyle = "#162026";
-      ctx.fill();
-      ctx.strokeStyle = "rgba(160, 178, 190, 0.6)";
-      ctx.lineWidth = 1.8 * s;
-      ctx.stroke();
-      ctx.restore();
-
-      // Emissive Light Paths with glowing traveling packets
-      ctx.save();
-      for (let i = 0; i < 8; i++) {
-        const rad = (i / 8) * Math.PI * 2 + t * 0.7;
-        let [x1, y1, z1] = rotateY(Math.cos(rad) * 30, Math.sin(rad) * 30, 0, rotY);
-        let [x2, y2, z2] = rotateY(Math.cos(rad + 0.4) * 140, Math.sin(rad + 0.4) * 140, 20, rotY);
-        [x1, y1, z1] = rotateX(x1, y1, z1, rotX);
-        [x2, y2, z2] = rotateX(x2, y2, z2, rotX);
-
-        const p1 = project(x1, y1, z1, activeX, activeY, fov, s);
-        const p2 = project(x2, y2, z2, activeX, activeY, fov, s);
-
-        ctx.beginPath();
-        ctx.moveTo(p1.x, p1.y);
-        ctx.lineTo(p2.x, p2.y);
-        ctx.strokeStyle = "rgba(56, 220, 255, 0.28)";
-        ctx.lineWidth = 1.2 * s;
-        ctx.stroke();
-
-        const prog = (t * 1.8 + i * 0.25) % 1;
-        const px = p1.x + (p2.x - p1.x) * prog;
-        const py = p1.y + (p2.y - p1.y) * prog;
-
-        ctx.beginPath();
-        ctx.arc(px, py, 3 * s, 0, Math.PI * 2);
-        ctx.fillStyle = "#ffffff";
-        ctx.shadowColor = "#38dcff";
-        ctx.shadowBlur = 10;
-        ctx.fill();
-      }
-      ctx.restore();
-
-      // Central Quantum Core Sphere
-      ctx.save();
-      let [cx3, cy3, cz3] = rotateX(0, 0, 0, rotX);
-      [cx3, cy3, cz3] = rotateY(cx3, cy3, cz3, rotY);
-      const cp = project(cx3, cy3, cz3, activeX, activeY, fov, s);
-
-      const coreR = 26 * s * pulse;
-      const coreGrad = ctx.createRadialGradient(cp.x - 4, cp.y - 4, 2, cp.x, cp.y, coreR);
-      coreGrad.addColorStop(0, "#ffffff");
-      coreGrad.addColorStop(0.3, "#38dcff");
-      coreGrad.addColorStop(0.7, "#0f6b5c");
-      coreGrad.addColorStop(1, "rgba(15, 107, 92, 0)");
-
-      ctx.beginPath();
-      ctx.arc(cp.x, cp.y, coreR, 0, Math.PI * 2);
-      ctx.fillStyle = coreGrad;
-      ctx.shadowColor = "#38dcff";
-      ctx.shadowBlur = 25 * pulse;
-      ctx.fill();
-      ctx.restore();
-
-      animId = requestAnimationFrame(render);
-    };
-
-    render();
-
-    return () => {
-      cancelAnimationFrame(animId);
-      window.removeEventListener("resize", resize);
-    };
-  }, [coreState]);
-
-  // Story opacity calculation based on hero scroll progress
-  // Story 0 (at 0.12 - 0.32, peak 0.22, right)
-  // Story 1 (at 0.34 - 0.54, peak 0.44, left)
-  // Story 2 (at 0.56 - 0.74, peak 0.65, right)
-  // Story 3 (at 0.76 - 0.94, peak 0.85, left)
-  const getStoryStyle = (start, end, side) => {
-    const p = heroProgress;
-    if (p < start || p > end) {
-      return { opacity: 0, visibility: "hidden", transform: "translateY(24px) scale(0.96)" };
-    }
-    const mid = (start + end) / 2;
-    const span = (end - start) / 2;
-    const dist = Math.abs(p - mid);
-    const opacity = Math.max(0, Math.min(1, 1 - dist / span));
-    const translateY = (1 - opacity) * (p < mid ? 28 : -28);
-
-    return {
-      opacity: opacity.toFixed(3),
-      visibility: opacity > 0.01 ? "visible" : "hidden",
-      transform: `translate3d(0, ${translateY.toFixed(1)}px, 0)`,
-      transition: "opacity 0.2s ease-out, transform 0.2s ease-out",
-    };
+  const jumpTo = (id) => {
+    setMenuOpen(false);
+    document.getElementById(id)?.scrollIntoView({ behavior: reducedMotion.current ? "auto" : "smooth" });
   };
-
-  // Hero intro fade (fades out as user scrolls past 0.02 to 0.08)
-  const introOpacity = Math.max(0, Math.min(1, 1 - heroProgress / 0.07));
-  const introBlur = ((1 - introOpacity) * 12).toFixed(1);
-
-  const copyEmail = () => {
-    navigator.clipboard.writeText("carlo.timbas@automation.dev");
-    setCopiedEmail(true);
-    setTimeout(() => setCopiedEmail(false), 2400);
-  };
+  const introOpacity = Math.max(0, 1 - progress * 5.8);
+  const coreModel = "/models/timbas-automation-core.glb";
 
   return (
-    <div
-      className="min-h-screen text-[#eef3f7] selection:bg-[#38dcff]/30 selection:text-[#38dcff] relative overflow-x-hidden"
-      style={{
-        backgroundColor: "#0a0c0f",
-        fontFamily: 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      }}
-    >
-      {/* ─────────────────────────────────────────────────────────────
-          FIXED MINIMAL NAVIGATION (rjv style)
-         ───────────────────────────────────────────────────────────── */}
-      <header
-        className={`fixed top-0 left-0 right-0 z-50 h-[72px] px-[clamp(16px,4vw,56px)] flex items-center justify-between transition-all duration-500 ${
-          navScrolled
-            ? "bg-[#0a0c0f]/90 backdrop-blur-md border-b border-[#d6ecff1a]"
-            : "bg-transparent border-b border-transparent"
-        }`}
-      >
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => go("home")}
-            className="text-[13px] font-mono tracking-wider text-[#93a0ad] hover:text-[#38dcff] transition-colors flex items-center gap-1.5"
-          >
-            <span className="text-[#38dcff]">←</span> CTPR CLUB
-          </button>
-          <span className="text-slate-700">/</span>
-          <button
-            onClick={() => scrollTo("top")}
-            className="text-[17px] font-bold tracking-tight text-white hover:text-[#38dcff] transition-colors"
-          >
-            CARLO TIMBAS
-          </button>
-        </div>
-
-        {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-8 text-[13px] font-mono text-[#93a0ad]">
-          <button onClick={() => scrollTo("about")} className="hover:text-white transition-colors">
-            About
-          </button>
-          <button onClick={() => scrollTo("services")} className="hover:text-white transition-colors">
-            Services
-          </button>
-          <button onClick={() => scrollTo("process")} className="hover:text-white transition-colors">
-            Process
-          </button>
-          <button onClick={() => scrollTo("work")} className="hover:text-white transition-colors">
-            Case Studies
-          </button>
-          <button onClick={() => scrollTo("contact")} className="hover:text-white transition-colors">
-            Contact
-          </button>
-        </nav>
-
-        {/* Right CTA */}
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setBookingOpen(true)}
-            className="px-4 py-2 rounded-full text-[13px] font-mono font-medium text-[#0a0c0f] bg-[#38dcff] hover:bg-white transition-all shadow-[0_0_20px_rgba(56,220,255,0.3)] hover:shadow-[0_0_25px_rgba(255,255,255,0.5)]"
-          >
-            Book a Call
-          </button>
-          {toggle && (
-            <button
-              onClick={toggle}
-              className="w-9 h-9 rounded-full border border-[#d6ecff1a] text-[#93a0ad] hover:text-white flex items-center justify-center text-xs transition-colors"
-              title="Toggle theme"
-            >
-              {dark ? "☀" : "☾"}
-            </button>
-          )}
+    <div className="timbas-page" ref={pageRef}>
+      <style>{CSS}</style>
+      <header className="tb-nav">
+        <div className="tb-nav-inner">
+          <a className="tb-logo" href="#home" onClick={(e) => { e.preventDefault(); jumpTo("home"); }}>Carlo <span>Timbas</span></a>
+          <nav className="tb-links" aria-label="Main navigation">
+            {[ ["home","Home"],["projects","Projects"],["stack","Tech Stack"],["about","About"] ].map(([id,label]) => <a key={id} href={`#${id}`} onClick={(e) => { e.preventDefault(); jumpTo(id); }}>{label}</a>)}
+          </nav>
+          <button className="tb-menu-btn" onClick={() => setMenuOpen((v) => !v)} aria-expanded={menuOpen} aria-label="Toggle navigation">{menuOpen ? "Close" : "Menu"}</button>
+          <nav className={`tb-menu ${menuOpen ? "open" : ""}`} aria-label="Mobile navigation">
+            {[ ["home","Home"],["projects","Projects"],["stack","Tech Stack"],["about","About"] ].map(([id,label]) => <a key={id} href={`#${id}`} onClick={(e) => { e.preventDefault(); jumpTo(id); }}>{label}</a>)}
+          </nav>
         </div>
       </header>
 
-      {/* ─────────────────────────────────────────────────────────────
-          760vh HERO SCROLL SECTION (Directly matching rjv-automation)
-         ───────────────────────────────────────────────────────────── */}
-      <section ref={heroRef} id="hero" className="relative w-full h-[760vh] z-20">
-        {/* Sticky 100vh Viewport Stage */}
-        <div className="sticky top-0 h-screen w-full overflow-hidden isolation-auto flex items-center justify-center">
-          {/* Subtle Ambient Studio Glow */}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(56,220,255,0.08),transparent_70%)] pointer-events-none" />
-
-          {/* Vignette Layer */}
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_40%,rgba(10,12,15,0.85)_100%)] pointer-events-none z-10" />
-
-          {/* GIANT HEADLINE: CARLO TIMBAS (Behind character cutout) */}
-          <div
-            className="absolute top-[18vh] left-0 right-0 flex justify-center pointer-events-none select-none z-0 px-4"
-            style={{
-              opacity: introOpacity.toFixed(3),
-              filter: `blur(${introBlur}px)`,
-              visibility: introOpacity > 0.01 ? "visible" : "hidden",
-              transition: "opacity 0.2s ease-out, filter 0.2s ease-out",
-            }}
-          >
-            <h1 className="text-[clamp(44px,14vw,200px)] font-black tracking-[-0.055em] leading-[0.8] whitespace-nowrap text-transparent bg-clip-text bg-gradient-to-b from-[#f4f8fb] via-[#d6ecff]/70 to-[#d6ecff]/20">
-              CARLO TIMBAS
-            </h1>
-          </div>
-
-          {/* ─────────────────────────────────────────────────────────
-              DYNAMIC 60FPS HERO VIDEO CANVAS (Scrubbed with scroll)
-              Draws the 180 video frames f_0001.webp - f_0180.webp!
-              Carlo turns, orbits, and moves seamlessly forward/backward!
-             ───────────────────────────────────────────────────────── */}
-          <canvas
-            ref={heroCanvasRef}
-            className="absolute inset-0 w-full h-full object-cover z-10 pointer-events-none"
-          />
-
-          {/* INTRO FOOTER (Tagline, CTAs, and Scroll cue - fades out on scroll) */}
-          <div
-            className="absolute bottom-12 left-0 right-0 z-20 flex flex-col items-center text-center pointer-events-auto px-4"
-            style={{
-              opacity: introOpacity.toFixed(3),
-              filter: `blur(${introBlur}px)`,
-              visibility: introOpacity > 0.01 ? "visible" : "hidden",
-              transition: "opacity 0.2s ease-out, filter 0.2s ease-out",
-            }}
-          >
-            <p className="text-base sm:text-xl font-medium text-[#eef3f7] mb-6 tracking-tight">
-              I automate businesses for a living.
-            </p>
-            <div className="flex flex-wrap items-center justify-center gap-4 mb-8">
-              <button
-                onClick={() => scrollTo("work")}
-                className="px-6 py-3 rounded-full text-[14px] font-medium text-white border border-[#d6ecff33] bg-[#0a0c0f]/60 backdrop-blur-md hover:bg-white/10 transition-all"
-              >
-                View Case Studies
-              </button>
-              <button
-                onClick={() => setBookingOpen(true)}
-                className="px-6 py-3 rounded-full text-[14px] font-medium text-[#0a0c0f] bg-[#38dcff] hover:bg-white transition-all shadow-[0_0_20px_rgba(56,220,255,0.3)]"
-              >
-                Book a Call
-              </button>
+      <main>
+        <section id="home" className="tb-home-track" ref={homeRef} aria-label="Home">
+          <div className="tb-home-sticky">
+            <img ref={stillRef} className="tb-hero-media tb-hero-still" src="/photos/timbas/carlo-hero-poster.webp" alt="Carlo Timbas" />
+            <canvas ref={canvasRef} className="tb-hero-media tb-hero-canvas" aria-hidden="true" />
+            <div className="tb-hero-tint" /><div className="tb-hero-grain" />
+            <div className="tb-hero-intro" style={{ opacity: introOpacity, filter: `blur(${progress * 8}px)`, "--tb-intro-y": `${progress * -12}px` }}>
+              <div className="tb-eyebrow">Full-stack developer · Manila, PH</div>
+              <h1 className="tb-hero-title">Build with<br /><em>intention.</em></h1>
+              <p className="tb-hero-copy">I’m Carlo Timbas. I build thoughtful digital experiences and explore how automation can make everyday work flow better.</p>
+              <div className="tb-hero-actions">
+                <a className="tb-button primary" href="#projects" onClick={(e) => { e.preventDefault(); jumpTo("projects"); }}>View projects</a>
+                <a className="tb-button" href="#about" onClick={(e) => { e.preventDefault(); jumpTo("about"); }}>About Carlo</a>
+              </div>
             </div>
-            <div className="flex items-center gap-2 text-xs font-mono text-[#93a0ad] tracking-widest uppercase">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#38dcff] animate-ping" />
-              <span>Scroll to explore</span>
+            {STORIES.map((story, i) => <div key={story.title} className={`tb-story ${storyIndex === i ? "active" : ""}`} aria-hidden={storyIndex !== i}>
+              <img className="tb-story-img" src={`${ASSET}${story.image}`} alt="" />
+              <div><div className="tb-story-count">0{i + 1} / 04</div><h2>{story.title}</h2><p>{story.text}</p></div>
+            </div>)}
+            <div className="tb-scroll-hint"><span className="tb-scroll-line" /> Scroll to explore</div>
+          </div>
+        </section>
+
+        <section className="tb-section" id="projects">
+          <div className="tb-section-inner">
+            <div className="tb-section-kicker">~/PROJECTS · CASE STUDIES</div>
+            <h2 className="tb-section-title">Work in<br /><em>progress.</em></h2>
+            <p className="tb-section-lede">Three demonstration concepts show how connected workflows could reduce repetitive handoffs. These are illustrative ideas, not client case studies.</p>
+            <div className="tb-projects">{CASES.map((c, i) => <article className="tb-project" key={c.n}>
+              <div className="tb-project-top"><span>{c.n} / DEMO CONCEPT</span><span>WORKFLOW STUDY</span></div>
+              <div className="tb-project-art"><img src={`${ASSET}${["core-detail.png","automation-orb.png","connected-pipeline.png"][i]}`} alt="" /></div>
+              <h3>{c.title}</h3>
+              <dl>
+                <div><dt>Scenario</dt><dd>{c.client}</dd></div>
+                <div><dt>Problem</dt><dd>{c.problem}</dd></div>
+                <div><dt>Approach</dt><dd>{c.solution}</dd></div>
+                <div><dt>Intended outcome</dt><dd className="metric">{c.result}</dd></div>
+              </dl>
+            </article>)}</div>
+          </div>
+        </section>
+
+        <section className="tb-section" id="stack">
+          <div className="tb-section-inner">
+            <div className="tb-section-kicker">~/TECH STACK · AREAS OF FOCUS</div>
+            <h2 className="tb-section-title">The tools behind<br /><em>the ideas.</em></h2>
+            <p className="tb-section-lede">A growing toolkit for building interfaces, connecting systems, and making routine work easier to manage.</p>
+            <div className="tb-stack-layout">
+              <div className="tb-stack-grid">{STACK.map(([label,tools]) => <div className="tb-stack-item" key={label}><small>{label}</small><strong>{tools}</strong></div>)}</div>
+              <div><div className="tb-section-kicker" style={{ marginBottom: 18 }}>WHAT I’M EXPLORING</div><div className="tb-services">{SERVICES.map((s,i) => <div className="tb-service" key={s}><span>0{i+1}</span>{s}</div>)}</div></div>
             </div>
           </div>
+        </section>
 
-          {/* ─────────────────────────────────────────────────────────
-              4 STORY PASSAGES OVERLAYING OPPOSITE THE MOVING CHARACTER
-             ───────────────────────────────────────────────────────── */}
-          <div className="absolute inset-0 pointer-events-none z-20 flex items-center justify-between px-[clamp(20px,6vw,80px)]">
-            {/* Story 0 (Appears on RIGHT while Carlo is on Left) */}
-            <div
-              className="absolute right-[clamp(24px,8vw,120px)] w-[min(38vw,480px)] space-y-4"
-              style={getStoryStyle(0.12, 0.32, "right")}
-            >
-              <img
-                src="./photos/timbas/node.webp"
-                alt="Glass workflow nodes"
-                className="w-24 sm:w-32 h-auto object-contain filter drop-shadow-[0_0_30px_rgba(56,220,255,0.4)]"
-              />
-              <p className="text-xl sm:text-2xl md:text-3xl font-medium text-white tracking-tight leading-snug">
-                Every repetitive task is a decision waiting to be automated.
-              </p>
+        <section className="tb-section" id="about">
+          <div className="tb-section-inner">
+            <div className="tb-about-grid">
+              <div className="tb-about-copy">
+                <div className="tb-section-kicker">~/ABOUT</div>
+                <h2 className="tb-section-title">Curious by<br /><em>nature.</em></h2>
+                <p>I’m Carlo Timbas, a full-stack developer interested in how useful digital products come together—from the details of an interface to the systems working behind it.</p>
+                <p>I enjoy learning by building, exploring Java, Spring Boot, React, and new ways to reduce repetitive steps in a workflow.</p>
+                <div className="tb-about-note">Experience: Learning through hands-on projects<br />Based in Manila, Philippines</div>
+              </div>
+              <div className="tb-about-art" aria-hidden="true" />
             </div>
-
-            {/* Story 1 (Appears on LEFT while Carlo is on Right) */}
-            <div
-              className="absolute left-[clamp(24px,8vw,120px)] w-[min(38vw,480px)] space-y-4"
-              style={getStoryStyle(0.34, 0.54, "left")}
-            >
-              <img
-                src="./photos/timbas/orb.webp"
-                alt="Chrome AI agent orb"
-                className="w-24 sm:w-32 h-auto object-contain filter drop-shadow-[0_0_30px_rgba(56,220,255,0.4)]"
-              />
-              <p className="text-xl sm:text-2xl md:text-3xl font-medium text-white tracking-tight leading-snug">
-                Let AI agents carry the busywork, so your people keep the judgment calls.
-              </p>
-            </div>
-
-            {/* Story 2 (Appears on RIGHT while Carlo is on Left) */}
-            <div
-              className="absolute right-[clamp(24px,8vw,120px)] w-[min(38vw,480px)] space-y-4"
-              style={getStoryStyle(0.56, 0.74, "right")}
-            >
-              <img
-                src="./photos/timbas/pipe.webp"
-                alt="Interlocking data pipeline"
-                className="w-24 sm:w-32 h-auto object-contain filter drop-shadow-[0_0_30px_rgba(56,220,255,0.4)]"
-              />
-              <p className="text-xl sm:text-2xl md:text-3xl font-medium text-white tracking-tight leading-snug">
-                Good automation is invisible. The data simply arrives where it’s needed.
-              </p>
-            </div>
-
-            {/* Story 3 (Appears on LEFT while Carlo is on Right) */}
-            <div
-              className="absolute left-[clamp(24px,8vw,120px)] w-[min(38vw,480px)] space-y-4"
-              style={getStoryStyle(0.76, 0.94, "left")}
-            >
-              <img
-                src="./photos/timbas/tiles.webp"
-                alt="Stack of connected app tiles"
-                className="w-24 sm:w-32 h-auto object-contain filter drop-shadow-[0_0_30px_rgba(56,220,255,0.4)]"
-              />
-              <p className="text-xl sm:text-2xl md:text-3xl font-medium text-white tracking-tight leading-snug">
-                Your tools already work. I make them work together.
-              </p>
+            <div className="tb-final-cta">
+              <div><h3>Let’s make busywork<br />a little smaller.</h3><p>Have a workflow idea or a project in mind? Let’s talk.</p></div>
+              <a className="tb-button primary" href="#projects" onClick={(e) => { e.preventDefault(); jumpTo("projects"); }}>Explore the projects ↗</a>
             </div>
           </div>
+        </section>
+      </main>
+
+      <div className="tb-core-float" aria-hidden="true" style={{ left: coreView.side === "left" ? "4vw" : "calc(96vw - min(32vw, 390px))", opacity: coreView.visible ? 0.42 : 0 }}>
+        <div className="tb-core" style={{ transform: `rotateY(${coreView.rotate}deg) rotateX(4deg)` }}>
+          <model-viewer src={coreModel} poster="/photos/timbas/core-detail.png" alt="A sculptural 3D automation core with glass plates, machined gears, and jade-lit pathways" camera-orbit={motionReduced ? "0deg 75deg 125%" : "calc(0deg + env(window-scroll-y) * 360deg) 75deg 125%"} camera-target="0m 0m 0m" camera-controls disable-zoom interaction-prompt="none" touch-action="pan-y" loading="eager" shadow-intensity="0.55" exposure="1.08" style={{ width: "100%", height: "100%", background: "transparent", "--poster-color": "transparent" }} />
         </div>
-      </section>
-
-      {/* ─────────────────────────────────────────────────────────────
-          PANELS CONTAINER (ABOUT, SERVICES, PROCESS, WORK, CONTACT)
-          With Continuous 3D Automation Core Canvas in the background!
-         ───────────────────────────────────────────────────────────── */}
-      <div ref={panelsRef} className="relative z-30 bg-[#0a0c0f]">
-        {/* Sticky 3D Core Canvas Layer spanning all panels */}
-        <div
-          className="fixed inset-0 pointer-events-none z-10 transition-opacity duration-700 overflow-hidden"
-          style={{
-            opacity: coreState.opacity.toFixed(3),
-            visibility: coreState.opacity > 0.01 ? "visible" : "hidden",
-          }}
-        >
-          <canvas
-            ref={coreCanvasRef}
-            className="w-full h-full block"
-            style={{ filter: "drop-shadow(0 0 50px rgba(56,220,255,0.25))" }}
-          />
-        </div>
-
-        {/* ── PANEL 1: ABOUT (Right-aligned 3D Model, Left-aligned content) ── */}
-        <section
-          id="about"
-          className="relative z-20 min-h-screen py-[max(140px,20vh)] px-[clamp(16px,4vw,56px)] flex items-center"
-        >
-          <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-            <div className="lg:col-span-6 space-y-7">
-              <p className="text-xs font-mono tracking-[0.18em] uppercase text-[#38dcff]">
-                About
-              </p>
-              <h2 className="text-3xl sm:text-5xl font-bold tracking-tight text-white leading-[1.1]">
-                Turning busywork into autonomous systems.
-              </h2>
-              <p className="text-[#93a0ad] text-base sm:text-lg leading-relaxed">
-                I’m <strong className="text-white">Carlo Timbas</strong>, an AI automation specialist and full-stack developer.
-                I build the workflows, AI agents, chatbots, and integrations that take manual work off your team’s plate, so
-                the work gets done without anyone having to do it.
-              </p>
-              <p className="text-[#93a0ad] text-base leading-relaxed">
-                You get systems that are documented, monitored, and easy to hand over. Not a pile of fragile zaps.
-              </p>
-
-              {/* Stats */}
-              <div className="flex items-center gap-8 pt-2">
-                <div className="flex flex-col">
-                  <span className="text-3xl sm:text-4xl font-bold text-white tracking-tight">
-                    3+<small className="text-xs font-mono text-[#38dcff] ml-1">years</small>
-                  </span>
-                  <span className="text-xs text-[#93a0ad] font-mono mt-1">of development & automation</span>
-                </div>
-                <div className="w-px h-12 bg-[#d6ecff1a]" />
-                <div className="flex flex-col">
-                  <span className="text-3xl sm:text-4xl font-bold text-white tracking-tight">
-                    5<small className="text-xs font-mono text-[#38dcff] ml-1">services</small>
-                  </span>
-                  <span className="text-xs text-[#93a0ad] font-mono mt-1">from audit to deployment</span>
-                </div>
-              </div>
-
-              {/* Tool Stack Chips */}
-              <div className="pt-2">
-                <p className="text-xs font-mono tracking-[0.18em] uppercase text-[#38dcff] mb-3">
-                  Tool stack
-                </p>
-                <ul className="flex flex-wrap gap-2 text-xs font-mono">
-                  {["n8n", "Make", "Zapier", "Python", "Claude API", "OpenAI API", "GoHighLevel", "HubSpot", "Java", "Spring Boot", "React", "PostgreSQL"].map((chip) => (
-                    <li
-                      key={chip}
-                      className="px-3.5 py-2 rounded-full border border-[#d6ecff33] bg-[#111419]/60 text-[#eef3f7] hover:border-[#38dcff] transition-colors"
-                    >
-                      {chip}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-
-            {/* Empty right column: 3D Core shines through here! */}
-            <div className="hidden lg:block lg:col-span-6 pointer-events-none" />
-          </div>
-        </section>
-
-        {/* ── PANEL 2: SERVICES (Left-aligned 3D Model, Right-aligned content) ── */}
-        <section
-          id="services"
-          className="relative z-20 min-h-screen py-[max(140px,20vh)] px-[clamp(16px,4vw,56px)] flex items-center"
-        >
-          <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-            {/* Empty left column: 3D Core glides across here! */}
-            <div className="hidden lg:block lg:col-span-6 pointer-events-none" />
-
-            <div className="lg:col-span-6 space-y-7">
-              <p className="text-xs font-mono tracking-[0.18em] uppercase text-[#38dcff]">
-                Services
-              </p>
-              <h2 className="text-3xl sm:text-5xl font-bold tracking-tight text-white leading-[1.1]">
-                What I build for you.
-              </h2>
-
-              <ol className="divide-y divide-[#d6ecff1a] border-t border-b border-[#d6ecff1a]">
-                {[
-                  {
-                    num: "01",
-                    title: "Workflow automation",
-                    desc: "Connect your apps and retire copy-paste. Built in n8n, Make or Zapier, whichever fits how your team works.",
-                  },
-                  {
-                    num: "02",
-                    title: "AI agents & chatbots",
-                    desc: "Assistants that answer, qualify and route, trained on your process, with a clean handoff to a human.",
-                  },
-                  {
-                    num: "03",
-                    title: "CRM setup & integrations",
-                    desc: "GoHighLevel or HubSpot set up around your pipeline, with clean data flowing in from every source.",
-                  },
-                  {
-                    num: "04",
-                    title: "RPA & process audits",
-                    desc: "I map where the hours go, then automate the steps that don’t need a person.",
-                  },
-                  {
-                    num: "05",
-                    title: "Corporate AI training",
-                    desc: "Hands-on sessions that get your team using AI confidently and safely, on their real work.",
-                  },
-                ].map((s) => (
-                  <li key={s.num} className="grid grid-cols-[48px_1fr] gap-4 py-5 group">
-                    <span className="font-mono text-sm text-[#38dcff] font-bold">{s.num}</span>
-                    <div>
-                      <h3 className="text-base font-semibold text-white group-hover:text-[#38dcff] transition-colors">
-                        {s.title}
-                      </h3>
-                      <p className="text-sm text-[#93a0ad] mt-1 leading-relaxed">{s.desc}</p>
-                    </div>
-                  </li>
-                ))}
-              </ol>
-
-              {/* Process Sub-Section */}
-              <div id="process" className="pt-4 space-y-4">
-                <h3 className="text-xs font-mono tracking-[0.18em] uppercase text-[#38dcff]">
-                  How it works
-                </h3>
-                <ol className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                  {[
-                    { num: "1", title: "Audit", text: "Find the highest-leverage tasks to automate first." },
-                    { num: "2", title: "Blueprint", text: "Map the data flow, tools, and edge cases." },
-                    { num: "3", title: "Build", text: "Ship the workflow, test with real data, handle errors." },
-                    { num: "4", title: "Handover", text: "Video walkthrough, documentation, and support." },
-                  ].map((step) => (
-                    <li
-                      key={step.num}
-                      className="p-4 rounded-xl border border-[#d6ecff1a] bg-[#111419]/60 text-xs space-y-1.5"
-                    >
-                      <span className="font-mono text-[#38dcff] font-bold text-sm block">#{step.num}</span>
-                      <strong className="text-white block text-sm">{step.title}</strong>
-                      <span className="text-[#93a0ad] block leading-relaxed">{step.text}</span>
-                    </li>
-                  ))}
-                </ol>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ── PANEL 3: CASE STUDIES (Right-aligned 3D Model, Left-aligned content) ── */}
-        <section
-          id="work"
-          className="relative z-20 min-h-screen py-[max(140px,20vh)] px-[clamp(16px,4vw,56px)] flex items-center"
-        >
-          <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-            <div className="lg:col-span-6 space-y-7">
-              <p className="text-xs font-mono tracking-[0.18em] uppercase text-[#38dcff]">
-                Case Studies
-              </p>
-              <h2 className="text-3xl sm:text-5xl font-bold tracking-tight text-white leading-[1.1]">
-                Results, not just workflows.
-              </h2>
-              <p className="text-xs font-mono text-[#93a0ad]">
-                Sample projects. Numbers in dashed boxes are placeholders.
-              </p>
-
-              <div className="space-y-4">
-                {/* Case 1 */}
-                <article className="p-6 rounded-2xl border border-[#d6ecff1a] bg-gradient-to-br from-[#1a1f26]/75 to-[#0d1014]/75 backdrop-blur-md space-y-3">
-                  <p className="text-xs font-mono text-white flex items-center justify-between">
-                    <span>Real estate agency</span>
-                    <span className="px-2 py-0.5 rounded border border-[#d6ecff33] text-[10px] text-[#38dcff]">
-                      Sample
-                    </span>
-                  </p>
-                  <dl className="text-xs space-y-1.5 leading-relaxed">
-                    <div>
-                      <dt className="text-[#93a0ad] font-mono inline mr-2">Problem:</dt>
-                      <dd className="text-slate-300 inline">
-                        Leads from four sources sat in inboxes for hours before anyone replied.
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="text-[#93a0ad] font-mono inline mr-2">Solution:</dt>
-                      <dd className="text-slate-300 inline">
-                        An n8n and GoHighLevel pipeline that captures, enriches, and routes every lead, with an AI-drafted first reply.
-                      </dd>
-                    </div>
-                  </dl>
-                  <p className="pt-2 text-xs font-mono text-[#93a0ad]">
-                    <span className="text-white font-bold text-sm px-2 py-1 rounded border border-dashed border-[#38dcff] mr-2 text-[#38dcff]">
-                      15 min
-                    </span>
-                    response time, down from{" "}
-                    <span className="px-1.5 py-0.5 rounded border border-dashed border-[#d6ecff33] text-white">
-                      4 hrs
-                    </span>
-                  </p>
-                </article>
-
-                {/* Case 2 */}
-                <article className="p-6 rounded-2xl border border-[#d6ecff1a] bg-gradient-to-br from-[#1a1f26]/75 to-[#0d1014]/75 backdrop-blur-md space-y-3">
-                  <p className="text-xs font-mono text-white flex items-center justify-between">
-                    <span>E-commerce brand</span>
-                    <span className="px-2 py-0.5 rounded border border-[#d6ecff33] text-[10px] text-[#38dcff]">
-                      Sample
-                    </span>
-                  </p>
-                  <dl className="text-xs space-y-1.5 leading-relaxed">
-                    <div>
-                      <dt className="text-[#93a0ad] font-mono inline mr-2">Problem:</dt>
-                      <dd className="text-slate-300 inline">
-                        The support team answered the same repetitive order questions all day.
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="text-[#93a0ad] font-mono inline mr-2">Solution:</dt>
-                      <dd className="text-slate-300 inline">
-                        An AI chatbot connected to live Shopify data, handing complex cases to a human with full context.
-                      </dd>
-                    </div>
-                  </dl>
-                  <p className="pt-2 text-xs font-mono text-[#93a0ad]">
-                    <span className="text-white font-bold text-sm px-2 py-1 rounded border border-dashed border-[#38dcff] mr-2 text-[#38dcff]">
-                      35 hrs
-                    </span>
-                    saved per week
-                  </p>
-                </article>
-
-                {/* Case 3 */}
-                <article className="p-6 rounded-2xl border border-[#d6ecff1a] bg-gradient-to-br from-[#1a1f26]/75 to-[#0d1014]/75 backdrop-blur-md space-y-3">
-                  <p className="text-xs font-mono text-white flex items-center justify-between">
-                    <span>Professional services firm</span>
-                    <span className="px-2 py-0.5 rounded border border-[#d6ecff33] text-[10px] text-[#38dcff]">
-                      Sample
-                    </span>
-                  </p>
-                  <dl className="text-xs space-y-1.5 leading-relaxed">
-                    <div>
-                      <dt className="text-[#93a0ad] font-mono inline mr-2">Problem:</dt>
-                      <dd className="text-slate-300 inline">
-                        Invoicing and reporting meant manual copy-paste across three separate tools.
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="text-[#93a0ad] font-mono inline mr-2">Solution:</dt>
-                      <dd className="text-slate-300 inline">
-                        A Make and Python workflow that syncs CRM, accounting, and reporting on an automated schedule.
-                      </dd>
-                    </div>
-                  </dl>
-                  <p className="pt-2 text-xs font-mono text-[#93a0ad]">
-                    <span className="text-white font-bold text-sm px-2 py-1 rounded border border-dashed border-[#38dcff] mr-2 text-[#38dcff]">
-                      $4,200
-                    </span>
-                    monthly operating cost reduced
-                  </p>
-                </article>
-              </div>
-            </div>
-
-            {/* Empty right column: 3D Core shines through here! */}
-            <div className="hidden lg:block lg:col-span-6 pointer-events-none" />
-          </div>
-        </section>
-
-        {/* ── PANEL 4: CONTACT / CTA (Full-width centered, rjv style) ── */}
-        <section
-          id="contact"
-          className="relative z-20 min-h-[90vh] py-32 px-[clamp(16px,4vw,56px)] text-center flex flex-col items-center justify-center overflow-hidden"
-        >
-          {/* Cyan Glow background */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[min(1100px,130vw)] aspect-[2] pointer-events-none bg-[radial-gradient(closest-side,rgba(56,220,255,0.18),transparent)]" />
-
-          <div className="relative z-10 max-w-2xl mx-auto space-y-6">
-            <h2 className="text-3xl sm:text-5xl font-bold tracking-tight text-white">
-              Let’s Automate Your Business
-            </h2>
-            <p className="text-base sm:text-lg text-[#93a0ad] leading-relaxed">
-              Book a free automation audit. We’ll find the work your team shouldn’t be doing, and what to automate first.
-            </p>
-            <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
-              <button
-                onClick={() => setBookingOpen(true)}
-                className="px-8 py-4 rounded-full text-base font-semibold text-[#0a0c0f] bg-[#38dcff] hover:bg-white transition-all shadow-[0_0_30px_rgba(56,220,255,0.4)] hover:shadow-[0_0_40px_rgba(255,255,255,0.6)]"
-              >
-                Book a Free Automation Audit
-              </button>
-              <button
-                onClick={copyEmail}
-                className="px-6 py-4 rounded-full text-sm font-mono text-[#93a0ad] hover:text-white border border-[#d6ecff1a] bg-[#111419]/60 hover:bg-[#111419] transition-all"
-              >
-                {copiedEmail ? "Copied Email!" : "carlo.timbas@automation.dev"}
-              </button>
-            </div>
-          </div>
-        </section>
-
-        {/* ── FOOTER ── */}
-        <footer className="border-t border-[#d6ecff1a] bg-[#07090c] py-10 px-[clamp(16px,4vw,56px)] relative z-20">
-          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6 text-xs font-mono text-[#93a0ad]">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => go("home")}
-                className="hover:text-[#38dcff] transition-colors"
-              >
-                ← BACK TO CTPR CLUB
-              </button>
-              <span className="text-slate-700">|</span>
-              <span>© {new Date().getFullYear()} CARLO TIMBAS</span>
-            </div>
-
-            {next && (
-              <button
-                onClick={() => go(next.id)}
-                className="px-4 py-2 rounded-lg bg-[#111419] hover:bg-[#1a1f26] text-white border border-[#d6ecff1a] hover:border-[#38dcff] transition-colors"
-              >
-                Next: {next.name} →
-              </button>
-            )}
-          </div>
-        </footer>
       </div>
-
-      {/* ─────────────────────────────────────────────────────────────
-          BOOKING AUDIT MODAL
-         ───────────────────────────────────────────────────────────── */}
-      {bookingOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
-          <div className="relative w-full max-w-md bg-[#111419] border border-[#d6ecff33] rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6">
-            <div className="flex items-center justify-between border-b border-[#d6ecff1a] pb-4">
-              <div>
-                <h3 className="text-xl font-bold text-white">Book an Automation Audit</h3>
-                <p className="text-xs font-mono text-[#38dcff] mt-0.5">30-MIN STRATEGY SESSION</p>
-              </div>
-              <button
-                onClick={() => setBookingOpen(false)}
-                className="w-8 h-8 rounded-full bg-[#1a1f26] text-[#93a0ad] hover:text-white flex items-center justify-center text-sm"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="space-y-4 text-xs font-mono">
-              <div>
-                <label className="block text-[#93a0ad] mb-1.5 uppercase">Your Name</label>
-                <input
-                  type="text"
-                  placeholder="Jane Doe"
-                  className="w-full bg-[#0a0c0f] border border-[#d6ecff33] rounded-xl p-3 text-white focus:outline-none focus:border-[#38dcff]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[#93a0ad] mb-1.5 uppercase">Work Email</label>
-                <input
-                  type="email"
-                  placeholder="jane@company.com"
-                  className="w-full bg-[#0a0c0f] border border-[#d6ecff33] rounded-xl p-3 text-white focus:outline-none focus:border-[#38dcff]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[#93a0ad] mb-1.5 uppercase">What manual process hurts most?</label>
-                <textarea
-                  rows="3"
-                  placeholder="We spend 15+ hours weekly copying CRM data into accounting..."
-                  className="w-full bg-[#0a0c0f] border border-[#d6ecff33] rounded-xl p-3 text-white focus:outline-none focus:border-[#38dcff]"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end gap-3 pt-2">
-              <button
-                onClick={() => setBookingOpen(false)}
-                className="px-4 py-2.5 text-xs font-mono text-[#93a0ad] hover:text-white"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  alert("Thank you! Carlo will review your details and send a calendar invite.");
-                  setBookingOpen(false);
-                }}
-                className="px-6 py-3 rounded-full text-xs font-mono font-bold bg-[#38dcff] hover:bg-white text-[#0a0c0f] transition-all shadow-[0_0_20px_rgba(56,220,255,0.3)]"
-              >
-                Confirm Booking →
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <footer className="tb-footer"><span>© {new Date().getFullYear()} CARLO TIMBAS</span><button onClick={() => go?.("home")}>Back to CTPR Club ↑</button>{next && <button onClick={() => go?.(next.id)}>Next: {next.name} →</button>}</footer>
     </div>
   );
 }
+
+
+
+
+
+
+

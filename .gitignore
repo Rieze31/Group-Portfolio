@@ -3,3 +3,7 @@ backend/data/
 backend/target/
 .idea/
 *.iml
+
+# Local assistant skill copies; keep them on disk, out of the project changeset.
+/.agents/
+/.claude/

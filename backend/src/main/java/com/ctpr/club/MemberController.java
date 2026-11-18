@@ -9,7 +9,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/members")
 public class MemberController {
-    private static final int MAX_MEMBERS = 4;
+    private static final int MAX_MEMBERS = 8;
 
     private final MemberRepository repo;
 

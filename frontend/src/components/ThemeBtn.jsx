@@ -1,11 +1,13 @@
-export default function ThemeBtn({ dark, toggle }) {
+export default function ThemeBtn({ dark, toggle, compact = false }) {
   return (
     <button
+      type="button"
+      className={`tb${compact ? " tb-compact" : ""}`}
       onClick={toggle}
-      className="bg-transparent border border-[var(--line)] text-[var(--ink)] rounded-full px-3 py-1 text-[11px] cursor-pointer hover:border-[var(--acc)] transition-colors"
-      style={{ fontFamily: "var(--mono)" }}
+      aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
+      title={dark ? "Switch to light mode" : "Switch to dark mode"}
     >
-      {dark ? "☀️ LIGHT" : "🌙 DARK"}
+      <span className={dark ? "tb-icon" : "tb-icon moon"} aria-hidden="true">{dark ? "☀" : "☾"}</span>
     </button>
   );
 }
