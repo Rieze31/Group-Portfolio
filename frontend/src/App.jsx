@@ -5,6 +5,7 @@ import SantosPortfolio from "./portfolios/SantosPortfolio.jsx";
 import TimbasPortfolio from "./portfolios/TimbasPortfolio.jsx";
 import DateMePrank from "./components/DateMePrank.jsx";
 import Flash from "./components/Flash.jsx";
+import CardFan from "./components/CardFan.jsx";
 
 let M = []; // filled from the Spring Boot API (see main.jsx)
 export function loadMembers(list) { M = list; }
@@ -78,33 +79,6 @@ const realNames = {
   m3: "Phiona Eunice Garcia",
   m4: "Carlo Timbas",
 };
-const HEARTS = [
-  [-46, -250, 22, 0.24, 0.9], [104, -208, 17, 0.29, 1.2], [-270, -145, 14, 0.33, 1.5],
-  [290, -112, 19, 0.38, 1.7], [-385, -8, 24, 0.27, 1.1], [382, 34, 15, 0.36, 1.9],
-  [-320, 145, 18, 0.32, 1.3], [336, 188, 23, 0.36, 1.6], [-196, 275, 14, 0.29, 2],
-  [192, 286, 18, 0.34, 1.4], [-490, 250, 12, 0.38, 2.2], [472, -236, 13, 0.36, 2.1],
-  [-525, -275, 18, 0.33, 1.8], [530, 160, 16, 0.32, 2.3], [-95, 360, 20, 0.29, 1.7],
-  [82, 362, 14, 0.36, 2.4], [-610, 42, 15, 0.33, 2.5], [612, -44, 21, 0.29, 2.6],
-  [-245, -330, 13, 0.36, 2.1], [246, -330, 16, 0.34, 2.2], [-430, 365, 18, 0.32, 2.7],
-  [438, 350, 13, 0.37, 2.8], [-570, -370, 12, 0.38, 2.9], [575, 340, 17, 0.33, 3],
-  [-150, -420, 15, 0.3, 1.5], [155, -420, 19, 0.28, 1.8], [-675, -170, 16, 0.31, 2.4],
-  [680, 205, 18, 0.29, 2.6], [-690, 390, 14, 0.33, 3.1], [690, -385, 15, 0.32, 3.2],
-  [-350, 430, 17, 0.3, 3.4], [345, 440, 14, 0.34, 3.5],
-  [-760, -310, 18, 0.31, 2.7], [760, 330, 16, 0.3, 2.9], [-760, 80, 13, 0.34, 3.3],
-  [755, -95, 20, 0.29, 3.6], [-585, 470, 15, 0.32, 3.8], [580, 475, 18, 0.3, 4],
-  [-120, 500, 14, 0.35, 4.2], [125, 500, 17, 0.31, 4.4], [-820, 470, 15, 0.3, 4.6],
-  [820, -450, 16, 0.33, 4.8],
-];
-const LAUNCH_HEARTS = [
-  [-310, -250, 34, 0], [-230, -350, 24, 70], [-125, -275, 40, 35],
-  [-35, -410, 28, 110], [80, -320, 36, 20], [205, -380, 26, 90],
-  [315, -245, 42, 55], [405, -130, 24, 125], [-390, -80, 26, 100],
-  [-330, 100, 40, 30], [-235, 250, 27, 140], [-145, 160, 35, 75],
-  [-50, 340, 25, 115], [65, 250, 42, 15], [170, 360, 28, 100],
-  [270, 210, 36, 50], [390, 120, 25, 130], [-430, 20, 32, 65],
-  [-280, -5, 23, 160], [330, -25, 30, 145], [-175, -440, 22, 180],
-  [145, -470, 32, 155], [-80, 430, 28, 190], [450, 270, 34, 175],
-];
 function useRoute() {
   const get = () => { const h = location.hash.replace("#", ""); return h === "deck" || M.some((m) => m.id === h) ? h : "home"; };
   const [r, setR] = useState(get);
@@ -122,46 +96,6 @@ function ThemeBtn({ dark, toggle }) {
     <button className="tb" onClick={toggle} aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}>
       <span className={dark ? "tb-icon" : "tb-icon moon"}>{dark ? "☀" : "☾"}</span>
     </button>
-  );
-}
-
-function HeartShape({ className = "", size = 24, style }) {
-  return (
-    <svg className={className} style={style} width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78Z" />
-    </svg>
-  );
-}
-
-function HeartField() {
-  return (
-    <div className="heart-field" aria-hidden="true">
-      <svg className="heart-defs" width="0" height="0">
-        <defs>
-          <linearGradient id="heart-gradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#F2BA49" />
-            <stop offset="48%" stopColor="#E5A93C" />
-            <stop offset="100%" stopColor="#E5A93C" stopOpacity=".14" />
-          </linearGradient>
-        </defs>
-      </svg>
-      <span className="heart-burst-ring" />
-      <HeartShape className="heart-origin" size={124} />
-      {HEARTS.map(([x, y, size, opacity, delay], index) => (
-        <HeartShape
-          key={index}
-          className="ambient-heart"
-          size={Math.round(size * 1.7)}
-          style={{
-            "--heart-x": `${x}px`,
-            "--heart-y": `${y}px`,
-            "--heart-opacity": opacity,
-            "--heart-delay": `${delay}s`,
-            "--heart-duration": `${5.6 + (index % 4) * .8}s`,
-          }}
-        />
-      ))}
-    </div>
   );
 }
 
@@ -289,56 +223,69 @@ function Stack({ go, onMatch, order, setOrder }) {
   );
 }
 
-function Landing({ go, onMatch, order, setOrder, dark, toggle }) {
-  const [launching, setLaunching] = useState(false);
-  const launchTimer = useRef(null);
-  useEffect(() => () => window.clearTimeout(launchTimer.current), []);
-  const launch = () => {
-    if (launching) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      go("deck");
-      return;
+const WORDMARK = "CTPR";
+
+function Landing({ go, dark, toggle, members }) {
+  const showcaseRef = useRef(null);
+  const [showcaseVisible, setShowcaseVisible] = useState(false);
+  const [focusPaused, setFocusPaused] = useState(false);
+
+  useEffect(() => {
+    const section = showcaseRef.current;
+    if (!section) return undefined;
+    if (!("IntersectionObserver" in window)) {
+      setShowcaseVisible(true);
+      return undefined;
     }
-    setLaunching(true);
-    launchTimer.current = window.setTimeout(() => go("deck"), 850);
-  };
+    const observer = new IntersectionObserver(([entry]) => {
+      setShowcaseVisible(entry.isIntersecting && entry.intersectionRatio >= 0.5);
+    }, { threshold: 0.5 });
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, []);
 
   return (
-    <main className="home-screen dating-theme">
-      <HeartField />
-      <div className="bar">
-        <span className="mono">CTPR CLUB</span>
+    <main
+      className="landing-showcase dating-theme"
+      onFocusCapture={() => setFocusPaused(true)}
+      onBlurCapture={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setFocusPaused(false);
+      }}
+    >
+      <header className="landing-bar">
+        <span className="landing-brand mono">CTPR CLUB</span>
         <nav className="dating-nav" aria-label="Primary navigation">
           <a href="#home">Home</a>
           <a href="#deck">Meet the club</a>
         </nav>
         <ThemeBtn dark={dark} toggle={toggle} />
-      </div>
-      <div className="home-content">
-        <h1>Find your<br />dev <em>match.</em></h1>
-        <p className="sub">Skip the "what are we?" stage and go straight to production. Swipe through the people behind the pixels.</p>
-        <div className={`match-launch${launching ? " is-bursting" : ""}`}>
-          {launching && (
-            <span className="launch-burst" aria-hidden="true">
-              {LAUNCH_HEARTS.map(([x, y, size, delay], index) => (
-                <HeartShape
-                  key={index}
-                  className="launch-heart"
-                  size={size}
-                  style={{
-                    "--launch-x": `${x}px`,
-                    "--launch-y": `${y}px`,
-                    "--launch-delay": `${delay}ms`,
-                  }}
-                />
-              ))}
-            </span>
-          )}
-          <button className="find-match" onClick={launch} disabled={launching}>
-            Find Your Match
-          </button>
+      </header>
+      <section
+        className="landing-showcase-stage"
+        id="home"
+        ref={showcaseRef}
+        aria-label="CTPR Club member showcase"
+      >
+        <div className="landing-wordmark" aria-hidden="true">{WORDMARK}</div>
+        <CardFan
+          members={members}
+          variant="showcase"
+          sectionVisible={showcaseVisible}
+          focusPaused={focusPaused}
+        />
+      </section>
+      <section className="landing-intro">
+        <div className="landing-intro-grid">
+          <div className="landing-intro-copy">
+            <h1>Find your dev match.</h1>
+            <p>Skip the "what are we?" stage and go straight to production. Swipe through the people behind the pixels.</p>
+            <button className="landing-find-match" onClick={() => go("deck")}>
+              Find Your Match
+            </button>
+          </div>
+          <CardFan members={members} variant="hero" />
         </div>
-      </div>
+      </section>
     </main>
   );
 }
@@ -551,7 +498,7 @@ function App() {
                 : <Portfolio key={m.id} m={m} go={go} dark={dark} toggle={toggle} />
           : route === "deck"
             ? <Deck go={go} onMatch={acceptMember} order={order} setOrder={setOrder} dark={dark} toggle={toggle} />
-            : <Landing go={go} onMatch={acceptMember} order={order} setOrder={setOrder} dark={dark} toggle={toggle} />}
+            : <Landing go={go} dark={dark} toggle={toggle} members={M} />}
     </>
   );
 }
