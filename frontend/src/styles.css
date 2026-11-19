@@ -92,7 +92,7 @@ h1 em{font-size:1.08em;letter-spacing:-.045em}
 .match-card{width:min(100%,520px);padding:32px;border:1px solid var(--line);border-radius:28px;background:var(--card);text-align:center;box-shadow:0 24px 70px rgba(0,0,0,.18);animation:match-pop 3.6s cubic-bezier(.2,.8,.2,1) forwards}
 .match-kicker{color:var(--acc);margin:0}
 .match-card h1{font-size:clamp(42px,8vw,68px);margin:10px 0 22px}
-.match-image{display:block;width:100%;max-height:min(52vh,420px);object-fit:contain;border-radius:18px;background:#001B2B}
+.match-image{display:block;width:100%;max-height:min(52vh,420px);object-fit:contain;border-radius:18px;background:#000000}
 .match-copy{max-width:420px;margin:22px auto 10px;color:var(--mute);font:16px/1.7 var(--sans)}
 .match-copy strong{color:var(--ink)}
 .date-prank-screen{position:fixed;inset:0;z-index:110;display:grid;place-items:center;padding:16px;background:#fff9e9;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
@@ -238,7 +238,7 @@ h2{font:400 clamp(30px,4.5vw,48px)/1.04 var(--serif);letter-spacing:-.04em;margi
 .deck-screen.dating-theme .cnt{width:min(92vw,760px);color:var(--dating-muted);letter-spacing:.08em}
 .deck-screen.dating-theme .cnt b{color:var(--dating-ink);font-family:"Figtree","Nunito",system-ui,sans-serif;font-weight:800}
 .deck-screen.dating-theme .stack{
-  width:min(92vw,760px);height:min(66dvh,620px);margin:0 auto;
+  width:min(92vw,760px);height:min(75dvh,700px);margin:0 auto;
 }
 .deck-screen.dating-theme .card{
   left:50%;width:min(70vw,410px);height:100%;border-radius:24px;

@@ -5,15 +5,15 @@ import PortfolioPage from "../components/portfolio/PortfolioPage.jsx";
 const DATA = {
   name: "Althea Lei Santos",
   role: "BSIT STUDENT",
-  color: "#9b5de5",
-  onAcc: "#ffffff",
+  color: "#FFDB5B",
+  onAcc: "#3B3B3B",
   bio: "Portfolio coming soon. Replace this text with your story.",
   projects: [
     {
       title: "A Web-Based Order Management and Service Reservation System with Predictive Analytics for Ermel’s Glass and Aluminum Works.",
       description: "A web-based system for managing orders and service reservations, with predictive analytics for Ermel’s Glass and Aluminum Works.",
       image: "./ermels-glass-aluminum.png",
-      gradient: "linear-gradient(135deg,#2a1b4a,#7b5ea7)",
+      gradient: "linear-gradient(135deg,#3B3B3B,#FFDB5B)",
       tags: ["Figma", "Canva", "React"],
     },
     {
@@ -21,7 +21,7 @@ const DATA = {
       description: "A web-based tool for assessing diabetes complication risk using rule-based scoring and calibrated machine-learning models.",
       image: "./diabeates-risk-assessment.png",
       imagePosition: "center top",
-      gradient: "linear-gradient(135deg,#3a1b3f,#b45bd6)",
+      gradient: "linear-gradient(135deg,#000000,#3B3B3B)",
       tags: ["JavaScript", "HTML", "CSS"],
     },
     {
@@ -29,7 +29,7 @@ const DATA = {
       description: "A website for managing gym scheduling at Fit X Brawl Gym.",
       image: "./fitxbrawl-home.png",
       imagePosition: "center top",
-      gradient: "linear-gradient(135deg,#1b3a35,#458a72)",
+      gradient: "linear-gradient(135deg,#3B3B3B,#000000)",
       tags: ["JavaScript", "HTML", "CSS"],
     },
   ],
@@ -44,9 +44,9 @@ const DATA = {
     { n: "Canva", c: "Tools", e: "🖌️" },
   ],
   slides: [
-    { t: "Workspace", d: "Where the work happens.", g: "linear-gradient(160deg,#9b5de5,#2b2622)" },
-    { t: "Campus life", d: "Life between classes.", g: "linear-gradient(160deg,#0f6b5c,#6fcf97)" },
-    { t: "Off the clock", d: "What I do for fun.", g: "linear-gradient(160deg,#f15bb5,#ffb347)" },
+    { t: "Workspace", d: "Where the work happens.", g: "linear-gradient(160deg,#FFDB5B,#3B3B3B)" },
+    { t: "Campus life", d: "Life between classes.", g: "linear-gradient(160deg,#3B3B3B,#000000)" },
+    { t: "Off the clock", d: "What I do for fun.", g: "linear-gradient(160deg,#FFDB5B,#000000)" },
   ],
 };
 

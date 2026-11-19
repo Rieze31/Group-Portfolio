@@ -32,7 +32,7 @@ const PAGES = ["Home", "Projects", "Tech Stack", "About Me"];
 const SANS = { fontFamily: '"Figtree", "Nunito", system-ui, sans-serif' };
 const SERIF = { fontFamily: '"Figtree", "Nunito", system-ui, sans-serif' };
 const HIDE_BACK = { backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" };
-const LETTER_COLORS = ["#f5a623", "#8bc34a", "#4caf50", "#42a5f5", "#ef5350", "#ff9800", "#26c6da", "#66bb6a", "#5c6bc0"];
+const LETTER_COLORS = ["#FFDB5B", "#3B3B3B", "#FFDB5B", "#3B3B3B", "#FFDB5B", "#3B3B3B", "#FFDB5B", "#3B3B3B", "#FFDB5B"];
 const EDGE = "border border-[#d2d2d8]";
 
 const CSS = `
@@ -45,7 +45,7 @@ const CSS = `
 function Pastener() {
   return (
     <div className="relative mx-auto mb-5 h-5 w-28">
-      <div className="absolute inset-0 rounded-full border-[3px] border-[#d23b3b]" />
+      <div className="absolute inset-0 rounded-full border-[3px] border-[#FFDB5B]" />
       <div className="absolute inset-x-3 top-1/2 h-[5px] -translate-y-1/2 border-y border-[#cfcfd4] bg-[#e9e9ec]" />
       <div className="absolute -top-[2px] left-[34%] h-6 w-3 border border-[#cfcfd4] bg-white" />
       <div className="absolute -top-[2px] left-[58%] h-6 w-3 border border-[#cfcfd4] bg-white" />
@@ -69,8 +69,8 @@ function CoverSheet() {
       <div className="absolute inset-[7px] border-2 border-dashed border-black" />
       <div className="relative flex h-full flex-col items-center px-[10%] pb-[9%] pt-[12%]" style={SANS}>
         <div className="flex items-end gap-1">
-          <span className="border-b-2 border-[#4a90d9] px-1 text-[26px] font-bold leading-tight text-[#4a90d9]">{DATA.first}</span>
-          <span className="text-[34px] font-black leading-none text-[#f28c28]">’s</span>
+          <span className="border-b-2 border-[#FFDB5B] px-1 text-[26px] font-bold leading-tight text-[#3B3B3B]">{DATA.first}</span>
+          <span className="text-[34px] font-black leading-none text-[#FFDB5B]">’s</span>
         </div>
 
         <div className="mt-3 flex" style={{ fontFamily: '"Arial Rounded MT Bold", "Arial Black", system-ui, sans-serif' }}>
