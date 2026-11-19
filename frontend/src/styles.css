@@ -238,10 +238,10 @@ h2{font:400 clamp(30px,4.5vw,48px)/1.04 var(--serif);letter-spacing:-.04em;margi
 .deck-screen.dating-theme .cnt{width:min(92vw,760px);color:var(--dating-muted);letter-spacing:.08em}
 .deck-screen.dating-theme .cnt b{color:var(--dating-ink);font-family:"Figtree","Nunito",system-ui,sans-serif;font-weight:800}
 .deck-screen.dating-theme .stack{
-  width:min(92vw,760px);height:min(61dvh,620px);margin:0 auto;
+  width:min(92vw,760px);height:min(66dvh,620px);margin:0 auto;
 }
 .deck-screen.dating-theme .card{
-  left:50%;width:min(76vw,540px);height:100%;border-radius:24px;
+  left:50%;width:min(70vw,410px);height:100%;border-radius:24px;
   box-shadow:0 26px 54px rgba(59,59,59,.18);perspective:1200px;transform-origin:center;
 }
 .deck-screen.dating-theme .card.t{box-shadow:0 28px 60px rgba(59,59,59,.25);touch-action:pan-y}
@@ -258,7 +258,7 @@ h2{font:400 clamp(30px,4.5vw,48px)/1.04 var(--serif);letter-spacing:-.04em;margi
   color:var(--dating-ink);animation:match-fade 3.6s ease-in forwards;
 }
 .match-screen.dating-theme .match-card{
-  position:relative;border:0;border-radius:28px;background:#FDFCF9;box-shadow:0 24px 70px rgba(59,59,59,.18);
+  position:relative;border:0;border-radius:28px;background:#FFDB5B;box-shadow:0 24px 70px rgba(59,59,59,.18);
 }
 :root[data-theme="dark"] .match-screen.dating-theme .match-card{color:#3B3B3B}
 :root[data-theme="dark"] .match-screen.dating-theme .match-kicker,
@@ -280,8 +280,8 @@ h2{font:400 clamp(30px,4.5vw,48px)/1.04 var(--serif);letter-spacing:-.04em;margi
   .dating-theme .tb{width:42px;height:42px}
   .home-screen.dating-theme{padding-top:88px}
   .deck-screen.dating-theme{padding-top:76px}
-  .deck-screen.dating-theme .stack{width:92vw;height:clamp(65dvh,68dvh,72dvh)}
-  .deck-screen.dating-theme .card{width:92vw}
+  .deck-screen.dating-theme .stack{width:min(92vw,380px);height:min(68dvh,500px)}
+  .deck-screen.dating-theme .card{width:min(92vw,380px)}
   .deck-screen.dating-theme .card:nth-child(2){transform:translateX(-50%) translate(54px,18px) rotate(6deg) scale(.96)!important}
   .deck-screen.dating-theme .card:nth-child(3){transform:translateX(-50%) translate(84px,38px) rotate(11deg) scale(.92)!important}
 }
