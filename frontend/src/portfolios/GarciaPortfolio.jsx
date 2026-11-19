@@ -3,154 +3,301 @@ import ThemeBtn from "../components/ThemeBtn.jsx";
 
 /* ---------- Everything you may want to edit is in DATA ---------- */
 const DATA = {
-  name: "Phiona Eunice Garcia",
-  first: "Phiona",
-  school: "Pamantasan ng Lungsod ng Maynila",
-  course: "Bachelor of Science in Information Technology",
+  name: "Phiona Eunice de Leon Garcia",
+  nickname: "Yay",
   section: "BSIT 3-1",
-  teacher: "Sean Dyogi",
-  photo: "",   // put a file in frontend/public/photos/ and write e.g. "/photos/garcia.jpg" here
-  intro: "Third year IT student interested in web development, from the interface people see to the backend that supports it.",
-  projects: [
-    { title: "CTPR Club Group Portfolio", text: "A group portfolio website with a card landing page, one portfolio per member, and a Spring Boot backend.", stack: "React, Spring Boot, Java, Tailwind CSS" },
-    { title: "EaseAccess", text: "A barangay document request system."},
-    { title: "ReadAble", text: "A web-based interactive reading comprehension support application for children with autism spectrum disorder (ASD)"},
-    { title: "Adobe Photoshop Projects ", text: "A series of graphic design projects created using Adobe Photoshop.", stack: "Adobe Photoshop" },
-  ],
-  stack: [
-    ["Frontend", "React, JavaScript, HTML, CSS, Tailwind, CSS"],
-    ["Backend", "Java, Spring Boot, REST APIs"],
-    ["Database and tools", "MySQL, H2, Git, GitHub, Vite, VS Code"],
-    ["Design", "Figma, wireframing, responsive layout"],
-  ],
+  field: "BSIT Portfolio",   // small label at the top-left of every page
+  date: "Nov 2026",          // small label at the top-right of every page
+  photo: "",                 // put a file in frontend/public/photos/ and write e.g. "/photos/garcia.jpg" here
+  spotifyPlaylist: "",       // paste the playlist ID from your Spotify share link (open.spotify.com/playlist/THIS_PART)
+
   about: [
-    "I am a third year BSIT student at Pamantasan ng Lungsod ng Maynila. I enjoy building web pages and learning how the backend behind them works.",
-    "This portfolio is part of the CTPR Club group portfolio.",
+    ["Nickname:", "Yay"],
+    ["Age:", "21 yrs old"],
+    ["Favorite color:", " White"],
+    ["Favorite app:", "TikTok "],
+    ["Year:", "3rd year BSIT student"],
+    ["Learning style:", "Visual learner"],
+    ["Why IT:", "I chose IT because of its broad opportunities and the creative world of it."],
   ],
+
+  projects: [
+    { title: "CTPR Club Group Portfolio", text: "Group portfolio website." },
+    { title: "EaseAccess", text: "Barangay document request system." },
+    { title: "ReadAble", text: "Web-based interactive reading comprehension support application for children with autism spectrum disorder (ASD)." },
+  ],
+
+  skills: [
+    { title: "Adobe Photoshop", text: "Graphic design projects that I used to compete with in collaborative desktop publishing." },
+    { title: "InDesign", text: "Desktop publishing and page layout for multi-page print and digital media, that I also used to compete with in collaborative desktop publishing." },
+    { title: "SketchUp", text: "3D modelling and visual prototypes like architectural structures and interior designing." },
+  ],
+
   hobbies: [
-    ["Online Shopping:", " sale items are my weakness"],
-    ["Solo Dates:", " matcha and me "],
-    ["Dressing up:", " When i look good, I feel good."],
+    { title: "Online shopping" },
+    { title: "Matcha hunting" },
+    { title: "Pickleball" },
+    { title: "Cafe hopping" },
+    { title: "Music vibing", spotify: true },
+    { title: "Sunset watching" },
+  ],
+
+  quests: [
+    { title: "GotChew", text: "Selling Dubai chewy cookies." },
+    { title: "TikTok Affiliate" },
+  ],
+
+  facts: [
+    "I love trying on clothes.",
+    "I love trying out new food spots.",
+    "I love cooking the recipes I see on TikTok or FB reels.",
+    "I have a vintage and digital camera collection.",
+    "I love anything vintage.",
   ],
 };
 
-const PAGES = ["Home", "Projects", "Tech Stack", "Facts About Me", "Hobbies and Interests"];
+/* the tabs shown in the table of contents (order = page order) */
+const PAGES = ["About Me", "Projects", "Skills", "Hobbies", "Side Quests", "Fun Facts"];
+
+/* palette taken from the template */
+const YEL = "#ffc72c";     // folder
+const PALE = "#fdf3a7";    // pages
+const LAV = "#f0dce8";     // pink paper (cover + cards)
+const BROWN = "#5a2008";
+const PINK = "#e6128c";
+const GOLD = "#e0a92a";
+const LINE = "#d9c86a";
+
 const SANS = { fontFamily: '"Inter Tight", system-ui, sans-serif' };
-const SERIF = { fontFamily: '"Times New Roman", Times, serif' };
+const MONO = { fontFamily: '"Space Mono", ui-monospace, Menlo, monospace' };
+const SCRIPT = { fontFamily: '"Yellowtail", "Brush Script MT", cursive' };
+const DISPLAY = {
+  fontFamily: '"Bagel Fat One", "Arial Black", system-ui, sans-serif',
+  color: BROWN,
+  WebkitTextStroke: `4px ${GOLD}`,
+  paintOrder: "stroke fill",
+  lineHeight: 0.98,
+};
 const HIDE_BACK = { backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" };
-const LETTER_COLORS = ["#f5a623", "#8bc34a", "#4caf50", "#42a5f5", "#ef5350", "#ff9800", "#26c6da", "#66bb6a", "#5c6bc0"];
-const EDGE = "border border-[#d2d2d8]";
+const EDGE = "border border-[#d9a521]";
 
 const CSS = `
+@import url("https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Space+Mono:wght@400;700&family=Yellowtail&display=swap");
 @keyframes sheetIn { from { transform: rotateX(-80deg); opacity: .15; } to { transform: rotateX(0); opacity: 1; } }
 .sheet { transform-origin: top center; animation: sheetIn .45s ease-out both; }
 @media (prefers-reduced-motion: reduce) { .sheet { animation: none; } }
 `;
 
-/* red paper fastener, like the photo */
-function Pastener() {
+/* ---------- small building blocks ---------- */
+
+function Star({ size = 26, className = "" }) {
   return (
-    <div className="relative mx-auto mb-5 h-5 w-28">
-      <div className="absolute inset-0 rounded-full border-[3px] border-[#d23b3b]" />
-      <div className="absolute inset-x-3 top-1/2 h-[5px] -translate-y-1/2 border-y border-[#cfcfd4] bg-[#e9e9ec]" />
-      <div className="absolute -top-[2px] left-[34%] h-6 w-3 border border-[#cfcfd4] bg-white" />
-      <div className="absolute -top-[2px] left-[58%] h-6 w-3 border border-[#cfcfd4] bg-white" />
+    <svg viewBox="0 0 24 24" width={size} height={size} className={className} aria-hidden="true">
+      <g stroke={PINK} strokeWidth="4.5" strokeLinecap="round">
+        <path d="M12 3v18" />
+        <path d="M4.2 7.5l15.6 9" />
+        <path d="M4.2 16.5l15.6-9" />
+      </g>
+    </svg>
+  );
+}
+
+function Title({ children, size = 30 }) {
+  return (
+    <div className="relative mb-4 pr-8">
+      <h2 className="m-0 font-normal" style={{ ...DISPLAY, fontSize: size }}>{children}</h2>
+      <Star className="absolute right-0 top-0" />
     </div>
   );
 }
 
-function Field({ label, value }) {
+/* header and footer shared by every page, like the template slides */
+function Frame({ n, children }) {
   return (
-    <div className="flex items-end gap-2">
-      <b className="shrink-0 text-[11px] uppercase">{label}</b>
-      <span className="flex-1 border-b border-black pb-px text-center text-[13px]">{value}</span>
+    <div className="flex min-h-full flex-col" style={{ ...MONO, color: BROWN }}>
+      <div className="flex items-center justify-between text-[8.5px]" style={{ color: PINK }}>
+        <span>{DATA.field}</span>
+        <span style={{ ...SCRIPT, fontSize: 17 }}>{DATA.first}</span>
+        <span>{DATA.date}</span>
+      </div>
+      <div className="mt-4 flex-1">{children}</div>
+      <div className="mt-5 flex items-center justify-between text-[8.5px]" style={{ color: PINK }}>
+        <span>{DATA.section}</span>
+        <span>{n} / {PAGES.length}</span>
+        <span>CTPR Club</span>
+      </div>
     </div>
   );
 }
 
-/* the paper stuck on the front of the folder */
+/* pink-bordered card used for projects and side quests */
+function Card({ label, title, text }) {
+  return (
+    <div className="border-2 bg-[#fffbd6] p-2.5" style={{ borderColor: PINK }}>
+      <div className="flex items-baseline gap-2">
+        <span className="text-[9px]" style={{ color: PINK }}>{label}</span>
+        <b className="text-[13px] leading-tight" style={{ ...SANS, fontWeight: 800 }}>{title}</b>
+      </div>
+      {text && <p className="m-0 mt-1 text-[9.5px] leading-[1.55]">{text}</p>}
+    </div>
+  );
+}
+
+/* ---------- the cover (front of the folder) ---------- */
+
 function CoverSheet() {
   return (
-    <div className="absolute inset-x-[7%] inset-y-[5%] bg-white text-[#111] shadow-[0_1px_3px_rgba(0,0,0,.2)]">
-      <div className="absolute inset-[7px] border-2 border-dashed border-black" />
-      <div className="relative flex h-full flex-col items-center px-[10%] pb-[9%] pt-[12%]" style={SANS}>
-        <div className="flex items-end gap-1">
-          <span className="border-b-2 border-[#4a90d9] px-1 text-[26px] font-bold leading-tight text-[#4a90d9]">{DATA.first}</span>
-          <span className="text-[34px] font-black leading-none text-[#f28c28]">’s</span>
+    <div className="absolute inset-x-[6%] inset-y-[4%] rounded-[10px] shadow-[0_1px_3px_rgba(0,0,0,.2)]" style={{ background: LAV }}>
+      <div className="absolute inset-[7px] rounded-lg border-2 border-dashed" style={{ borderColor: BROWN }} />
+      <div className="relative flex h-full flex-col px-[9%] py-[8%]" style={MONO}>
+        <div className="flex justify-between text-[10px]" style={{ color: PINK }}>
+          <span>{DATA.field}</span>
+          <span>{DATA.date}</span>
         </div>
 
-        <div className="mt-3 flex" style={{ fontFamily: '"Arial Rounded MT Bold", "Arial Black", system-ui, sans-serif' }}>
-          {"PORTFOLIO".split("").map((c, i) => (
-            <span key={i} className="inline-block text-[34px] font-black leading-none" style={{ color: LETTER_COLORS[i], transform: `rotate(${i % 2 ? 2 : -2}deg)` }}>{c}</span>
-          ))}
+        <div className="flex flex-1 flex-col items-center justify-center text-center">
+          <div style={{ ...DISPLAY, fontSize: 55, WebkitTextStroke: `6px ${GOLD}` }}>
+            <br />Portfolio
+          </div>
+          <div className="mt-3 -rotate-2" style={{ ...SCRIPT, color: PINK, fontSize: 38, lineHeight: 1.05 }}>
+            {DATA.first}
+          </div>
         </div>
 
-        <div className="mt-5 flex aspect-[0.8] w-[36%] items-center justify-center overflow-hidden border-2 border-[#9a9aa0] text-[11px] text-[#777]">
-          {DATA.photo ? <img src={DATA.photo} alt={DATA.name} className="h-full w-full object-cover" /> : "Photo"}
-        </div>
-
-        <div className="mt-auto w-full space-y-3">
-          <Field label="Year & Section:" value={DATA.section} />
-          <Field label="Classroom Teacher:" value={DATA.teacher} />
+        <div className="flex justify-between text-[10px]" style={{ color: PINK }}>
+          <span>{DATA.section}</span>
+          <span> {DATA.teacher}</span>
         </div>
       </div>
     </div>
   );
 }
 
-const H = "mb-1.5 mt-4 border-b border-black text-[15px] font-bold first:mt-0";
-const T = "text-[12.5px] leading-[1.5]";
+/* ---------- the pages inside the folder ---------- */
 
 function PageContent({ i }) {
+  /* About Me */
   if (i === 0) {
     return (
-      <>
-        <h1 className="text-[22px] font-bold leading-tight">{DATA.name}</h1>
-        <p className={T + " mb-2"}>{DATA.intro}</p>
-        <h3 className={H}>Student Information</h3>
-        <ul className={T + " list-disc pl-5"}>
-          <li>School: {DATA.school}</li>
-          <li>Course: {DATA.course}</li>
-          <li>Year and section: {DATA.section}</li>
-        </ul>
-      </>
+      <Frame n={1}>
+        <Title>{PAGES[0]}</Title>
+        <div className="flex items-start gap-3">
+          <div className="min-w-0 flex-1 text-[10px] leading-[1.55]">
+            <p className="m-0" style={{ color: PINK }}>Hello!</p>
+            <p className="m-0 mb-2 font-bold" style={{ color: PINK }}>I’m {DATA.nickname}</p>
+            <p className="m-0">Full name: {DATA.name}</p>
+          </div>
+          <div className="aspect-[0.78] w-[40%] shrink-0 border-2 p-1.5" style={{ background: "#f2c230", borderColor: PINK }}>
+            <div className="flex h-full w-full items-center justify-center overflow-hidden text-[10px]" style={{ background: LAV, color: PINK }}>
+              {DATA.photo ? <img src={DATA.photo} alt={DATA.name} className="h-full w-full object-cover" /> : "Photo"}
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4 rounded-lg border-2 border-dashed px-3 py-1.5" style={{ borderColor: BROWN, background: LAV }}>
+          {DATA.about.map(([k, v]) => (
+            <div key={k} className="flex gap-2 border-b border-dotted py-1.5 text-[10px] leading-[1.5] last:border-b-0" style={{ borderColor: "#b08a9c" }}>
+              <b className="w-[84px] shrink-0" style={{ color: PINK }}>{k}</b>
+              <span>{v}</span>
+            </div>
+          ))}
+        </div>
+      </Frame>
     );
   }
+
+  /* Projects */
   if (i === 1) {
     return (
-      <>
-        <h3 className={H}>Projects</h3>
-        <ul className={T + " list-disc space-y-2 pl-5"}>
-          {DATA.projects.map((p) => (
-            <li key={p.title}><b>{p.title}.</b> {p.text} <i>{p.stack}.</i></li>
+      <Frame n={2}>
+        <Title>{PAGES[1]}</Title>
+        <div className="space-y-3">
+          {DATA.projects.map((p, k) => (
+            <Card key={p.title} label={String(k + 1).padStart(2, "0")} title={p.title} text={p.text} />
           ))}
-        </ul>
-      </>
+        </div>
+      </Frame>
     );
   }
+
+  /* Skills */
   if (i === 2) {
     return (
-      <>
-        <h3 className={H}>Tech Stack</h3>
-        <ul className={T + " list-disc space-y-1.5 pl-5"}>
-          {DATA.stack.map(([k, v]) => <li key={k}><b>{k}:</b> {v}</li>)}
-        </ul>
-      </>
+      <Frame n={3}>
+        <Title>{PAGES[2]}</Title>
+        <div>
+          {DATA.skills.map((s, k) => (
+            <div key={s.title} className="flex gap-3 border-b py-3 first:pt-0" style={{ borderColor: LINE }}>
+              <span className="w-3 shrink-0 text-[10px]" style={{ color: PINK }}>{k + 1}</span>
+              <div className="min-w-0">
+                <b className="block text-[14px] leading-tight" style={{ ...SANS, fontWeight: 800 }}>{s.title}</b>
+                <p className="m-0 mt-1 text-[9.5px] leading-[1.6]">{s.text}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Frame>
     );
   }
-    if (i === 4) {
+
+  /* Hobbies: dashed cards like the "Let's work together" card */
+  if (i === 3) {
     return (
-      <>
-        <h3 className={H}>Hobbies and Interests</h3>
-        {DATA.hobbies.map((p, k) => <p key={k} className={T + " mb-2"}>{p}</p>)}
-      </>
+      <Frame n={4}>
+        <Title>{PAGES[3]}</Title>
+        <div className="grid grid-cols-2 gap-2.5">
+          {DATA.hobbies.map((h) => (
+            <div
+              key={h.title}
+              className={"flex flex-col items-center justify-center rounded-xl border-2 border-dashed px-2 py-3 text-center " + (h.spotify ? "col-span-2" : "")}
+              style={{ borderColor: BROWN, background: LAV }}
+            >
+              <div style={{ ...SCRIPT, color: PINK, fontSize: 24, lineHeight: 1.1 }}>{h.title}</div>
+              {h.spotify && DATA.spotifyPlaylist && (
+                <iframe
+                  title="Top Spotify playlist"
+                  src={`https://open.spotify.com/embed/playlist/${DATA.spotifyPlaylist}?theme=0`}
+                  width="100%"
+                  height="152"
+                  loading="lazy"
+                  allow="encrypted-media"
+                  className="mt-2 rounded-xl border-0"
+                />
+              )}
+            </div>
+          ))}
+        </div>
+      </Frame>
     );
   }
+
+  /* Side Quests */
+  if (i === 4) {
+    return (
+      <Frame n={5}>
+        <Title>{PAGES[4]}</Title>
+        <div className="space-y-3">
+          {DATA.quests.map((q, k) => (
+            <Card key={q.title} label={`Quest ${String(k + 1).padStart(2, "0")}`} title={q.title} text={q.text} />
+          ))}
+        </div>
+      </Frame>
+    );
+  }
+
+  /* Fun Facts */
   return (
-    <>
-      <h3 className={H}>About Me</h3>
-      {DATA.about.map((p, k) => <p key={k} className={T + " mb-2"}>{p}</p>)}
-    </>
+    <Frame n={6}>
+      <Title>{PAGES[5]}</Title>
+      <div>
+        {DATA.facts.map((f) => (
+          <div key={f} className="flex items-start gap-2.5 border-b py-2.5 first:pt-0" style={{ borderColor: LINE }}>
+            <Star size={13} className="mt-[2px] shrink-0" />
+            <p className="m-0 text-[10.5px] leading-[1.6]">{f}</p>
+          </div>
+        ))}
+      </div>
+    </Frame>
   );
 }
 
@@ -199,20 +346,19 @@ export default function GarciaPortfolio({ next, go, dark, toggle }) {
             style={{ transformStyle: "preserve-3d" }}
           >
             {/* back of the folder + the paper inside it */}
-            <div className={"absolute inset-0 bg-[#efeff2] " + EDGE}>
-              <div className={"absolute -right-[13px] top-[4%] h-[38%] w-[13px] rounded-r-md border-l-0 bg-[#e6e6ea] " + EDGE} />
+            <div className={"absolute inset-0 " + EDGE} style={{ background: YEL }}>
+              <div className={"absolute -right-[13px] top-[4%] h-[38%] w-[13px] rounded-r-md border-l-0 bg-[#f2b51c] " + EDGE} />
               <div className="absolute inset-x-[4%] bottom-[2.5%] top-[2.5%] [perspective:1200px]">
                 <div
                   key={open + "-" + page}
-                  className="sheet h-full overflow-y-auto bg-white px-6 pb-6 pt-3 text-[#111] shadow-[0_1px_0_#d9d9de,0_2px_0_#fff,0_3px_0_#d9d9de]"
-                  style={SERIF}
+                  className="sheet h-full overflow-y-auto px-4 pb-4 pt-3.5 shadow-[0_1px_0_#e6d77a,0_2px_0_#fff8c4,0_3px_0_#e6d77a]"
+                  style={{ ...SANS, background: PALE, color: BROWN }}
                   onTouchStart={(e) => { touchX.current = e.touches[0].clientX; }}
                   onTouchEnd={(e) => {
                     const d = e.changedTouches[0].clientX - touchX.current;
                     if (d < -50) step(1); else if (d > 50) step(-1);
                   }}
                 >
-                  <Pastener />
                   <PageContent i={page} />
                 </div>
               </div>
@@ -230,32 +376,38 @@ export default function GarciaPortfolio({ next, go, dark, toggle }) {
                 aria-label="Open the folder"
                 onClick={openFolder}
                 onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && openFolder()}
-                className={"absolute inset-0 bg-[#f7f7f9] shadow-[0_8px_24px_rgba(0,0,0,.18)] " + EDGE + (open ? "" : " cursor-pointer")}
-                style={HIDE_BACK}
+                className={"absolute inset-0 shadow-[0_8px_24px_rgba(0,0,0,.18)] " + EDGE + (open ? "" : " cursor-pointer")}
+                style={{ ...HIDE_BACK, background: YEL }}
               >
-                <div className="absolute inset-y-0 left-[5%] w-px bg-[#dcdce2]" />
-                <div className="absolute inset-y-0 left-[6.5%] w-px bg-[#dcdce2]" />
+                <div className="absolute inset-y-0 left-[3%] w-px" style={{ background: GOLD }} />
+                <div className="absolute inset-y-0 left-[4.2%] w-px" style={{ background: GOLD }} />
                 <CoverSheet />
               </div>
 
-              {/* inside of the cover: contents */}
-              <div className={"absolute inset-0 bg-[#f7f7f9] p-6 text-[#111] " + EDGE} style={{ ...HIDE_BACK, transform: "rotateY(180deg)" }}>
-                <div className="absolute inset-y-0 right-[5%] w-px bg-[#dcdce2]" />
-                <div className="font-mono text-[11px] uppercase tracking-widest text-[#555]">Contents</div>
-                <h2 className="mt-2 text-xl font-bold leading-tight">{DATA.name}</h2>
-                <ol className="mt-8 list-none p-0">
-                  {PAGES.map((p, i) => (
+              {/* inside of the cover: table of contents */}
+              <div className={"absolute inset-0 p-6 " + EDGE} style={{ ...HIDE_BACK, transform: "rotateY(180deg)", background: PALE, color: BROWN }}>
+                <div className="absolute inset-y-0 right-[5%] w-px" style={{ background: "#e6d77a" }} />
+                <Star size={34} />
+                <h2 className="mb-6 mt-2 font-normal" style={{ ...DISPLAY, fontSize: 34 }}>Table of<br />Contents</h2>
+                <ol className="m-0 list-none p-0" style={MONO}>
+                  {PAGES.map((p, k) => (
                     <li key={p}>
                       <button
-                        onClick={() => setPage(i)}
-                        className="flex w-full cursor-pointer items-baseline gap-2 border-0 border-b border-dotted border-[#999] bg-transparent py-2 text-left text-sm text-[#111]"
+                        onClick={() => setPage(k)}
+                        className="flex w-full cursor-pointer items-baseline gap-4 border-0 border-b bg-transparent py-2.5 text-left text-[13px]"
+                        style={{ borderColor: LINE, color: BROWN }}
                       >
-                        <span className={page === i ? "font-bold" : ""}>{p}</span>
-                        <span className="ml-auto font-mono text-xs">{i + 1}</span>
+                        <span className="w-3 text-[11px]" style={{ color: PINK }}>{k + 1}</span>
+                        <span className={page === k ? "font-bold" : ""}>{p}</span>
                       </button>
                     </li>
                   ))}
                 </ol>
+                <div className="absolute inset-x-6 bottom-5 flex justify-between text-[9px]" style={{ ...MONO, color: PINK }}>
+                  <span>{DATA.field}</span>
+                  <span style={{ ...SCRIPT, fontSize: 16 }}>{DATA.first}</span>
+                  <span>{DATA.date}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -274,8 +426,8 @@ export default function GarciaPortfolio({ next, go, dark, toggle }) {
                 <button className={linkBtn} onClick={() => setOpen(false)}>Close folder</button>
               </div>
               <div className="flex flex-wrap justify-center gap-4 md:hidden">
-                {PAGES.map((p, i) => (
-                  <button key={p} onClick={() => setPage(i)} className={linkBtn + (page === i ? " font-bold" : "")}>{p}</button>
+                {PAGES.map((p, k) => (
+                  <button key={p} onClick={() => setPage(k)} className={linkBtn + (page === k ? " font-bold" : "")}>{p}</button>
                 ))}
               </div>
             </>
