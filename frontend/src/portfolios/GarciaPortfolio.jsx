@@ -29,8 +29,8 @@ const DATA = {
 };
 
 const PAGES = ["Home", "Projects", "Tech Stack", "About Me"];
-const SANS = { fontFamily: '"Inter Tight", system-ui, sans-serif' };
-const SERIF = { fontFamily: '"Times New Roman", Times, serif' };
+const SANS = { fontFamily: '"Figtree", "Nunito", system-ui, sans-serif' };
+const SERIF = { fontFamily: '"Figtree", "Nunito", system-ui, sans-serif' };
 const HIDE_BACK = { backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" };
 const LETTER_COLORS = ["#f5a623", "#8bc34a", "#4caf50", "#42a5f5", "#ef5350", "#ff9800", "#26c6da", "#66bb6a", "#5c6bc0"];
 const EDGE = "border border-[#d2d2d8]";
@@ -162,7 +162,7 @@ export default function GarciaPortfolio({ next, go, dark, toggle }) {
   const linkBtn = "cursor-pointer border-0 bg-transparent p-0 text-sm underline underline-offset-4 disabled:cursor-default disabled:no-underline disabled:opacity-30";
 
   return (
-    <div className="flex min-h-screen flex-col overflow-x-hidden bg-[var(--bg)] text-[var(--ink)]" style={SANS}>
+    <div className="cohesive-portfolio flex min-h-screen flex-col overflow-x-hidden bg-[var(--bg)] text-[var(--ink)]" style={SANS}>
       <style>{CSS}</style>
 
       <nav className="sticky top-[env(safe-area-inset-top,0px)] z-30 border-b border-[var(--line)] bg-[var(--bg)]">

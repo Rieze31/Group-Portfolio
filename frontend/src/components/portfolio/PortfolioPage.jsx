@@ -18,6 +18,7 @@ export default function PortfolioPage({ data, member, next, go, dark, toggle }) 
   const [menuOpen, setMenuOpen] = useState(false);
 
   const isVenzon = Boolean(data.portrait);
+  const isAlthea = data.name === "Althea Lei Santos";
   const navLinks = isVenzon ? ["home", "projects", "stack", "about"] : ["projects", "stack", "about"];
 
   useEffect(() => {
@@ -40,7 +41,7 @@ export default function PortfolioPage({ data, member, next, go, dark, toggle }) 
   }, [isVenzon, data.projects]);
 
   return (
-    <div className={isVenzon ? "venzon-page" : undefined} style={accStyle}>
+    <div className={`${isVenzon ? "venzon-page " : ""}${isAlthea ? "althea-portfolio " : ""}cohesive-portfolio`} style={accStyle}>
       <Peek portrait={data.portrait} />
 
       {/* ── Sticky nav ── */}
@@ -48,11 +49,11 @@ export default function PortfolioPage({ data, member, next, go, dark, toggle }) 
         <div className="max-w-[960px] mx-auto px-5 flex justify-between items-center h-[58px]">
           {/* Back button */}
           <button
-            onClick={() => isVenzon ? scTo("home") : go("home")}
+            onClick={() => go("home")}
             className="bg-transparent border-0 text-[var(--ink)] font-medium text-sm cursor-pointer px-2 py-1.5 hover:text-[var(--acc)] transition-colors shrink-0"
-            style={{ fontFamily: "var(--sans)", color: isVenzon ? "var(--acc)" : undefined }}
+            style={{ fontFamily: "var(--sans)" }}
           >
-            {isVenzon ? "Rieze" : "← CTPR Club"}
+            ← CTPR Club
           </button>
 
           {/* Desktop nav links */}
@@ -135,7 +136,7 @@ export default function PortfolioPage({ data, member, next, go, dark, toggle }) 
               <button
                 onClick={() => scTo("projects")}
                 className="border rounded-full px-5 py-2.5 text-sm font-bold cursor-pointer transition-opacity hover:opacity-80"
-                style={{ background: "var(--acc)", borderColor: "var(--acc)", color: "var(--on-acc,#151515)", fontFamily: "var(--sans)" }}
+                style={{ background: "var(--portfolio-accent)", borderColor: "var(--portfolio-accent)", color: "var(--portfolio-button-ink)", fontFamily: "var(--sans)" }}
               >
                 View projects
               </button>
@@ -164,7 +165,7 @@ export default function PortfolioPage({ data, member, next, go, dark, toggle }) 
           {data.projects.map((p, k) => (
             <div
               key={p.title}
-              className={`flex flex-col sm:flex-row gap-6 sm:gap-8 items-start sm:items-center my-8 ${k % 2 ? "sm:flex-row-reverse" : ""}${isVenzon ? " venzon-reveal" : ""}`}
+              className={`flex flex-col sm:flex-row gap-6 sm:gap-8 items-start sm:items-center my-8 ${k % 2 ? "sm:flex-row-reverse" : ""}${isVenzon ? " venzon-reveal" : ""}${isAlthea ? " althea-project-row" : ""}`}
             >
               <div
                 className={`relative w-full sm:flex-[1_1_280px] h-[180px] sm:h-[200px] rounded-[18px] overflow-hidden grid place-items-center text-white text-xs${isVenzon ? " venzon-project-image" : ""}`}

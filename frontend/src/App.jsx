@@ -246,10 +246,10 @@ function Stack({ go, onMatch, order, setOrder }) {
     },
     onPointerCancel: () => { setDrag(false); setDx(0); stopPassSound(); },
   };
-  const BACK = [null, "translate(10px,12px) rotate(3deg)", "translate(-8px,22px) rotate(-3deg)"];
+  const BACK = [null, "translateX(-50%) translate(150px,22px) rotate(7deg) scale(.96)", "translateX(-50%) translate(250px,52px) rotate(13deg) scale(.91)"];
 
   return (
-    <div className="sw">
+    <div className={`sw${drag && dx < 0 ? " drag-left" : ""}${drag && dx > 0 ? " drag-right" : ""}`}>
       <div className="cnt"><b>{String(order[0] + 1).padStart(2, "0")}</b> / {String(M.length).padStart(2, "0")}</div>
       <div className="stack">
         {order.slice(0, 3).map((idx, i) => {
@@ -257,7 +257,7 @@ function Stack({ go, onMatch, order, setOrder }) {
           return (
             <div key={idx} className={"card" + (t ? " t" : "")} {...(t ? h : {})}
               style={{ background: m.color, color: m.textColor, zIndex: 10 - i, transition: t && drag ? "none" : undefined,
-                transform: t ? `translateX(${dx}px) rotate(${dx / 22}deg)` : BACK[i] }}>
+                transform: t ? `translateX(calc(-50% + ${dx}px)) rotate(${dx / 22}deg)` : BACK[i] }}>
               {t && (
                 <>
                   <div className="photo" style={{ background: `linear-gradient(155deg,${m.color}cc,#001B2B)` }}>
@@ -282,8 +282,8 @@ function Stack({ go, onMatch, order, setOrder }) {
       </div>
       <p className="hint">DRAG THE CARD TO SWIPE</p>
       <div className="acts">
-        <button className="act" onClick={pass}><i style={{ background: "#331A04", color: "#F8E964" }}>✕</i>OH HELL NAHHH</button>
-        <button className="act" onClick={look}><i style={{ background: "#EEA233", color: "#331A04" }}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78Z" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg></i>ALAM MO HAAA</button>
+        <button className="act" onClick={pass} aria-label="Pass on this member"><i style={{ background: "#331A04", color: "#F8E964" }}>✕</i>OH HELL NAHHH</button>
+        <button className="act" onClick={look} aria-label="Accept this member"><i style={{ background: "#EEA233", color: "#331A04" }}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78Z" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg></i>ALAM MO HAAA</button>
       </div>
     </div>
   );
@@ -304,9 +304,16 @@ function Landing({ go, onMatch, order, setOrder, dark, toggle }) {
   };
 
   return (
-    <main className="home-screen">
+    <main className="home-screen dating-theme">
       <HeartField />
-      <div className="bar"><span className="mono">CTPR CLUB</span><ThemeBtn dark={dark} toggle={toggle} /></div>
+      <div className="bar">
+        <span className="mono">CTPR CLUB</span>
+        <nav className="dating-nav" aria-label="Primary navigation">
+          <a href="#home">Home</a>
+          <a href="#deck">Meet the club</a>
+        </nav>
+        <ThemeBtn dark={dark} toggle={toggle} />
+      </div>
       <div className="home-content">
         <h1>Find your<br />dev <em>match.</em></h1>
         <p className="sub">Skip the "what are we?" stage and go straight to production. Swipe through the people behind the pixels.</p>
@@ -338,9 +345,12 @@ function Landing({ go, onMatch, order, setOrder, dark, toggle }) {
 
 function Deck({ go, onMatch, order, setOrder, dark, toggle }) {
   return (
-    <main className="deck-screen">
+    <main className="deck-screen dating-theme">
       <div className="deck-bar">
-        <button className="back-home" onClick={() => go("home")}>Back to Home</button>
+        <nav className="dating-nav" aria-label="Primary navigation">
+          <a href="#home">Home</a>
+          <a href="#deck">Meet the club</a>
+        </nav>
         <ThemeBtn dark={dark} toggle={toggle} />
       </div>
       <Stack go={go} onMatch={onMatch} order={order} setOrder={setOrder} />
@@ -403,7 +413,7 @@ function Portfolio({ m, go, dark, toggle }) {
   const bio = m.bio;
   const slides = m.slides;
   return (
-    <div>
+    <div className="cohesive-portfolio">
       <Cursor /><Peek />
       <nav className="pn"><div className="w">
         <button className="back" onClick={() => go("home")}>← CTPR Club</button>
@@ -472,7 +482,8 @@ function Portfolio({ m, go, dark, toggle }) {
 /* ---------- App ---------- */
 function MatchScreen({ member }) {
   return (
-    <main className="match-screen">
+    <main className="match-screen dating-theme">
+      <div className="match-sparkles" aria-hidden="true">♡　✦　♡　✦　♡</div>
       <section className="match-card" role="dialog" aria-modal="true" aria-labelledby="match-title">
         <p className="match-kicker mono">A PROMISING TEAM-UP</p>
         <h1 id="match-title">It’s a <em>match!</em></h1>
