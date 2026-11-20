@@ -196,7 +196,7 @@ h2{font:400 clamp(30px,4.5vw,48px)/1.04 var(--serif);letter-spacing:-.04em;margi
 }
 .home-screen.dating-theme::before,.deck-screen.dating-theme::before{
   content:"";position:absolute;z-index:0;top:0;left:0;right:0;height:clamp(120px,20vh,210px);
-  background:linear-gradient(180deg,#F2EEE1 0,#FFEBA3 38%,#FFE173 72%,#FFDB5B 100%);
+  background:#FFDB5B;
   pointer-events:none;
 }
 :root[data-theme="dark"] .home-screen.dating-theme::before,
@@ -215,6 +215,10 @@ h2{font:400 clamp(30px,4.5vw,48px)/1.04 var(--serif);letter-spacing:-.04em;margi
 .dating-nav a:hover{text-decoration:underline;text-underline-offset:4px}
 .dating-theme .tb{background:transparent;border:2px solid var(--dating-line);color:var(--dating-ink);font-family:"Figtree","Nunito",system-ui,sans-serif;box-shadow:0 8px 22px rgba(59,59,59,.14)}
 .dating-theme .tb:hover{border-color:var(--dating-ink);box-shadow:0 10px 24px rgba(59,59,59,.2)}
+.dating-theme .tb,.cohesive-portfolio .tb{position:relative}
+.dating-theme .tb-icon:not(.moon),.cohesive-portfolio .tb-icon:not(.moon){
+  position:absolute;top:50%;left:50%;line-height:1;transform:translate(-50%,-52%);
+}
 :root[data-theme="dark"] .dating-theme .tb,
 :root[data-theme="dark"] .cohesive-portfolio .tb{color:#FFDB5B}
 .home-screen.dating-theme .heart-field{display:none}
@@ -244,6 +248,17 @@ h2{font:400 clamp(30px,4.5vw,48px)/1.04 var(--serif);letter-spacing:-.04em;margi
   left:50%;width:min(70vw,410px);height:100%;border-radius:24px;
   box-shadow:0 26px 54px rgba(59,59,59,.18);perspective:1200px;transform-origin:center;
 }
+.deck-screen.dating-theme .card .photo{position:absolute;inset:0;height:auto}
+.deck-screen.dating-theme .card .photo img{object-position:center center}
+.deck-screen.dating-theme .card .cap{top:58%;bottom:auto;z-index:2;text-shadow:0 2px 8px rgba(0,0,0,.8)}
+.deck-screen.dating-theme .card .info{
+  position:absolute;z-index:3;right:0;bottom:0;left:0;padding:72px 22px 18px;
+  background:linear-gradient(180deg,transparent 0%,rgba(0,0,0,.78) 42%,rgba(0,0,0,.9) 100%);
+  color:#fff;
+}
+.deck-screen.dating-theme .card .info .loc{opacity:.82}
+.deck-screen.dating-theme .card .info .view{border-top-color:rgba(255,255,255,.55);color:inherit}
+.deck-screen.dating-theme .card .info .tags span{border-color:currentColor}
 .deck-screen.dating-theme .card.t{box-shadow:0 28px 60px rgba(59,59,59,.25);touch-action:pan-y}
 .deck-screen.dating-theme .hint{color:var(--dating-muted);margin:0}
 .deck-screen.dating-theme .acts{gap:clamp(28px,6vw,72px);margin-top:0}
@@ -258,9 +273,14 @@ h2{font:400 clamp(30px,4.5vw,48px)/1.04 var(--serif);letter-spacing:-.04em;margi
   color:var(--dating-ink);animation:match-fade 3.6s ease-in forwards;
 }
 .match-screen.dating-theme .match-card{
-  position:relative;border:0;border-radius:28px;background:#FFDB5B;box-shadow:0 24px 70px rgba(59,59,59,.18);
+  position:relative;border:0;border-radius:28px;background:#000;color:#FFDB5B;box-shadow:0 24px 70px rgba(59,59,59,.18);
 }
-:root[data-theme="dark"] .match-screen.dating-theme .match-card{color:#3B3B3B}
+:root[data-theme="dark"] .match-screen.dating-theme .match-card{background:#FFDB5B;color:#3B3B3B}
+:root:not([data-theme="dark"]) .match-screen.dating-theme .match-kicker,
+:root:not([data-theme="dark"]) .match-screen.dating-theme .match-card h1,
+:root:not([data-theme="dark"]) .match-screen.dating-theme .match-card h1 em,
+:root:not([data-theme="dark"]) .match-screen.dating-theme .match-copy,
+:root:not([data-theme="dark"]) .match-screen.dating-theme .match-copy strong{color:#FFDB5B}
 :root[data-theme="dark"] .match-screen.dating-theme .match-kicker,
 :root[data-theme="dark"] .match-screen.dating-theme .match-card h1,
 :root[data-theme="dark"] .match-screen.dating-theme .match-card h1 em,
@@ -528,8 +548,8 @@ h2{font:400 clamp(30px,4.5vw,48px)/1.04 var(--serif);letter-spacing:-.04em;margi
 /* Venzon portfolio navigation, full-screen sections, and project reveals */
 .venzon-page .venzon-section{min-height:100vh;min-height:100svh;scroll-margin-top:58px}
 .venzon-page #home{scroll-margin-top:58px}
-.venzon-reveal{opacity:0;transform:translateY(28px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.75,.25,1)}
-.venzon-reveal.is-visible{opacity:1;transform:translateY(0)}
+.venzon-reveal,.portfolio-reveal{opacity:0;transform:translateY(28px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.75,.25,1)}
+.venzon-reveal.is-visible,.portfolio-reveal.is-visible{opacity:1;transform:translateY(0)}
 .venzon-project-image{height:clamp(220px,22vw,280px)!important;flex:1 1 48%}
 .venzon-project-copy{flex:1 1 48%}
 .venzon-project-action{display:inline-flex;align-items:center;justify-content:center;gap:7px;margin-top:12px;padding:7px 12px;border:1px solid var(--line);border-radius:7px;background:transparent;color:var(--mute);font:700 10px/1.2 var(--mono);letter-spacing:.12em;text-decoration:none;transition:transform .2s,border-color .2s,color .2s}
@@ -537,7 +557,7 @@ h2{font:400 clamp(30px,4.5vw,48px)/1.04 var(--serif);letter-spacing:-.04em;margi
 a.venzon-project-action:hover{transform:translateY(-1px);border-color:var(--acc);color:var(--ink)}
 .venzon-project-action.is-disabled{cursor:default;opacity:.7}
 .venzon-about-image{display:block;width:100%;height:clamp(300px,38vw,440px);object-fit:cover;object-position:center 32%;border:1px solid var(--line);border-radius:20px;box-shadow:0 18px 42px rgba(0,0,0,.14)}
-@media(prefers-reduced-motion:reduce){.venzon-reveal{opacity:1;transform:none;transition:none}.venzon-project-action{transition:none}}
+@media(prefers-reduced-motion:reduce){.venzon-reveal,.portfolio-reveal{opacity:1;transform:none;transition:none}.venzon-project-action{transition:none}}
 @media(max-width:639px){.venzon-project-image{height:clamp(190px,56vw,240px)!important;flex-basis:100%}.venzon-project-copy{flex-basis:100%}}
 
 /* Shared visual language for every portfolio except Carlo Timbas's dedicated page. */
@@ -566,7 +586,79 @@ a.venzon-project-action:hover{transform:translateY(-1px);border-color:var(--acc)
 .althea-portfolio .althea-project-row{width:min(100%,1360px);margin-inline:auto}
 .althea-portfolio .althea-project-row>div:first-child{flex:1 1 52%;height:auto!important;aspect-ratio:16/9}
 .althea-portfolio .althea-project-row>div:last-child{flex:1 1 48%}
+.venzon-page #home,.althea-portfolio>div>section:first-child,
+.venzon-page #stack,.althea-portfolio #stack{--section-bg:#FDFCF9;background:var(--section-bg);box-shadow:0 0 0 100vmax var(--section-bg);clip-path:inset(0 -100vmax);color:#3B3B3B}
+.venzon-page #projects,.althea-portfolio #projects,
+.venzon-page #about,.althea-portfolio #about{--section-bg:#FFDB5B;background:var(--section-bg);box-shadow:0 0 0 100vmax var(--section-bg);clip-path:inset(0 -100vmax);color:#3B3B3B}
+:root[data-theme="dark"] .venzon-page #home,
+:root[data-theme="dark"] .althea-portfolio>div>section:first-child,
+:root[data-theme="dark"] .venzon-page #stack,
+:root[data-theme="dark"] .althea-portfolio #stack{--section-bg:#000;background:var(--section-bg);box-shadow:0 0 0 100vmax var(--section-bg);color:#FFDB5B}
+:root[data-theme="dark"] .venzon-page #projects,
+:root[data-theme="dark"] .althea-portfolio #projects,
+:root[data-theme="dark"] .venzon-page #about,
+:root[data-theme="dark"] .althea-portfolio #about{--section-bg:#FFDB5B;background:var(--section-bg);box-shadow:0 0 0 100vmax var(--section-bg);color:#3B3B3B}
+.venzon-page .portfolio-bumble-nav,.althea-portfolio .portfolio-bumble-nav{
+  background:var(--section-bg,#FDFCF9)!important;border-bottom:0!important;
+}
+:root[data-theme="dark"] .venzon-page .portfolio-bumble-nav,
+:root[data-theme="dark"] .althea-portfolio .portfolio-bumble-nav{background:#000!important}
+.venzon-page .portfolio-nav-inner,.althea-portfolio .portfolio-nav-inner{max-width:1360px;height:76px}
+.venzon-page .portfolio-nav-links,.althea-portfolio .portfolio-nav-links{
+  position:absolute;left:50%;transform:translateX(-50%);align-items:center;gap:4px;
+  padding:10px 18px;border:1px solid var(--line);border-radius:999px;background:var(--card);
+  box-shadow:0 8px 24px rgba(59,59,59,.1);
+}
+.venzon-page .portfolio-nav-links>button,.althea-portfolio .portfolio-nav-links>button{
+  padding:8px 16px;font-weight:600;border-radius:999px;
+}
+.venzon-page .portfolio-nav-links>button:hover,.althea-portfolio .portfolio-nav-links>button:hover{
+  background:var(--dating-bg,#FFDB5B);color:#3B3B3B;
+}
+.venzon-page #home,.althea-portfolio>div>section:first-child{
+  padding-top:clamp(88px,11vw,150px);padding-bottom:clamp(88px,11vw,150px);
+}
+.venzon-page #home h1,.althea-portfolio>div>section:first-child h1{
+  font-weight:800;letter-spacing:-.04em;
+}
+.venzon-page #home h1 em,.althea-portfolio>div>section:first-child h1 em{color:inherit}
+.venzon-page #home button,.althea-portfolio>div>section:first-child button{
+  border-radius:999px;padding:13px 22px;
+}
+.venzon-page #projects h2,.venzon-page #stack h2,.venzon-page #about h2,
+.althea-portfolio #projects h2,.althea-portfolio #stack h2,.althea-portfolio #about h2{
+  font-weight:800;letter-spacing:-.035em;
+}
+.venzon-page #projects .venzon-reveal,.althea-portfolio #projects .althea-project-row{
+  padding:clamp(18px,3vw,30px);border-radius:26px;background:var(--card);
+  box-shadow:0 14px 32px rgba(59,59,59,.12);
+}
+.venzon-page #projects .venzon-project-image,.althea-portfolio #projects .althea-project-row>div:first-child{
+  border-radius:20px;
+}
+.venzon-page #about .venzon-about-image,.althea-portfolio #about .carousel{
+  border-radius:26px;box-shadow:0 18px 38px rgba(59,59,59,.14);
+}
+.venzon-page #about>div:first-child,
+.venzon-page #about>div:first-child p,
+.althea-portfolio #about>div:first-child,
+.althea-portfolio #about>div:first-child p{color:#3B3B3B!important}
+.venzon-page #about>div:first-child h2 em,
+.althea-portfolio #about>div:first-child h2 em{color:#3B3B3B!important}
+.venzon-page .portfolio-next-footer,.althea-portfolio .portfolio-next-footer{
+  margin-top:clamp(18px,4vw,48px);padding-top:38px;padding-bottom:38px;
+  border-top-color:rgba(59,59,59,.35);color:#3B3B3B;
+}
+.venzon-page .portfolio-next-footer button,.althea-portfolio .portfolio-next-footer button{
+  color:#3B3B3B;
+}
+.venzon-page #stack .tool-grid,.althea-portfolio #stack .tool-grid{
+  gap:14px;
+}
 @media(max-width:700px){
+  .venzon-page .portfolio-nav-inner,.althea-portfolio .portfolio-nav-inner{height:64px}
+  .venzon-page .portfolio-nav-links,.althea-portfolio .portfolio-nav-links{position:static;transform:none}
+  .venzon-page #projects .venzon-reveal,.althea-portfolio #projects .althea-project-row{padding:18px;border-radius:22px}
   .althea-portfolio .althea-project-row{gap:22px}
   .althea-portfolio .althea-project-row>div:first-child{height:auto!important;aspect-ratio:16/9;flex-basis:100%}
   .althea-portfolio .althea-project-row>div:last-child{flex-basis:100%}
