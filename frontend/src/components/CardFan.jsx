@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { photoUrlFor } from "../api.js";
 
 const AUTOPLAY_MS = 1600;
 const TRANSITION_MS = 550;
@@ -127,11 +128,6 @@ export default function CardFan({
           dissolving && !moveDissolving
         );
         const moved = dissolving && moveDissolving;
-        const photoUrl = variant === "showcase" &&
-          (member.id === "liza" || member.name === "Althea Lei Santos")
-          ? "/althea-peeking.png"
-          : member.photoUrl;
-
         return (
           <div
             className="card-fan-entry"
@@ -154,7 +150,7 @@ export default function CardFan({
             }}
           >
             <div className="card-fan-card" style={{ backgroundColor: member.color || "#FDFCF9" }}>
-              {photoUrl && <img src={photoUrl} alt="" draggable="false" />}
+              {photoUrlFor(member) && <img src={photoUrlFor(member)} alt="" draggable="false" />}
             {(variant === "hero" || variant === "showcase") && heroLabel && (
               <span className="card-fan-name">{heroLabel}</span>
             )}
