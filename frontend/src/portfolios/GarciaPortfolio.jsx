@@ -328,7 +328,7 @@ export default function GarciaPortfolio({ next, go, dark, toggle }) {
 
       <nav className="sticky top-[env(safe-area-inset-top,0px)] z-30 border-b border-[var(--line)] bg-[var(--bg)]">
         <div className="mx-auto flex h-[58px] max-w-[960px] items-center justify-between px-5">
-          <button onClick={() => go("home")} className="cursor-pointer border-0 bg-transparent px-2 py-1.5 text-sm font-medium text-[var(--ink)] hover:underline">
+          <button onClick={() => go("deck")} className="cursor-pointer border-0 bg-transparent px-2 py-1.5 text-sm font-medium text-[var(--ink)] hover:underline">
             Back to CTPR Club
           </button>
           <ThemeBtn dark={dark} toggle={toggle} />

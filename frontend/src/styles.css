@@ -570,7 +570,11 @@ h2{font:400 clamp(30px,4.5vw,48px)/1.04 var(--serif);letter-spacing:-.04em;margi
   padding:clamp(56px,8vw,112px) clamp(24px,7vw,104px);
   background:#FDFCF9;
   color:#3B3B3B;
+  opacity:0;
+  transform:translateY(28px);
+  transition:opacity .7s ease,transform .7s cubic-bezier(.2,.75,.25,1);
 }
+.landing-showcase .landing-story.is-visible{opacity:1;transform:translateY(0)}
 .landing-showcase .landing-story-copy{max-width:760px}
 .landing-showcase .landing-story-mark{
   display:block;
@@ -641,6 +645,7 @@ h2{font:400 clamp(30px,4.5vw,48px)/1.04 var(--serif);letter-spacing:-.04em;margi
 }
 @media(prefers-reduced-motion:reduce){
   .landing-showcase .landing-intro-grid{opacity:1;transform:none;transition:none}
+  .landing-showcase .landing-story{opacity:1;transform:none;transition:none}
   .landing-showcase .card-fan--showcase.is-reduced .card-fan-entry,
   .landing-showcase .card-fan--showcase.is-reduced .card-fan-card{transition:none!important}
 }
@@ -732,7 +737,9 @@ a.venzon-project-action:hover{transform:translateY(-1px);border-color:var(--acc)
   font-weight:800;letter-spacing:-.035em;
 }
 .venzon-page #projects .venzon-project-copy h2,
-.althea-portfolio #projects .althea-project-row>div:last-child h2{color:#fff!important}
+.althea-portfolio #projects .althea-project-row>div:last-child h2{color:#3B3B3B!important}
+:root[data-theme="dark"] .venzon-page #projects .venzon-project-copy h2,
+:root[data-theme="dark"] .althea-portfolio #projects .althea-project-row>div:last-child h2{color:#fff!important}
 .venzon-page #projects>h2 em,
 .althea-portfolio #projects>h2 em{color:#3B3B3B!important}
 .venzon-page #projects .venzon-reveal,.althea-portfolio #projects .althea-project-row{
