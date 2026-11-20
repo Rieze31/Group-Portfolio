@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import VenzonPortfolio from "./portfolios/VenzonPortfolio.jsx";
 import GarciaPortfolio from "./portfolios/GarciaPortfolio.jsx";
 import SantosPortfolio from "./portfolios/SantosPortfolio.jsx";
@@ -105,21 +105,21 @@ function ThemeBtn({ dark, toggle }) {
 }
 
 /* ---------- Landing ---------- */
-function Stack({ go, onMatch, order, setOrder, members }) {
+function Stack({ go, onMatch, order, setOrder, members, acceptSoundRef }) {
   const [dx, setDx] = useState(0);
   const [drag, setDrag] = useState(false);
   const busy = useRef(false), start = useRef(0), moved = useRef(false), act = useRef({});
   const passSound = useRef(null);
 
   useEffect(() => {
-    const audio = new Audio("./OH%20HELL%20NAH%20-%20Sound%20Effect.mp3");
-    const resetAfterPlayback = () => { audio.currentTime = 0; };
-    audio.addEventListener("ended", resetAfterPlayback);
-    passSound.current = audio;
+    const passAudio = new Audio("./OH%20HELL%20NAH%20-%20Sound%20Effect.mp3");
+    const resetPassAudio = () => { passAudio.currentTime = 0; };
+    passAudio.addEventListener("ended", resetPassAudio);
+    passSound.current = passAudio;
     return () => {
-      audio.removeEventListener("ended", resetAfterPlayback);
-      audio.pause();
-      audio.currentTime = 0;
+      passAudio.removeEventListener("ended", resetPassAudio);
+      passAudio.pause();
+      passAudio.currentTime = 0;
       passSound.current = null;
     };
   }, []);
@@ -141,6 +141,23 @@ function Stack({ go, onMatch, order, setOrder, members }) {
     const audio = passSound.current;
     if (audio) audio.loop = false;
   };
+  const startAcceptSound = () => {
+    const audio = acceptSoundRef.current;
+    if (!audio || !audio.paused) return;
+    audio.loop = true;
+    audio.play().catch((error) => console.warn("Unable to play accept sound:", error));
+  };
+  const stopAcceptSound = () => {
+    const audio = acceptSoundRef.current;
+    if (!audio) return;
+    audio.loop = false;
+    audio.pause();
+    audio.currentTime = 0;
+  };
+  const finishAcceptSound = () => {
+    const audio = acceptSoundRef.current;
+    if (audio) audio.loop = false;
+  };
 
   const fly = (dir, cb) => {
     if (busy.current) return;
@@ -150,6 +167,7 @@ function Stack({ go, onMatch, order, setOrder, members }) {
       setDx(0);
       busy.current = false;
       if (dir < 0) finishPassSound();
+      else finishAcceptSound();
     }, 280);
   };
   const pass = () => {
@@ -157,7 +175,11 @@ function Stack({ go, onMatch, order, setOrder, members }) {
     startPassSound();
     fly(-1, () => setOrder((o) => [...o.slice(1), o[0]]));
   };
-  const look = () => fly(1, () => onMatch(members[order[0]]));
+  const look = () => {
+    if (busy.current) return;
+    startAcceptSound();
+    fly(1, () => onMatch(members[order[0]]));
+  };
   act.current = { pass, look };
 
   useEffect(() => {
@@ -173,7 +195,16 @@ function Stack({ go, onMatch, order, setOrder, members }) {
       const d = e.clientX - start.current;
       if (Math.abs(d) > 5 && !moved.current) { moved.current = true; e.currentTarget.setPointerCapture(e.pointerId); }
       if (moved.current) {
-        if (d < 0) startPassSound(); else stopPassSound();
+        if (d < 0) {
+          startPassSound();
+          stopAcceptSound();
+        } else if (d > 0) {
+          stopPassSound();
+          startAcceptSound();
+        } else {
+          stopPassSound();
+          stopAcceptSound();
+        }
         setDx(d);
       }
     },
@@ -182,8 +213,9 @@ function Stack({ go, onMatch, order, setOrder, members }) {
       setDrag(false);
       if (dx > 90) look(); else if (dx < -90) pass(); else setDx(0);
       if (dx >= -90) stopPassSound();
+      if (dx <= 90) stopAcceptSound();
     },
-    onPointerCancel: () => { setDrag(false); setDx(0); stopPassSound(); },
+    onPointerCancel: () => { setDrag(false); setDx(0); stopPassSound(); stopAcceptSound(); },
   };
   const BACK = [null, "translateX(-50%) translate(150px,22px) rotate(7deg) scale(.96)", "translateX(-50%) translate(250px,52px) rotate(13deg) scale(.91)"];
 
@@ -326,7 +358,7 @@ function Landing({ go, dark, toggle, members }) {
   );
 }
 
-function Deck({ go, onMatch, order, setOrder, dark, toggle, members }) {
+function Deck({ go, onMatch, order, setOrder, dark, toggle, members, acceptSoundRef }) {
   return (
     <main className="deck-screen dating-theme">
       <div className="deck-bar">
@@ -336,7 +368,7 @@ function Deck({ go, onMatch, order, setOrder, dark, toggle, members }) {
         </nav>
         <ThemeBtn dark={dark} toggle={toggle} />
       </div>
-      <Stack go={go} onMatch={onMatch} order={order} setOrder={setOrder} members={members} />
+      <Stack go={go} onMatch={onMatch} order={order} setOrder={setOrder} members={members} acceptSoundRef={acceptSoundRef} />
     </main>
   );
 }
@@ -489,10 +521,54 @@ function App() {
   const [order, setOrder] = useState(D.map((_, i) => i));
   const [match, setMatch] = useState(null);
   const [prank, setPrank] = useState(null);
+  const swipeAcceptSoundRef = useRef(null);
+  const profileMusicRef = useRef(null);
+  const visitedMusicPortfolio = useRef(false);
   const [dark, setDark] = useState(() => matchMedia("(prefers-color-scheme: dark)").matches);
   const [fk, setFk] = useState(0);
   const [flashType, setFlashType] = useState("light");
   useEffect(() => { document.documentElement.setAttribute("data-theme", dark ? "dark" : "light"); }, [dark]);
+  useEffect(() => {
+    const audio = new Audio("./Closer%20-%20GEHLEE%20(Lyrics).mp3");
+    const resetAfterPlayback = () => { audio.currentTime = 0; };
+    audio.addEventListener("ended", resetAfterPlayback);
+    swipeAcceptSoundRef.current = audio;
+    return () => {
+      audio.removeEventListener("ended", resetAfterPlayback);
+      audio.pause();
+      audio.currentTime = 0;
+      swipeAcceptSoundRef.current = null;
+    };
+  }, []);
+  const stopCardTwoMusic = useCallback(() => {
+    const audio = profileMusicRef.current;
+    if (audio) audio.pause();
+    profileMusicRef.current = null;
+    visitedMusicPortfolio.current = false;
+  }, []);
+  const startCardTwoMusic = useCallback(() => {
+    stopCardTwoMusic();
+    const audio = new Audio("/Gusto%20Ko%20Sakin%20Ka%20Lang%20-%20Robledo%20Timido%20(Lyrics).mp3");
+    audio.loop = true;
+    profileMusicRef.current = audio;
+    return audio.play().catch((error) => {
+      if (profileMusicRef.current === audio) stopCardTwoMusic();
+      throw error;
+    });
+  }, [stopCardTwoMusic]);
+  const leaveCardTwoPortfolio = (to) => {
+    if (to === "deck" || to === "home") stopCardTwoMusic();
+    go(to);
+  };
+  useEffect(() => {
+    if (!profileMusicRef.current) return;
+    if (route === "santos" && !prank) {
+      visitedMusicPortfolio.current = true;
+    } else if (visitedMusicPortfolio.current && route !== "santos") {
+      stopCardTwoMusic();
+    }
+  }, [route, prank, stopCardTwoMusic]);
+  useEffect(() => () => stopCardTwoMusic(), [stopCardTwoMusic]);
   useEffect(() => {
     if (!match) return undefined;
     const timeout = window.setTimeout(() => {
@@ -516,7 +592,10 @@ function App() {
   return (
     <>
       {fk > 0 && <Flash key={fk} type={flashType} onDone={() => setFk(0)} />}
-      {prank ? <DateMePrank member={prank} onOpenPortfolio={() => {
+      {prank ? <DateMePrank
+        member={prank}
+        onStartMusic={prank.id === "liza" ? startCardTwoMusic : undefined}
+        onOpenPortfolio={() => {
         go(prank.id);
         setPrank(null);
         setFlashType("portfolio");
@@ -528,12 +607,12 @@ function App() {
           : m.portfolio === "garcia" || m.id === "garcia" || m.id === "bella" || m.id === "m3"
             ? <GarciaPortfolio key={m.id} go={go} dark={dark} toggle={toggle} />
             : m.portfolio === "santos" || m.id === "santos" || m.id === "liza" || m.id === "m2"
-              ? <SantosPortfolio key={m.id} member={m} next={M[(M.indexOf(m) + 1) % M.length]} go={go} dark={dark} toggle={toggle} />
+              ? <SantosPortfolio key={m.id} member={m} next={M[(M.indexOf(m) + 1) % M.length]} go={leaveCardTwoPortfolio} dark={dark} toggle={toggle} />
               : m.portfolio === "timbas" || m.id === "timbas" || m.id === "donny" || m.id === "m4"
                 ? <TimbasPortfolio key={m.id} member={m} next={M[(M.indexOf(m) + 1) % M.length]} go={go} dark={dark} toggle={toggle} />
                 : <Portfolio key={m.id} m={m} go={go} dark={dark} toggle={toggle} />
           : route === "deck"
-            ? <Deck go={go} onMatch={acceptMember} order={order} setOrder={setOrder} dark={dark} toggle={toggle} members={D} />
+            ? <Deck go={go} onMatch={acceptMember} order={order} setOrder={setOrder} dark={dark} toggle={toggle} members={D} acceptSoundRef={swipeAcceptSoundRef} />
             : <Landing go={go} dark={dark} toggle={toggle} members={D} />}
     </>
   );

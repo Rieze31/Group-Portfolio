@@ -10,12 +10,13 @@ function createHearts() {
   }));
 }
 
-export default function DateMePrank({ member, onOpenPortfolio }) {
+export default function DateMePrank({ member, onOpenPortfolio, onStartMusic }) {
   const [noClickCount, setNoClickCount] = useState(0);
   const [noPosition, setNoPosition] = useState(null);
   const [accepted, setAccepted] = useState(false);
   const [showPortfolioButton, setShowPortfolioButton] = useState(false);
   const [hearts, setHearts] = useState([]);
+  const [musicError, setMusicError] = useState("");
   const noButtonRef = useRef(null);
 
   useEffect(() => {
@@ -48,6 +49,11 @@ export default function DateMePrank({ member, onOpenPortfolio }) {
   const handleYes = () => {
     setAccepted(true);
     setHearts(createHearts());
+    if (onStartMusic) {
+      onStartMusic().catch(() => {
+        setMusicError("The music could not be played. Check that the audio file is available.");
+      });
+    }
   };
 
   const yesFontSize = noClickCount >= 3 ? 56 : noClickCount === 2 ? 40 : noClickCount === 1 ? 28 : 18;
@@ -60,7 +66,10 @@ export default function DateMePrank({ member, onOpenPortfolio }) {
     <main className="date-prank-screen">
       <section className={`date-prank-card${accepted ? " is-accepted" : ""}`} role="dialog" aria-modal="true" aria-label="Would you like to see my portfolio?">
         {accepted ? (
-          <div className="date-prank-message" aria-live="polite">ayiee lezgooo</div>
+          <>
+            <div className="date-prank-message" aria-live="polite">ayiee lezgooo</div>
+            {musicError && <p className="date-prank-music-error" role="alert">{musicError}</p>}
+          </>
         ) : (
           <>
             <h1 className="date-prank-heading">Would you like to see my portfolio?</h1>

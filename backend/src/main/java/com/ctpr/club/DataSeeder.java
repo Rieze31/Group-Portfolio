@@ -26,6 +26,14 @@ public class DataSeeder implements CommandLineRunner {
     public void run(String... args) {
         if (repo.count() > 0) {
             attachPhionaPortfolioToMemberThree();
+            removeLegacyMembers();
+            seedMemberIfMissing(member(0, "santos", "santos", "Althea Lei Santos", "BSIT STUDENT",
+                    "Navotas, Philippines", OPEN, "#b49cf0", "PORTFOLIO INSIDE", "Figma", "React", "Git"));
+            seedMemberIfMissing(member(1, "timbas", "timbas", "Carlo Timbas", "BSIT STUDENT",
+                    "Navotas, Philippines", OPEN, "#3fb0a6", "PORTFOLIO INSIDE", "Java", "Spring Boot", "React"));
+            seedMemberIfMissing(memberThree(2));
+            seedMemberIfMissing(member(3, "venzon", "venzon", "Rieze Andrei Venzon", "BSIT STUDENT",
+                    "Manila, Philippines", OPEN, "#ff6a4d", "OPEN TO AMBITIOUS PROBLEMS", "React", "Spring Boot", "Java"));
             updateMember("santos", "Althea Lei Santos", "BSIT STUDENT", "Navotas, Philippines");
             updateMember("timbas", "Carlo Timbas", "BSIT STUDENT", "Navotas, Philippines");
             updateMember("m3", "Phiona Eunice Garcia", "BSIT STUDENT", "Navotas, Philippines");
@@ -56,6 +64,14 @@ public class DataSeeder implements CommandLineRunner {
                 member(6, "donny", "timbas", "Piolo Pascual", "MYSTERY GUEST", "Manila, PH", "Plot twist: swipe right to meet the developer.", "#7cc99a", "PORTFOLIO INSIDE", "Surprise", "Plot twist", "Open me"),
                 member(7, "dwight", "venzon", "Dwight Ramos", "MYSTERY GUEST", "Manila, PH", "Plot twist: not who you think. Click to find out.", "#ffa24d", "PORTFOLIO INSIDE", "Surprise", "Plot twist", "Open me")
         ));
+    }
+
+    private void removeLegacyMembers() {
+        repo.deleteAllById(List.of("m2", "m4", "m5", "m6", "m7"));
+    }
+
+    private void seedMemberIfMissing(Member member) {
+        if (!repo.existsById(member.getId())) repo.save(member);
     }
 
     private void seedGuest(int order, String id, String portfolio, String name, String quote, String color) {
