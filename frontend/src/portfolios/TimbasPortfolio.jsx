@@ -12,9 +12,9 @@ const STORIES = [
   { title: "Build systems that work together.", text: "Small, clear connections can make a whole process feel simpler.", image: "tiles.webp", side: "left" },
 ];
 const CASES = [
-  { n: "01", title: "Lead follow-up flow", client: "LEAD MANAGEMENT", problem: "A new inquiry needs a quick, consistent handoff.", solution: "Capture a form entry, organize the lead, and prepare a follow-up draft for review.", result: "Review-first follow-up concept" },
-  { n: "02", title: "Support question triage", client: "CUSTOMER SUPPORT", problem: "Incoming questions need a useful first pass without losing human judgement.", solution: "Group requests, suggest a response, and route uncertain cases to a person.", result: "Human-in-the-loop assistant concept" },
-  { n: "03", title: "Cross-tool status sync", client: "TEAM OPERATIONS", problem: "Project updates can get scattered across the tools a team uses.", solution: "Connect status changes and surface the latest update in one clear place.", result: "Connected workflow concept" },
+  { n: "01", title: "FitXBrawl Gym Scheduling Management System", client: "GYM MANAGEMENT", problem: "Manual scheduling and membership management can cause booking conflicts and extra staff workload.", solution: "Built a centralized, secure, and responsive web system that automates class booking and membership administration.", result: "Centralized gym scheduling and membership management" },
+  { n: "02", title: "Ermel Glass and Aluminum Management System", client: "SERVICE ORDER MANAGEMENT", problem: "Manual inquiries, quotations, reservations, payments, and installation tracking cause delays and disorganized records.", solution: "Built a web-based system for order and service reservation management with sales forecasting and real-time tracking.", result: "Streamlined service operations and sales planning" },
+  { n: "03", title: "DiaBeates: Diabetes Complication Risk Assessment", client: "HEALTHCARE TECHNOLOGY", problem: "People with diabetes need an understandable way to assess possible complication risks.", solution: "Built a web-based screening system using rule-based scoring and calibrated machine-learning models to assess four complication risks.", result: "Transparent diabetes complication risk assessments" },
 ];
 const STACK = [
   ["Frontend", "React · JavaScript"],
@@ -22,7 +22,7 @@ const STACK = [
   ["Workflow design", "APIs · Integrations · Process mapping"],
   ["Tools", "Git · GitHub · Vite"],
 ];
-const SERVICES = ["Workflow automation", "AI agents and chatbots", "CRM and app integrations", "Process audits and RPA"];
+const SERVICES = ["Data Analytics", "AI agent and chatbots", "Web-based Systems", "Vibe coding"];
 
 const CAMERA_ZOOM = [[0,1.02],[2,1.02],[4.2,1.02],[6.8,1.02],[8,1.02],[10.4,1.02],[11.6,1.02],[13.6,1.02],[17.2,1.02],[19,1.02],[20.04,1.02]];
 const CAMERA_X = [[0,.42],[4,.47],[7,.55],[11,.46],[14,.57],[15,.47],[20.04,.42]];
@@ -236,11 +236,11 @@ export default function TimbasPortfolio({ member, next, go }) {
 
         <section className="tb-section" id="projects">
           <div className="tb-section-inner">
-            <div className="tb-section-kicker">~/PROJECTS · CASE STUDIES</div>
-            <h2 className="tb-section-title">Work in<br /><em>progress.</em></h2>
-            <p className="tb-section-lede">Three demonstration concepts show how connected workflows could reduce repetitive handoffs. These are illustrative ideas, not client case studies.</p>
+            <div className="tb-section-kicker">~/PROJECTS · ACTUAL WORK</div>
+            <h2 className="tb-section-title">Selected<br /><em>projects.</em></h2>
+            <p className="tb-section-lede">Three completed project experiences covering gym operations, service management, and healthcare risk assessment.</p>
             <div className="tb-projects">{CASES.map((c, i) => <article className="tb-project" key={c.n}>
-              <div className="tb-project-top"><span>{c.n} / DEMO CONCEPT</span><span>WORKFLOW STUDY</span></div>
+              <div className="tb-project-top"><span>{c.n} / ACTUAL PROJECT</span><span>PROJECT STUDY</span></div>
               <div className="tb-project-art"><img src={`${ASSET}${["core-detail.png","automation-orb.png","connected-pipeline.png"][i]}`} alt="" /></div>
               <h3>{c.title}</h3>
               <dl>
