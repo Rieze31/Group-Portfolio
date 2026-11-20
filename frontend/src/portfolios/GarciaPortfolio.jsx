@@ -60,7 +60,7 @@ const DATA = {
 const PAGES = ["About Me", "Projects", "Skills", "Hobbies", "Side Quests", "Fun Facts"];
 
 /* palette taken from the template */
-const YEL = "#ffc72c";     // folder
+const YEL = "#efdeae";     // folder
 const PALE = "#fdf3a7";    // pages
 const LAV = "#f0dce8";     // pink paper (cover + cards)
 const BROWN = "#5a2008";
