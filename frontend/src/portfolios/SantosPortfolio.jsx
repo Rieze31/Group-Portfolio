@@ -49,11 +49,19 @@ const DATA = {
     { t: "Campus Life at PLM", image: "/images/campus-life.jpg", d: "“I entered PLM as a BSIT student who simply loved design—not knowing yet that true IT is rooted in empathy for the user.” Loving every moment of campus life while learning to build software that truly understands people." },
     { t: "Art & UI/UX Design", image: "/images/art-uiux.jpg", d: "During the pandemic, I discovered that I actually know how to draw and paint. That creative spark became my superpower—now I naturally step into the UI/UX designer role in every project we build." },
     { t: "Skills & Teamwork", image: "/images/skills-vibe.jpg", d: "Behind the visuals, I'm big on analytical thinking, problem-solving, time management, and being meticulous with every detail—while always making sure I can easily vibe and collaborate with everyone on the team." },
+    { t: "Childhood dreams", image: "/images/childhood-1.jpg", d: "Ever since I was a kid, I really liked makeup, art, and dressing up—playing with colors and aesthetics long before I realized that same eye for styling and visual detail is what connects straight into UI/UX design." },
+    { t: "The real outfit", image: "/images/childhood-2.jpg", d: "I'm kidding—I wasn't actually blonde and I didn't wear that dress. But I really love makeup though!" },
+    { t: "No smile", image: "/images/childhood-3.jpg", d: "I wasn't actually smiling." },
+    { t: "Sorry", image: "/images/childhood-4.jpg", d: "I'm so sorry." },
   ],
   slides: [
     { t: "Campus Life at PLM", image: "/images/campus-life.jpg", d: "" },
     { t: "Art & UI/UX Design", image: "/images/art-uiux.jpg", d: "" },
     { t: "Skills & Teamwork", image: "/images/skills-vibe.jpg", d: "" },
+    { t: "Childhood dreams", image: "/images/childhood-1.jpg", d: "" },
+    { t: "The real outfit", image: "/images/childhood-2.jpg", d: "" },
+    { t: "No smile", image: "/images/childhood-3.jpg", d: "" },
+    { t: "Sorry", image: "/images/childhood-4.jpg", d: "" },
   ],
 };
 
