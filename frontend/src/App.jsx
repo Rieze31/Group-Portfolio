@@ -265,8 +265,10 @@ const WORDMARK = "CTPR";
 function Landing({ go, dark, toggle, members }) {
   const showcaseRef = useRef(null);
   const introRef = useRef(null);
+  const storyRef = useRef(null);
   const [showcaseVisible, setShowcaseVisible] = useState(false);
   const [introVisible, setIntroVisible] = useState(false);
+  const [storyVisible, setStoryVisible] = useState(false);
   const [focusPaused, setFocusPaused] = useState(false);
 
   useEffect(() => {
@@ -279,6 +281,23 @@ function Landing({ go, dark, toggle, members }) {
     const observer = new IntersectionObserver(([entry]) => {
       setShowcaseVisible(entry.isIntersecting && entry.intersectionRatio >= 0.5);
     }, { threshold: 0.5 });
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const section = storyRef.current;
+    if (!section) return undefined;
+    if (!("IntersectionObserver" in window)) {
+      setStoryVisible(true);
+      return undefined;
+    }
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setStoryVisible(true);
+        observer.unobserve(section);
+      }
+    }, { threshold: 0.12 });
     observer.observe(section);
     return () => observer.disconnect();
   }, []);
@@ -342,7 +361,7 @@ function Landing({ go, dark, toggle, members }) {
           <CardFan members={members} variant="hero" />
         </div>
       </section>
-      <section className="landing-story" aria-label="Baby and Bebu coding story">
+      <section className={`landing-story${storyVisible ? " is-visible" : ""}`} ref={storyRef} aria-label="Baby and Bebu coding story">
         <div className="landing-story-copy">
           <span className="landing-story-mark" aria-hidden="true">"</span>
           <blockquote>
@@ -431,7 +450,7 @@ function Portfolio({ m, go, dark, toggle }) {
     <div className="cohesive-portfolio">
       <Cursor /><Peek />
       <nav className="pn"><div className="w">
-        <button className="back" onClick={() => go("home")}>← CTPR Club</button>
+        <button className="back" onClick={() => go("deck")}>← CTPR Club</button>
         <div className="links">
           {["projects", "stack", "about"].map((s) => <button key={s} onClick={() => scTo(s)}>{s[0].toUpperCase() + s.slice(1)}</button>)}
           <ThemeBtn dark={dark} toggle={toggle} compact />
@@ -452,7 +471,7 @@ function Portfolio({ m, go, dark, toggle }) {
             </ul>
             <p className="p">{bio}</p>
             <button className="btn" onClick={() => scTo("projects")}>View projects</button>
-            <button className="btn o" onClick={() => go("home")}>← Back to the club</button>
+            <button className="btn o" onClick={() => go("deck")}>← Back to the club</button>
           </div>
         </section>
         <section className="sec" id="projects">
@@ -486,7 +505,7 @@ function Portfolio({ m, go, dark, toggle }) {
           <div><Carousel slides={slides} key={m.id} /></div>
         </section>
         <footer className="pf">
-          <button className="back" onClick={() => go("home")}>← Back to the club</button>
+          <button className="back" onClick={() => go("deck")}>← Back to the club</button>
           <button className="back" onClick={() => go(nx.id)}>Next: {nx.name} →</button>
         </footer>
       </div>
