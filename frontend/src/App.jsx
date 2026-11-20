@@ -12,8 +12,8 @@ let M = []; // filled from the Spring Boot API (see main.jsx)
 let D = [];
 const DISPLAY_MEMBER_IDS = ["dwight", "liza", "bella", "donny"];
 export function loadMembers(list) {
-  M = list;
-  D = DISPLAY_MEMBER_IDS.map((id) => list.find((member) => member.id === id)).filter(Boolean);
+  M = Array.isArray(list) ? list : [];
+  D = DISPLAY_MEMBER_IDS.map((id) => M.find((member) => member.id === id)).filter(Boolean);
 }
 const DW_TOOLS = [
   { n: "Java", c: "Backend", e: "☕" }, { n: "Spring Boot", c: "Backend", e: "🍃" },
@@ -106,7 +106,7 @@ function ThemeBtn({ dark, toggle }) {
 }
 
 /* ---------- Landing ---------- */
-function Stack({ go, onMatch, order, setOrder, members, acceptSoundRef }) {
+function Stack({ go, onMatch, order, setOrder, cardPos, setCardPos, members, acceptSoundRef }) {
   const [dx, setDx] = useState(0);
   const [drag, setDrag] = useState(false);
   const busy = useRef(false), start = useRef(0), moved = useRef(false), act = useRef({});
@@ -172,12 +172,15 @@ function Stack({ go, onMatch, order, setOrder, members, acceptSoundRef }) {
     }, 280);
   };
   const pass = () => {
-    if (busy.current) return;
+    if (busy.current || !members.length || !order.length) return;
     startPassSound();
-    fly(-1, () => setOrder((o) => [...o.slice(1), o[0]]));
+    fly(-1, () => {
+      setOrder((o) => [...o.slice(1), o[0]]);
+      setCardPos((p) => (p + 1) % members.length);
+    });
   };
   const look = () => {
-    if (busy.current) return;
+    if (busy.current || !members.length || !order.length) return;
     startAcceptSound();
     fly(1, () => onMatch(members[order[0]]));
   };
@@ -220,14 +223,24 @@ function Stack({ go, onMatch, order, setOrder, members, acceptSoundRef }) {
   };
   const BACK = [null, "translateX(-50%) translate(150px,22px) rotate(7deg) scale(.96)", "translateX(-50%) translate(250px,52px) rotate(13deg) scale(.91)"];
 
+  if (!members.length || !order.length) {
+    return (
+      <div className="sw">
+        <div className="cnt"><b>00</b> / 00</div>
+        <p className="hint">LOADING MEMBERS...</p>
+      </div>
+    );
+  }
+
   return (
     <div className={`sw${drag && dx < 0 ? " drag-left" : ""}${drag && dx > 0 ? " drag-right" : ""}`}>
-      <div className="cnt"><b>{String(order[0] + 1).padStart(2, "0")}</b> / {String(members.length).padStart(2, "0")}</div>
+      <div className="cnt"><b>{String(cardPos + 1).padStart(2, "0")}</b> / {String(members.length).padStart(2, "0")}</div>
       <div className="stack">
         {order.slice(0, 3).map((idx, i) => {
           const m = members[idx], t = i === 0;
+          if (!m) return null;
           return (
-            <div key={idx} className={"card" + (t ? " t" : "")} {...(t ? h : {})}
+            <div key={m.id ?? idx} className={"card" + (t ? " t" : "")} {...(t ? h : {})}
               style={{ background: m.color, color: m.textColor, zIndex: 10 - i, transition: t && drag ? "none" : undefined,
                 transform: t ? `translateX(calc(-50% + ${dx}px)) rotate(${dx / 22}deg)` : BACK[i] }}>
               {t && (
@@ -386,7 +399,7 @@ function Landing({ go, dark, toggle, members }) {
   );
 }
 
-function Deck({ go, onMatch, order, setOrder, dark, toggle, members, acceptSoundRef }) {
+function Deck({ go, onMatch, order, setOrder, cardPos, setCardPos, dark, toggle, members, acceptSoundRef }) {
   return (
     <main className="deck-screen dating-theme">
       <div className="deck-bar">
@@ -396,7 +409,16 @@ function Deck({ go, onMatch, order, setOrder, dark, toggle, members, acceptSound
         </nav>
         <ThemeBtn dark={dark} toggle={toggle} />
       </div>
-      <Stack go={go} onMatch={onMatch} order={order} setOrder={setOrder} members={members} acceptSoundRef={acceptSoundRef} />
+      <Stack
+        go={go}
+        onMatch={onMatch}
+        order={order}
+        setOrder={setOrder}
+        cardPos={cardPos}
+        setCardPos={setCardPos}
+        members={members}
+        acceptSoundRef={acceptSoundRef}
+      />
     </main>
   );
 }
@@ -526,7 +548,7 @@ function Portfolio({ m, go, dark, toggle }) {
 function MatchScreen({ member }) {
   return (
     <main className="match-screen dating-theme">
-      <div className="match-sparkles" aria-hidden="true">♡　✦　♡　✦　♡</div>
+      <div className="match-sparkles" aria-hidden="true">♡ ✦ ♡ ✦ ♡</div>
       <section className="match-card" role="dialog" aria-modal="true" aria-labelledby="match-title">
         <p className="match-kicker mono">A PROMISING TEAM-UP</p>
         <h1 id="match-title">It’s a <em>match!</em></h1>
@@ -546,7 +568,8 @@ function MatchScreen({ member }) {
 
 function App() {
   const [route, go] = useRoute();
-  const [order, setOrder] = useState(D.map((_, i) => i));
+  const [order, setOrder] = useState(() => D.map((_, i) => i));
+  const [cardPos, setCardPos] = useState(0);
   const [match, setMatch] = useState(null);
   const [prank, setPrank] = useState(null);
   const swipeAcceptSoundRef = useRef(null);
@@ -556,6 +579,10 @@ function App() {
   const [fk, setFk] = useState(0);
   const [flashType, setFlashType] = useState("light");
   useEffect(() => { document.documentElement.setAttribute("data-theme", dark ? "dark" : "light"); }, [dark]);
+  useEffect(() => {
+    setOrder(D.map((_, i) => i));
+    setCardPos(0);
+  }, [route, D.length]);
   useEffect(() => {
     const audio = new Audio("./Closer%20-%20GEHLEE%20(Lyrics).mp3");
     const resetAfterPlayback = () => { audio.currentTime = 0; };
@@ -640,7 +667,18 @@ function App() {
                 ? <TimbasPortfolio key={m.id} member={m} next={M[(M.indexOf(m) + 1) % M.length]} go={go} dark={dark} toggle={toggle} />
                 : <Portfolio key={m.id} m={m} go={go} dark={dark} toggle={toggle} />
           : route === "deck"
-            ? <Deck go={go} onMatch={acceptMember} order={order} setOrder={setOrder} dark={dark} toggle={toggle} members={D} acceptSoundRef={swipeAcceptSoundRef} />
+            ? <Deck
+                go={go}
+                onMatch={acceptMember}
+                order={order}
+                setOrder={setOrder}
+                cardPos={cardPos}
+                setCardPos={setCardPos}
+                dark={dark}
+                toggle={toggle}
+                members={D}
+                acceptSoundRef={swipeAcceptSoundRef}
+              />
             : <Landing go={go} dark={dark} toggle={toggle} members={D} />}
     </>
   );

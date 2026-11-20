@@ -2,20 +2,16 @@ import { useEffect, useRef, useState } from "react";
 import ThemeBtn from "../components/ThemeBtn.jsx";
 
 /* ---------- Everything you may want to edit is in DATA ---------- */
-/* Photos: put the files in frontend/public/photos/ and write just the file name
-   WITHOUT the extension (e.g. img: "readable"). The page tries .jpg, .jpeg, .png
-   and .webp automatically. Until a photo is found, a placeholder box is shown. */
+
 const DATA = {
   name: "Phiona Eunice De Leon Garcia",
   nickname: "Yay",
   section: "BSIT 3-1",
   teacher: "Sean Dyogi",
   field: "BSIT Portfolio",   // small label at the top-left of every page
-  date: "Nov 2026",          // small label at the top-right of every page
-  photo: "cover",            // About Me photo (file name without extension)
-  photoPos: "50% 30%",       // vertical crop of the About Me photo: raise the 2nd number to move the picture up
-  spotifyPlaylist: "https://open.spotify.com/artist/7tYKF4w9nC0nq9CsPZTHyP", // Spotify link (artist or playlist) shown by "Music vibing"
-
+  photo: "cover",            
+  photoPos: "50% 30%",      
+  spotifyPlaylist: "https://open.spotify.com/artist/7tYKF4w9nC0nq9CsPZTHyP", 
   about: [
     ["Nickname:", "Yay"],
     ["Age:", "21 yrs old"],
@@ -24,6 +20,7 @@ const DATA = {
   ],
 
   projects: [
+    { title: "Graphic Design Portfolio", text: "View portfolio", pdf: "/GARCIA-PHIONA-PORTFOLIO.pdf" },
     { title: "CTPR Club Group Portfolio", text: "Group portfolio website." },
     { title: "EaseAccess", text: "Barangay document request system.", img: "easeaccess" },
     { title: "ReadAble", text: "Web-based interactive reading comprehension support application for children with autism spectrum disorder (ASD).", img: "readable" },
@@ -32,18 +29,19 @@ const DATA = {
   ],
 
   skills: [
-    { title: "Adobe Photoshop", text: "Graphic design projects that I used to compete with in collaborative desktop publishing." },
-    { title: "InDesign", text: "Desktop publishing and page layout for multi-page print and digital media, that I also used to compete with in collaborative desktop publishing.", img: "adobe" },
-    { title: "SketchUp", text: "3D modelling and visual prototypes like architectural structures and interior designing.", img: "sketchup" },
-    { title: "MySQL", icon: "🗄️" },
-    { title: "Figma", icon: "🎨" },
-    { title: "Git", icon: "🔀" },
-    { title: "Canva", icon: "✨" },
-    { title: "CapCut", icon: "🎬" },
-    { title: "CSS", icon: "💅" },
-    { title: "HTML", icon: "🌐" },
-    { title: "Java", icon: "☕" },
-    { title: "C++", icon: "⚙️" },
+    { title: "Adobe Photoshop", text: "I use Photoshop to create graphic designs and compete in collaborative desktop publishing projects." },
+    { title: "InDesign", text: "I enjoy using InDesign to build polished layouts for print and digital publications, including my collaborative desktop publishing entries.", img: "adobe" },
+    { title: "SketchUp", text: "I use SketchUp to turn my ideas into 3D models and visual prototypes for architecture and interior design.", img: "sketchup" },
+    { title: "MySQL", icon: "🗄️", text: "I use MySQL to organize and manage data for my application projects." },
+    { title: "Figma", icon: "🎨", text: "I use Figma to design interfaces and turn my ideas into interactive prototypes." },
+    { title: "Git", icon: "🔀", text: "I use Git to track my progress, manage project changes, and collaborate with others." },
+    { title: "Canva", icon: "✨", text: "I use Canva to create clean presentations and expressive visual designs." },
+    { title: "CapCut", icon: "🎬", text: "I use CapCut to edit videos with engaging effects, text, audio, and transitions." },
+    { title: "CSS", icon: "💅", text: "I use CSS to bring my web designs to life with layouts, colors, and responsive effects." },
+    { title: "HTML", icon: "🌐", text: "I use HTML to structure the content and features of the websites I build." },
+    { title: "Java", icon: "☕", text: "I use Java to build applications and strengthen my object-oriented programming skills." },
+    { title: "C++", icon: "⚙️", text: "I use C++ to develop efficient programs and improve my problem-solving skills." },
+    { title: "Spring", icon: "🌱", text: "I use Spring to build organized Java applications and understand backend development." },
   ],
 
   hobbies: [
@@ -75,13 +73,13 @@ const DATA = {
   ],
 };
 
-/* the tabs shown in the table of contents (order = page order) */
-const PAGES = ["About Me", "Projects", "Skills", "Hobbies", "Side Quests", "Fun Facts"];
+
+const PAGES = ["About Me", "Projects", "Skills", "Hobbies", "Side Quests" ];
 
 const PHOTO_DIR = "/photos/phio";
 const PHOTO_EXTS = ["jpg", "jpeg", "png", "webp"];
 
-/* how much the right-hand page is magnified when the folder is open (1 = normal) */
+
 const PAGE_ZOOM = 1.25;
 
 const YEL = "#efdeae";     // folder
@@ -135,9 +133,7 @@ function Title({ children, size = 30 }) {
   );
 }
 
-/* a photo slot: shows the picture when the file exists, otherwise a placeholder box.
-   name = file name without extension ("readable"), or a full path ("/photos/me.jpg")
-   pos  = CSS object-position for the crop ("50% 0%" = top of the picture) */
+
 function Pic({ name, alt = "", className = "", pos = "50% 0%" }) {
   const [tryIdx, setTryIdx] = useState(0);
   const isPath = !!name && (name.startsWith("/") || name.includes("."));
@@ -164,7 +160,7 @@ function Pic({ name, alt = "", className = "", pos = "50% 0%" }) {
   );
 }
 
-/* header and footer shared by every page, like the template slides */
+
 function Frame({ n, children }) {
   return (
     <div className="flex min-h-full flex-col" style={{ ...MONO, color: BROWN }}>
@@ -183,10 +179,8 @@ function Frame({ n, children }) {
   );
 }
 
-/* pink-bordered card used for projects and side quests.
-   layout "top": photo above the text (wide screenshots)
-   layout "side": photo on the left, text on the right (portrait photos) */
-function Card({ label, title, text, img, layout = "top" }) {
+
+function Card({ label, title, text, img, pdf, layout = "top" }) {
   const head = (
     <>
       <div className="flex items-baseline gap-2">
@@ -194,6 +188,17 @@ function Card({ label, title, text, img, layout = "top" }) {
         <b className="text-[13px] leading-tight" style={{ ...SANS, fontWeight: 800 }}>{title}</b>
       </div>
       {text && <p className="m-0 mt-1 text-[9.5px] leading-[1.55]">{text}</p>}
+      {pdf && (
+        <a
+          href={pdf}
+          target="_blank"
+          rel="noreferrer"
+          className="mt-1.5 inline-block text-[9.5px] font-bold underline underline-offset-2"
+          style={{ color: PINK }}
+        >
+          Open PDF
+        </a>
+      )}
     </>
   );
 
@@ -244,8 +249,7 @@ function CoverSheet() {
   );
 }
 
-/* "Music vibing" card: click the title to show or hide the Spotify playlist.
-   Accepts a full share link or just the playlist ID. */
+
 function spotifyRef(v) {
   const str = String(v || "");
   const m = str.match(/(playlist|artist|album|track)\/([A-Za-z0-9]+)/);
@@ -332,7 +336,7 @@ function PageContent({ i }) {
         <Title>{PAGES[1]}</Title>
         <div className="space-y-3">
           {DATA.projects.map((p, k) => (
-            <Card key={p.title} label={String(k + 1).padStart(2, "0")} title={p.title} text={p.text} img={p.img} />
+            <Card key={p.title} label={String(k + 1).padStart(2, "0")} title={p.title} text={p.text} img={p.img} pdf={p.pdf} />
           ))}
         </div>
       </Frame>
@@ -461,7 +465,7 @@ export default function GarciaPortfolio({ next, go, dark, toggle }) {
 
       <main className="flex flex-1 flex-col items-center justify-center gap-6 px-4 py-10">
         <div className="[perspective:1800px]">
-          {/* the folder: closed it is centered, open it slides right so the whole spread is centered */}
+          {}
           <div
             className={
               "relative aspect-[0.64] w-[var(--w)] [--w:min(420px,92vw)] md:[--w:min(520px,44vw)] transition-transform duration-[900ms] ease-in-out motion-reduce:transition-none " +
@@ -483,7 +487,7 @@ export default function GarciaPortfolio({ next, go, dark, toggle }) {
                     if (d < -50) step(1); else if (d > 50) step(-1);
                   }}
                 >
-                  {/* zoomed in so the right-hand page is easier to read */}
+                  {}
                   <div style={{ zoom: PAGE_ZOOM }}>
                     <PageContent i={page} />
                   </div>
@@ -491,7 +495,7 @@ export default function GarciaPortfolio({ next, go, dark, toggle }) {
               </div>
             </div>
 
-            {/* the cover: swings open from its left edge */}
+            {}
             <div
               className="absolute inset-0 origin-left transition-transform duration-[1000ms] ease-in-out motion-reduce:transition-none"
               style={{ transformStyle: "preserve-3d", transform: open ? "rotateY(-180deg)" : "rotateY(0deg)" }}
@@ -511,7 +515,7 @@ export default function GarciaPortfolio({ next, go, dark, toggle }) {
                 <CoverSheet />
               </div>
 
-              {/* inside of the cover: table of contents */}
+              {}
               <div className={"absolute inset-0 p-6 " + EDGE} style={{ ...HIDE_BACK, transform: "rotateY(180deg)", background: PALE, color: BROWN }}>
                 <div className="absolute inset-y-0 right-[5%] w-px" style={{ background: "#e6d77a" }} />
                 <Star size={34} className="mb-6 mt-2 block" />
@@ -539,7 +543,7 @@ export default function GarciaPortfolio({ next, go, dark, toggle }) {
           </div>
         </div>
 
-        {/* controls under the folder */}
+        {}
         <div className="flex min-h-[64px] flex-col items-center gap-3">
           {!open ? (
             <p className="m-0 text-sm text-[var(--mute)]">Click the folder to open it.</p>
