@@ -6,6 +6,7 @@ import TimbasPortfolio from "./portfolios/TimbasPortfolio.jsx";
 import DateMePrank from "./components/DateMePrank.jsx";
 import Flash from "./components/Flash.jsx";
 import CardFan from "./components/CardFan.jsx";
+import { photoUrlFor } from "./api.js";
 
 let M = []; // filled from the Spring Boot API (see main.jsx)
 let D = [];
@@ -232,7 +233,7 @@ function Stack({ go, onMatch, order, setOrder, members, acceptSoundRef }) {
               {t && (
                 <>
                   <div className="photo" style={{ background: `linear-gradient(155deg,${m.color}cc,#001B2B)` }}>
-                    {m.photoUrl ? <img src={m.photoUrl} alt={m.name} draggable={false} /> : <b>{m.init}</b>}
+                    {photoUrlFor(m) ? <img src={photoUrlFor(m)} alt={m.name} draggable={false} /> : <b>{m.init}</b>}
                     <span className="badge">{m.match}% YOUR TYPE</span>
                     <span className="cap">{m.cap}</span>
                     <span className="stamp" style={{ opacity: clamp(Math.abs(dx) / 90), transform: dx < 0 ? "rotate(10deg)" : undefined,

@@ -1,11 +1,23 @@
 // Calls the Spring Boot API. In dev, vite.config.js proxies /api to http://localhost:8080.
 // In production the React build is served by Spring Boot itself, so /api is the same origin.
 const photos = {
-  dwight: "./dwight-ramos.png",
-  bella: "./bela-padilla.jpg",
-  liza: "./member-rose.jpg",
-  donny: "./piolo.jpg",
+  dwight: "/dwight-ramos.png",
+  bella: "/bela-padilla.jpg",
+  liza: "/member-rose.jpg",
+  donny: "/piolo.jpg",
 };
+const photoAliases = {
+  "dwight ramos": photos.dwight,
+  rose: photos.liza,
+  "bella padilla": photos.bella,
+  "piolo pascual": photos.donny,
+};
+export const photoUrlFor = (member) => (
+  photos[String(member?.id || "").toLowerCase()]
+  || photoAliases[String(member?.name || "").toLowerCase()]
+  || member?.photoUrl
+  || null
+);
 
 const paletteColors = {
   "#ff6a4d": "#EEA233", "#e9b93c": "#FFB915", "#7fb2e8": "#003F66",
@@ -28,7 +40,7 @@ export function normalize(m) {
     quote: m.quote,
     tags: m.tags || [],
     color: m.color,
-    photoUrl: photos[m.id] || m.photoUrl || null,
+    photoUrl: photoUrlFor(m),
     bio: m.bio,
     match: m.matchPercent,
     cap: m.caption,
