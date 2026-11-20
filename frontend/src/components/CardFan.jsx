@@ -127,6 +127,10 @@ export default function CardFan({
           dissolving && !moveDissolving
         );
         const moved = dissolving && moveDissolving;
+        const photoUrl = variant === "showcase" &&
+          (member.id === "liza" || member.name === "Althea Lei Santos")
+          ? "/althea-peeking.png"
+          : member.photoUrl;
 
         return (
           <div
@@ -150,7 +154,7 @@ export default function CardFan({
             }}
           >
             <div className="card-fan-card" style={{ backgroundColor: member.color || "#FDFCF9" }}>
-              {member.photoUrl && <img src={member.photoUrl} alt="" draggable="false" />}
+              {photoUrl && <img src={photoUrl} alt="" draggable="false" />}
             {(variant === "hero" || variant === "showcase") && heroLabel && (
               <span className="card-fan-name">{heroLabel}</span>
             )}

@@ -19,6 +19,7 @@ export default function PortfolioPage({ data, member, next, go, dark, toggle }) 
 
   const isVenzon = Boolean(data.portrait);
   const isAlthea = data.name === "Althea Lei Santos";
+  const hasPeekPortrait = Boolean(data.portrait || data.peekPortrait);
   const hasReveal = isVenzon || isAlthea;
   const navLinks = ["projects", "stack", "about"];
 
@@ -43,7 +44,7 @@ export default function PortfolioPage({ data, member, next, go, dark, toggle }) 
 
   return (
     <div className={`${isVenzon ? "venzon-page " : ""}${isAlthea ? "althea-portfolio " : ""}cohesive-portfolio`} style={accStyle}>
-      <Peek portrait={data.portrait} />
+      <Peek portrait={hasPeekPortrait ? (data.portrait || data.peekPortrait) : undefined} />
 
       {/* ── Sticky nav ── */}
       <nav className="portfolio-bumble-nav sticky top-[env(safe-area-inset-top,0px)] z-20 bg-[var(--bg)] border-b border-[var(--line)]">
@@ -111,6 +112,14 @@ export default function PortfolioPage({ data, member, next, go, dark, toggle }) 
           {data.headFolder ? (
             <div className={`flex-none self-center sm:self-auto${isAlthea ? " althea-headshot" : ""}`}>
               <Cursor folder={data.headFolder} alt={data.name} backText={data.headBackText} interactive={Boolean(data.portrait)} />
+            </div>
+          ) : data.headPhoto ? (
+            <div className={`flex-none self-center sm:self-auto${isAlthea ? " althea-headshot" : ""}`}>
+              <img
+                src={data.headPhoto}
+                alt={data.name}
+                className="w-[220px] h-[270px] rounded-3xl object-cover"
+              />
             </div>
           ) : (
             <div

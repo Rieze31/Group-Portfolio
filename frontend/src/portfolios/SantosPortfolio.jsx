@@ -7,6 +7,8 @@ const DATA = {
   role: "BSIT STUDENT",
   color: "#FFDB5B",
   onAcc: "#3B3B3B",
+  headPhoto: "/althea-main.jpg",
+  peekPortrait: "/althea-peeking.png",
   bio: "Portfolio coming soon. Replace this text with your story.",
   projects: [
     {

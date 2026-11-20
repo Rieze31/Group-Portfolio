@@ -270,6 +270,14 @@ function Landing({ go, dark, toggle, members }) {
   const [introVisible, setIntroVisible] = useState(false);
   const [storyVisible, setStoryVisible] = useState(false);
   const [focusPaused, setFocusPaused] = useState(false);
+  const [leaving, setLeaving] = useState(false);
+
+  const goToDeck = () => {
+    if (leaving) return;
+    setLeaving(true);
+    const delay = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? 0 : 260;
+    window.setTimeout(() => go("deck"), delay);
+  };
 
   useEffect(() => {
     const section = showcaseRef.current;
@@ -321,7 +329,7 @@ function Landing({ go, dark, toggle, members }) {
 
   return (
     <main
-      className="landing-showcase dating-theme"
+      className={`landing-showcase dating-theme${leaving ? " landing-exit" : ""}`}
       onFocusCapture={() => setFocusPaused(true)}
       onBlurCapture={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget)) setFocusPaused(false);
@@ -331,7 +339,7 @@ function Landing({ go, dark, toggle, members }) {
         <span className="landing-brand mono">CTPR CLUB</span>
         <nav className="dating-nav" aria-label="Primary navigation">
           <a href="#home">Home</a>
-          <a href="#deck">Meet the club</a>
+          <a href="#deck" onClick={(event) => { event.preventDefault(); goToDeck(); }}>Meet the club</a>
         </nav>
         <ThemeBtn dark={dark} toggle={toggle} />
       </header>
@@ -354,7 +362,7 @@ function Landing({ go, dark, toggle, members }) {
           <div className="landing-intro-copy">
             <h1>Find your dev match.</h1>
             <p>Skip the "what are we?" stage and go straight to production. Swipe through the people behind the pixels.</p>
-            <button className="landing-find-match" onClick={() => go("deck")}>
+            <button className="landing-find-match" onClick={goToDeck}>
               Find Your Match
             </button>
           </div>
