@@ -687,6 +687,11 @@ a.venzon-project-action:hover{transform:translateY(-1px);border-color:var(--acc)
   --mono:"Figtree","Nunito",system-ui,sans-serif;
   background:var(--bg);color:var(--ink);font-family:var(--sans);
 }
+@keyframes portfolio-slide-fade{
+  from{opacity:0;transform:translateY(6px)}
+  to{opacity:1;transform:translateY(0)}
+}
+.portfolio-carousel-slide,.portfolio-about-copy{animation:portfolio-slide-fade .3s ease both}
 :root[data-theme="dark"] .cohesive-portfolio{
   --bg:#000000;--ink:#FFDB5B;--mute:#FFDB5B;--line:#FFDB5B;--card:#151515;
   --acc:#FFDB5B;--portfolio-accent:#FFDB5B;--portfolio-button-ink:#000000;
@@ -696,6 +701,7 @@ a.venzon-project-action:hover{transform:translateY(-1px);border-color:var(--acc)
 .cohesive-portfolio .pn,
 .cohesive-portfolio nav{background:var(--bg)}
 .cohesive-portfolio .tb{background:transparent;color:#3B3B3B;border-color:var(--portfolio-accent)}
+.garcia-portfolio .garcia-theme-btn{background:transparent!important;color:#3B3B3B!important;border-color:#3B3B3B!important}
 .cohesive-portfolio .btn{font-family:var(--sans)}
 .cohesive-portfolio .back{color:#3B3B3B}
 .cohesive-portfolio .btn.o{color:var(--ink);border-color:var(--ink)}

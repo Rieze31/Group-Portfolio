@@ -323,15 +323,18 @@ export default function GarciaPortfolio({ next, go, dark, toggle }) {
   const linkBtn = "cursor-pointer border-0 bg-transparent p-0 text-sm underline underline-offset-4 disabled:cursor-default disabled:no-underline disabled:opacity-30";
 
   return (
-    <div className="cohesive-portfolio flex min-h-screen flex-col overflow-x-hidden bg-[var(--bg)] text-[var(--ink)]" style={SANS}>
+    <div className="cohesive-portfolio garcia-portfolio flex min-h-screen flex-col overflow-x-hidden bg-[var(--bg)] text-[var(--ink)]" style={SANS}>
       <style>{CSS}</style>
 
-      <nav className="sticky top-[env(safe-area-inset-top,0px)] z-30 border-b border-[var(--line)] bg-[var(--bg)]">
+      <nav
+        className="sticky top-[env(safe-area-inset-top,0px)] z-30 border-b border-[var(--line)]"
+        style={{ backgroundColor: dark ? "#FFDB5B" : "#FDFCF9" }}
+      >
         <div className="mx-auto flex h-[58px] max-w-[960px] items-center justify-between px-5">
-          <button onClick={() => go("deck")} className="cursor-pointer border-0 bg-transparent px-2 py-1.5 text-sm font-medium text-[var(--ink)] hover:underline">
-            Back to CTPR Club
+          <button onClick={() => go("deck")} className="cursor-pointer border-0 bg-transparent px-2 py-1.5 text-sm font-medium hover:underline" style={{ color: "#3B3B3B" }}>
+            ← CTPR Club
           </button>
-          <ThemeBtn dark={dark} toggle={toggle} />
+          <ThemeBtn dark={dark} toggle={toggle} className="garcia-theme-btn" />
         </div>
       </nav>
 

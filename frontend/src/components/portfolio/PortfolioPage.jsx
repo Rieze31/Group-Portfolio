@@ -16,6 +16,7 @@ export default function PortfolioPage({ data, member, next, go, dark, toggle }) 
   const init = parts[0][0] + parts[parts.length - 1][0];
   const accStyle = { "--acc": data.color, "--on-acc": data.onAcc || "#151515" };
   const [menuOpen, setMenuOpen] = useState(false);
+  const [aboutSlide, setAboutSlide] = useState(0);
 
   const isVenzon = Boolean(data.portrait);
   const isAlthea = data.name === "Althea Lei Santos";
@@ -235,12 +236,20 @@ export default function PortfolioPage({ data, member, next, go, dark, toggle }) 
             >
               A bit about <em>me.</em>
             </h2>
-            {(data.about || [data.bio]).map((paragraph) => <p key={paragraph} className="text-[var(--mute)] leading-relaxed text-[15px]">{paragraph}</p>)}
+            {data.aboutSlides ? (
+              <p key={aboutSlide} className="portfolio-about-copy text-[var(--mute)] leading-relaxed text-[15px]">
+                {data.aboutSlides[aboutSlide].d}
+              </p>
+            ) : (data.about || [data.bio]).map((paragraph) => <p key={paragraph} className="text-[var(--mute)] leading-relaxed text-[15px]">{paragraph}</p>)}
           </div>
           <div className="w-full sm:flex-[1_1_280px]">
             {isVenzon && data.aboutImage ? (
               <img className="venzon-about-image" src={data.aboutImage} alt="Rieze Andrei Venzon" loading="lazy" />
-            ) : <Carousel slides={data.slides} />}
+            ) : <Carousel
+              slides={data.slides}
+              activeIndex={data.aboutSlides ? aboutSlide : undefined}
+              onChange={data.aboutSlides ? setAboutSlide : undefined}
+            />}
           </div>
         </section>
 

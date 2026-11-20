@@ -1,8 +1,8 @@
-export default function ThemeBtn({ dark, toggle, compact = false }) {
+export default function ThemeBtn({ dark, toggle, compact = false, className = "" }) {
   return (
     <button
       type="button"
-      className={`tb${compact ? " tb-compact" : ""}`}
+      className={`tb${compact ? " tb-compact" : ""}${className ? ` ${className}` : ""}`}
       onClick={toggle}
       aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
       title={dark ? "Switch to light mode" : "Switch to dark mode"}

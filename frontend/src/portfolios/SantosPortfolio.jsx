@@ -9,7 +9,7 @@ const DATA = {
   onAcc: "#3B3B3B",
   headPhoto: "/althea-main.jpg",
   peekPortrait: "/althea-peeking.png",
-  bio: "Portfolio coming soon. Replace this text with your story.",
+  bio: "I'm just a regular girl with big dreams and big hopes, hunney.",
   projects: [
     {
       title: "A Web-Based Order Management and Service Reservation System with Predictive Analytics for Ermel’s Glass and Aluminum Works.",
@@ -45,10 +45,15 @@ const DATA = {
     { n: "Figma", c: "Tools", e: "🎨" },
     { n: "Canva", c: "Tools", e: "🖌️" },
   ],
+  aboutSlides: [
+    { t: "Campus Life at PLM", image: "/images/campus-life.jpg", d: "“I entered PLM as a BSIT student who simply loved design—not knowing yet that true IT is rooted in empathy for the user.” Loving every moment of campus life while learning to build software that truly understands people." },
+    { t: "Art & UI/UX Design", image: "/images/art-uiux.jpg", d: "During the pandemic, I discovered that I actually know how to draw and paint. That creative spark became my superpower—now I naturally step into the UI/UX designer role in every project we build." },
+    { t: "Skills & Teamwork", image: "/images/skills-vibe.jpg", d: "Behind the visuals, I'm big on analytical thinking, problem-solving, time management, and being meticulous with every detail—while always making sure I can easily vibe and collaborate with everyone on the team." },
+  ],
   slides: [
-    { t: "Workspace", d: "Where the work happens.", g: "linear-gradient(160deg,#FFDB5B,#3B3B3B)" },
-    { t: "Campus life", d: "Life between classes.", g: "linear-gradient(160deg,#3B3B3B,#000000)" },
-    { t: "Off the clock", d: "What I do for fun.", g: "linear-gradient(160deg,#FFDB5B,#000000)" },
+    { t: "Campus Life at PLM", image: "/images/campus-life.jpg", d: "" },
+    { t: "Art & UI/UX Design", image: "/images/art-uiux.jpg", d: "" },
+    { t: "Skills & Teamwork", image: "/images/skills-vibe.jpg", d: "" },
   ],
 };
 
