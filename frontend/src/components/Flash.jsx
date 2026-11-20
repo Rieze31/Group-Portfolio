@@ -49,7 +49,7 @@ export default function Flash({ onDone, type = "light" }) {
   return (
     <div className={`flash${portfolioTransition ? " portfolio-flash" : ""}`} onClick={finish} onAnimationEnd={(event) => event.target === event.currentTarget && finish()}>
       <img src={portfolioTransition ? "/portfolio-transition-cutout.png" : "/sunshine.png"} alt={portfolioTransition ? "Baby looking at the camera" : "Sunshine meme"} />
-      <span>{portfolioTransition ? "Wait lang guys" : "Light mode activated. Sorry for your eyes."}</span>
+      <span>{portfolioTransition ? "Enjoy the music ;)" : "Light mode activated. Sorry for your eyes."}</span>
       {!portfolioTransition && <audio ref={audioRef} src={soundSrc} preload="auto" aria-hidden="true" style={{ display: "none" }} />}
     </div>
   );
