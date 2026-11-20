@@ -18,11 +18,13 @@ export default function PortfolioPage({ data, member, next, go, dark, toggle }) 
   const [menuOpen, setMenuOpen] = useState(false);
 
   const isVenzon = Boolean(data.portrait);
-  const navLinks = isVenzon ? ["home", "projects", "stack", "about"] : ["projects", "stack", "about"];
+  const isAlthea = data.name === "Althea Lei Santos";
+  const hasReveal = isVenzon || isAlthea;
+  const navLinks = ["projects", "stack", "about"];
 
   useEffect(() => {
-    if (!isVenzon) return;
-    const nodes = document.querySelectorAll(".venzon-reveal");
+    if (!hasReveal) return;
+    const nodes = document.querySelectorAll(".portfolio-reveal");
     if (!("IntersectionObserver" in window)) {
       nodes.forEach((node) => node.classList.add("is-visible"));
       return;
@@ -37,26 +39,26 @@ export default function PortfolioPage({ data, member, next, go, dark, toggle }) 
     }, { threshold: 0.12 });
     nodes.forEach((node) => observer.observe(node));
     return () => observer.disconnect();
-  }, [isVenzon, data.projects]);
+  }, [hasReveal, data.projects]);
 
   return (
-    <div className={isVenzon ? "venzon-page" : undefined} style={accStyle}>
+    <div className={`${isVenzon ? "venzon-page " : ""}${isAlthea ? "althea-portfolio " : ""}cohesive-portfolio`} style={accStyle}>
       <Peek portrait={data.portrait} />
 
       {/* ── Sticky nav ── */}
-      <nav className="sticky top-[env(safe-area-inset-top,0px)] z-20 bg-[var(--bg)] border-b border-[var(--line)]">
-        <div className="max-w-[960px] mx-auto px-5 flex justify-between items-center h-[58px]">
+      <nav className="portfolio-bumble-nav sticky top-[env(safe-area-inset-top,0px)] z-20 bg-[var(--bg)] border-b border-[var(--line)]">
+        <div className="portfolio-nav-inner max-w-[960px] mx-auto px-5 flex justify-between items-center h-[58px]">
           {/* Back button */}
           <button
-            onClick={() => isVenzon ? scTo("home") : go("home")}
+            onClick={() => go("deck")}
             className="bg-transparent border-0 text-[var(--ink)] font-medium text-sm cursor-pointer px-2 py-1.5 hover:text-[var(--acc)] transition-colors shrink-0"
-            style={{ fontFamily: "var(--sans)", color: isVenzon ? "var(--acc)" : undefined }}
+            style={{ fontFamily: "var(--sans)" }}
           >
-            {isVenzon ? "Rieze" : "← CTPR Club"}
+            ← CTPR Club
           </button>
 
           {/* Desktop nav links */}
-          <div className="hidden sm:flex items-center gap-1">
+          <div className="portfolio-nav-links hidden sm:flex items-center gap-1">
             {navLinks.map((s) => (
               <button
                 key={s}
@@ -107,7 +109,7 @@ export default function PortfolioPage({ data, member, next, go, dark, toggle }) 
         <section id={isVenzon ? "home" : undefined} className={`py-14 sm:py-[72px] flex flex-col sm:flex-row gap-10 sm:gap-14 items-center${isVenzon ? " venzon-section" : ""}`}>
           {/* Headshot — interactive mouse-following Cursor widget */}
           {data.headFolder ? (
-            <div className="flex-none self-center sm:self-auto">
+            <div className={`flex-none self-center sm:self-auto${isAlthea ? " althea-headshot" : ""}`}>
               <Cursor folder={data.headFolder} alt={data.name} backText={data.headBackText} interactive={Boolean(data.portrait)} />
             </div>
           ) : (
@@ -135,12 +137,12 @@ export default function PortfolioPage({ data, member, next, go, dark, toggle }) 
               <button
                 onClick={() => scTo("projects")}
                 className="border rounded-full px-5 py-2.5 text-sm font-bold cursor-pointer transition-opacity hover:opacity-80"
-                style={{ background: "var(--acc)", borderColor: "var(--acc)", color: "var(--on-acc,#151515)", fontFamily: "var(--sans)" }}
+                style={{ background: "var(--portfolio-accent)", borderColor: "var(--portfolio-accent)", color: "var(--portfolio-button-ink)", fontFamily: "var(--sans)" }}
               >
                 View projects
               </button>
               <button
-                onClick={() => go("home")}
+                onClick={() => go("deck")}
                 className="bg-transparent border border-[var(--ink)] text-[var(--ink)] rounded-full px-5 py-2.5 text-sm font-bold cursor-pointer hover:opacity-70 transition-opacity"
                 style={{ fontFamily: "var(--sans)" }}
               >
@@ -164,7 +166,7 @@ export default function PortfolioPage({ data, member, next, go, dark, toggle }) 
           {data.projects.map((p, k) => (
             <div
               key={p.title}
-              className={`flex flex-col sm:flex-row gap-6 sm:gap-8 items-start sm:items-center my-8 ${k % 2 ? "sm:flex-row-reverse" : ""}${isVenzon ? " venzon-reveal" : ""}`}
+              className={`flex flex-col sm:flex-row gap-6 sm:gap-8 items-start sm:items-center my-8 ${k % 2 ? "sm:flex-row-reverse" : ""}${hasReveal ? " portfolio-reveal" : ""}${isVenzon ? " venzon-reveal" : ""}${isAlthea ? " althea-project-row" : ""}`}
             >
               <div
                 className={`relative w-full sm:flex-[1_1_280px] h-[180px] sm:h-[200px] rounded-[18px] overflow-hidden grid place-items-center text-white text-xs${isVenzon ? " venzon-project-image" : ""}`}
@@ -234,9 +236,9 @@ export default function PortfolioPage({ data, member, next, go, dark, toggle }) 
         </section>
 
         {/* ── Footer ── */}
-        {!isVenzon && <footer className="border-t border-[var(--line)] py-6 flex flex-wrap justify-between gap-2.5">
+        <footer className="portfolio-next-footer border-t border-[var(--line)] py-6 flex flex-wrap justify-between gap-2.5">
           <button
-            onClick={() => go("home")}
+            onClick={() => go("deck")}
             className="bg-transparent border-0 text-[var(--ink)] font-medium text-sm cursor-pointer px-2.5 py-1.5 hover:text-[var(--acc)] transition-colors"
             style={{ fontFamily: "var(--sans)" }}
           >
@@ -251,7 +253,7 @@ export default function PortfolioPage({ data, member, next, go, dark, toggle }) 
               Next: {next.name} →
             </button>
           )}
-        </footer>}
+        </footer>
       </div>
     </div>
   );
