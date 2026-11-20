@@ -8,7 +8,12 @@ import Flash from "./components/Flash.jsx";
 import CardFan from "./components/CardFan.jsx";
 
 let M = []; // filled from the Spring Boot API (see main.jsx)
-export function loadMembers(list) { M = list; }
+let D = [];
+const DISPLAY_MEMBER_IDS = ["dwight", "liza", "bella", "donny"];
+export function loadMembers(list) {
+  M = list;
+  D = DISPLAY_MEMBER_IDS.map((id) => list.find((member) => member.id === id)).filter(Boolean);
+}
 const DW_TOOLS = [
   { n: "Java", c: "Backend", e: "☕" }, { n: "Spring Boot", c: "Backend", e: "🍃" },
   { n: "React", c: "Frontend", e: "⚛️" }, { n: "Tailwind", c: "Frontend", e: "🌬️" },
@@ -100,7 +105,7 @@ function ThemeBtn({ dark, toggle }) {
 }
 
 /* ---------- Landing ---------- */
-function Stack({ go, onMatch, order, setOrder }) {
+function Stack({ go, onMatch, order, setOrder, members }) {
   const [dx, setDx] = useState(0);
   const [drag, setDrag] = useState(false);
   const busy = useRef(false), start = useRef(0), moved = useRef(false), act = useRef({});
@@ -152,7 +157,7 @@ function Stack({ go, onMatch, order, setOrder }) {
     startPassSound();
     fly(-1, () => setOrder((o) => [...o.slice(1), o[0]]));
   };
-  const look = () => fly(1, () => onMatch(M[order[0]]));
+  const look = () => fly(1, () => onMatch(members[order[0]]));
   act.current = { pass, look };
 
   useEffect(() => {
@@ -184,10 +189,10 @@ function Stack({ go, onMatch, order, setOrder }) {
 
   return (
     <div className={`sw${drag && dx < 0 ? " drag-left" : ""}${drag && dx > 0 ? " drag-right" : ""}`}>
-      <div className="cnt"><b>{String(order[0] + 1).padStart(2, "0")}</b> / {String(M.length).padStart(2, "0")}</div>
+      <div className="cnt"><b>{String(order[0] + 1).padStart(2, "0")}</b> / {String(members.length).padStart(2, "0")}</div>
       <div className="stack">
         {order.slice(0, 3).map((idx, i) => {
-          const m = M[idx], t = i === 0;
+          const m = members[idx], t = i === 0;
           return (
             <div key={idx} className={"card" + (t ? " t" : "")} {...(t ? h : {})}
               style={{ background: m.color, color: m.textColor, zIndex: 10 - i, transition: t && drag ? "none" : undefined,
@@ -227,7 +232,9 @@ const WORDMARK = "CTPR";
 
 function Landing({ go, dark, toggle, members }) {
   const showcaseRef = useRef(null);
+  const introRef = useRef(null);
   const [showcaseVisible, setShowcaseVisible] = useState(false);
+  const [introVisible, setIntroVisible] = useState(false);
   const [focusPaused, setFocusPaused] = useState(false);
 
   useEffect(() => {
@@ -240,6 +247,23 @@ function Landing({ go, dark, toggle, members }) {
     const observer = new IntersectionObserver(([entry]) => {
       setShowcaseVisible(entry.isIntersecting && entry.intersectionRatio >= 0.5);
     }, { threshold: 0.5 });
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const section = introRef.current;
+    if (!section) return undefined;
+    if (!("IntersectionObserver" in window)) {
+      setIntroVisible(true);
+      return undefined;
+    }
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setIntroVisible(true);
+        observer.unobserve(section);
+      }
+    }, { threshold: 0.12 });
     observer.observe(section);
     return () => observer.disconnect();
   }, []);
@@ -274,8 +298,8 @@ function Landing({ go, dark, toggle, members }) {
           focusPaused={focusPaused}
         />
       </section>
-      <section className="landing-intro">
-        <div className="landing-intro-grid">
+      <section className="landing-intro" ref={introRef}>
+        <div className={`landing-intro-grid${introVisible ? " is-visible" : ""}`}>
           <div className="landing-intro-copy">
             <h1>Find your dev match.</h1>
             <p>Skip the "what are we?" stage and go straight to production. Swipe through the people behind the pixels.</p>
@@ -286,11 +310,23 @@ function Landing({ go, dark, toggle, members }) {
           <CardFan members={members} variant="hero" />
         </div>
       </section>
+      <section className="landing-story" aria-label="Baby and Bebu coding story">
+        <div className="landing-story-copy">
+          <span className="landing-story-mark" aria-hidden="true">"</span>
+          <blockquote>
+            We make a great pair: one writes the code, the other finds the bugs—and somehow, we still call it teamwork.
+          </blockquote>
+          <p>Baby &amp; Bebu, coding since 2024</p>
+        </div>
+        <div className="landing-story-image">
+          <img src="/baby-bebu.jpg" alt="Baby and Bebu smiling together" loading="lazy" />
+        </div>
+      </section>
     </main>
   );
 }
 
-function Deck({ go, onMatch, order, setOrder, dark, toggle }) {
+function Deck({ go, onMatch, order, setOrder, dark, toggle, members }) {
   return (
     <main className="deck-screen dating-theme">
       <div className="deck-bar">
@@ -300,7 +336,7 @@ function Deck({ go, onMatch, order, setOrder, dark, toggle }) {
         </nav>
         <ThemeBtn dark={dark} toggle={toggle} />
       </div>
-      <Stack go={go} onMatch={onMatch} order={order} setOrder={setOrder} />
+      <Stack go={go} onMatch={onMatch} order={order} setOrder={setOrder} members={members} />
     </main>
   );
 }
@@ -450,7 +486,7 @@ function MatchScreen({ member }) {
 
 function App() {
   const [route, go] = useRoute();
-  const [order, setOrder] = useState(M.map((_, i) => i));
+  const [order, setOrder] = useState(D.map((_, i) => i));
   const [match, setMatch] = useState(null);
   const [prank, setPrank] = useState(null);
   const [dark, setDark] = useState(() => matchMedia("(prefers-color-scheme: dark)").matches);
@@ -497,8 +533,8 @@ function App() {
                 ? <TimbasPortfolio key={m.id} member={m} next={M[(M.indexOf(m) + 1) % M.length]} go={go} dark={dark} toggle={toggle} />
                 : <Portfolio key={m.id} m={m} go={go} dark={dark} toggle={toggle} />
           : route === "deck"
-            ? <Deck go={go} onMatch={acceptMember} order={order} setOrder={setOrder} dark={dark} toggle={toggle} />
-            : <Landing go={go} dark={dark} toggle={toggle} members={M} />}
+            ? <Deck go={go} onMatch={acceptMember} order={order} setOrder={setOrder} dark={dark} toggle={toggle} members={D} />
+            : <Landing go={go} dark={dark} toggle={toggle} members={D} />}
     </>
   );
 }

@@ -5,16 +5,24 @@ const TRANSITION_MS = 550;
 const FADE_MS = 350;
 
 const SHOWCASE_SLOTS = [
-  { x: 0, y: 0, scale: 1 },
-  { x: 60, y: 22, scale: 0.8 },
-  { x: 116, y: 46, scale: 0.65 },
-  { x: 145, y: 66, scale: 0.5 },
+  { x: 0, y: 0, scale: 1, rotate: -8 },
+  { x: 52, y: 18, scale: 0.82, rotate: -2 },
+  { x: 104, y: 38, scale: 0.68, rotate: 7 },
+  { x: 143, y: 58, scale: 0.54, rotate: 13 },
 ];
 const HERO_SLOTS = [
-  { x: 0, y: 0, scale: 1 },
-  { x: 55, y: 14, scale: 0.84 },
-  { x: 94, y: 28, scale: 0.7 },
+  { x: -12, y: 28, scale: 0.72, rotate: -16, z: 2 },
+  { x: 28, y: 10, scale: 0.86, rotate: -7, z: 3 },
+  { x: 68, y: 0, scale: 1, rotate: 0, z: 4 },
+  { x: 108, y: 24, scale: 0.72, rotate: 16, z: 2 },
 ];
+const HERO_LABELS = {
+  dwight: "Dwight, 20",
+  liza: "Rosé, 20",
+  bella: "Bela, 21",
+  donny: "Piolo, 21",
+};
+const HERO_LABELS_BY_INDEX = ["Dwight, 20", "Rosé, 20", "Bela, 21", "Piolo, 21"];
 
 export default function CardFan({
   members,
@@ -98,7 +106,7 @@ export default function CardFan({
     window.clearTimeout(settleTimer.current);
   }, []);
 
-  const visibleMembers = variant === "hero" ? members.slice(0, 3) : members;
+  const visibleMembers = variant === "hero" ? members.slice(0, 4) : members;
   const slots = variant === "hero" ? HERO_SLOTS : SHOWCASE_SLOTS;
 
   return (
@@ -114,6 +122,7 @@ export default function CardFan({
         const dissolving = variant === "showcase" && index === dissolvingIndex;
         const positionSlot = dissolving && !moveDissolving ? 0 : slot;
         const position = slots[Math.min(positionSlot, slots.length - 1)];
+        const heroLabel = HERO_LABELS[member.id] || HERO_LABELS_BY_INDEX[index];
         const hidden = variant === "showcase" && slot >= slots.length && !(
           dissolving && !moveDissolving
         );
@@ -132,11 +141,19 @@ export default function CardFan({
               "--fan-y": `${position.y}px`,
               "--fan-scale": position.scale,
               "--fan-delay": `${Math.min(positionSlot, slots.length - 1) * 80}ms`,
-              zIndex: hidden ? 0 : slots.length - positionSlot,
+              zIndex: hidden ? 0 : (variant === "hero" ? position.z : slots.length - positionSlot),
+              transform: variant === "hero"
+                ? `translate3d(${position.x}%,${position.y}px,0) scale(${position.scale}) rotate(${position.rotate}deg)`
+                : variant === "showcase"
+                  ? `translate3d(${position.x}%,calc(-50% + ${position.y}px),0) scale(${position.scale}) rotate(${position.rotate}deg)`
+                  : undefined,
             }}
           >
             <div className="card-fan-card" style={{ backgroundColor: member.color || "#FDFCF9" }}>
               {member.photoUrl && <img src={member.photoUrl} alt="" draggable="false" />}
+            {(variant === "hero" || variant === "showcase") && heroLabel && (
+              <span className="card-fan-name">{heroLabel}</span>
+            )}
               {variant === "hero" && member.tags?.[0] && (
                 <span className="card-fan-tag">{member.tags[0]}</span>
               )}

@@ -109,7 +109,7 @@ export default function PortfolioPage({ data, member, next, go, dark, toggle }) 
         <section id={isVenzon ? "home" : undefined} className={`py-14 sm:py-[72px] flex flex-col sm:flex-row gap-10 sm:gap-14 items-center${isVenzon ? " venzon-section" : ""}`}>
           {/* Headshot — interactive mouse-following Cursor widget */}
           {data.headFolder ? (
-            <div className="flex-none self-center sm:self-auto">
+            <div className={`flex-none self-center sm:self-auto${isAlthea ? " althea-headshot" : ""}`}>
               <Cursor folder={data.headFolder} alt={data.name} backText={data.headBackText} interactive={Boolean(data.portrait)} />
             </div>
           ) : (
