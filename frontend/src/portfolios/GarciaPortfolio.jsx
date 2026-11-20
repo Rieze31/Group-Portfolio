@@ -2,70 +2,94 @@ import { useEffect, useRef, useState } from "react";
 import ThemeBtn from "../components/ThemeBtn.jsx";
 
 /* ---------- Everything you may want to edit is in DATA ---------- */
+/* Photos: put the files in frontend/public/photos/ and write just the file name
+   WITHOUT the extension (e.g. img: "readable"). The page tries .jpg, .jpeg, .png
+   and .webp automatically. Until a photo is found, a placeholder box is shown. */
 const DATA = {
-  name: "Phiona Eunice de Leon Garcia",
+  name: "Phiona Eunice De Leon Garcia",
   nickname: "Yay",
   section: "BSIT 3-1",
+  teacher: "Sean Dyogi",
   field: "BSIT Portfolio",   // small label at the top-left of every page
   date: "Nov 2026",          // small label at the top-right of every page
-  photo: "",                 // put a file in frontend/public/photos/ and write e.g. "/photos/garcia.jpg" here
-  spotifyPlaylist: "",       // paste the playlist ID from your Spotify share link (open.spotify.com/playlist/THIS_PART)
+  photo: "cover",            // About Me photo (file name without extension)
+  photoPos: "50% 30%",       // vertical crop of the About Me photo: raise the 2nd number to move the picture up
+  spotifyPlaylist: "https://open.spotify.com/artist/7tYKF4w9nC0nq9CsPZTHyP", // Spotify link (artist or playlist) shown by "Music vibing"
 
   about: [
     ["Nickname:", "Yay"],
     ["Age:", "21 yrs old"],
-    ["Favorite color:", " White"],
-    ["Favorite app:", "TikTok "],
     ["Year:", "3rd year BSIT student"],
-    ["Learning style:", "Visual learner"],
     ["Why IT:", "I chose IT because of its broad opportunities and the creative world of it."],
   ],
 
   projects: [
     { title: "CTPR Club Group Portfolio", text: "Group portfolio website." },
-    { title: "EaseAccess", text: "Barangay document request system." },
-    { title: "ReadAble", text: "Web-based interactive reading comprehension support application for children with autism spectrum disorder (ASD)." },
+    { title: "EaseAccess", text: "Barangay document request system.", img: "easeaccess" },
+    { title: "ReadAble", text: "Web-based interactive reading comprehension support application for children with autism spectrum disorder (ASD).", img: "readable" },
+    { title: "ResumeFit", img: "resumefit" },
+    { title: "Restaurant Picker", text: "A random restaurant picker for people who are having a hard time picking where to eat." },
   ],
 
   skills: [
     { title: "Adobe Photoshop", text: "Graphic design projects that I used to compete with in collaborative desktop publishing." },
-    { title: "InDesign", text: "Desktop publishing and page layout for multi-page print and digital media, that I also used to compete with in collaborative desktop publishing." },
-    { title: "SketchUp", text: "3D modelling and visual prototypes like architectural structures and interior designing." },
+    { title: "InDesign", text: "Desktop publishing and page layout for multi-page print and digital media, that I also used to compete with in collaborative desktop publishing.", img: "adobe" },
+    { title: "SketchUp", text: "3D modelling and visual prototypes like architectural structures and interior designing.", img: "sketchup" },
+    { title: "MySQL", icon: "🗄️" },
+    { title: "Figma", icon: "🎨" },
+    { title: "Git", icon: "🔀" },
+    { title: "Canva", icon: "✨" },
+    { title: "CapCut", icon: "🎬" },
+    { title: "CSS", icon: "💅" },
+    { title: "HTML", icon: "🌐" },
+    { title: "Java", icon: "☕" },
+    { title: "C++", icon: "⚙️" },
   ],
 
   hobbies: [
     { title: "Online shopping" },
     { title: "Matcha hunting" },
-    { title: "Pickleball" },
+    { title: "Pickleball", img: "pickle" },
     { title: "Cafe hopping" },
     { title: "Music vibing", spotify: true },
-    { title: "Sunset watching" },
+    { title: "Sunset watching", center: true },
   ],
 
   quests: [
-    { title: "GotChew", text: "Selling Dubai chewy cookies." },
-    { title: "TikTok Affiliate" },
+    { title: "Polli Molli", text: "Anything personalized for events and special occasions.", img: "polli" },
+    { title: "GotChew", text: "Selling Dubai chewy cookies.", img: "gotchew" },
+    { title: "TikTok Affiliate", text: "Focused on clothes and lifestyle contents.", img: "affiliate" },
+  ],
+
+  favorites: [
+    ["Favorite color:", "White"],
+    ["Favorite app:", "TikTok"],
+    ["Learning style:", "Visual learner"],
   ],
 
   facts: [
-    "I love trying on clothes.",
-    "I love trying out new food spots.",
-    "I love cooking the recipes I see on TikTok or FB reels.",
-    "I have a vintage and digital camera collection.",
-    "I love anything vintage.",
+    ["Fashion:", "love trying on clothes."],
+    ["Food:", "love trying out new food spots."],
+    ["Cooking:", "love cooking the recipes I see on TikTok or FB reels."],
+    ["Collection:", "have a vintage and digital camera collection."],
   ],
 };
 
 /* the tabs shown in the table of contents (order = page order) */
 const PAGES = ["About Me", "Projects", "Skills", "Hobbies", "Side Quests", "Fun Facts"];
 
-/* palette taken from the template */
+const PHOTO_DIR = "/photos/phio";
+const PHOTO_EXTS = ["jpg", "jpeg", "png", "webp"];
+
+/* how much the right-hand page is magnified when the folder is open (1 = normal) */
+const PAGE_ZOOM = 1.25;
+
 const YEL = "#efdeae";     // folder
 const PALE = "#fdf3a7";    // pages
 const LAV = "#f0dce8";     // pink paper (cover + cards)
 const BROWN = "#5a2008";
 const PINK = "#e6128c";
-const GOLD = "#e0a92a";
+const GOLD = "#d8b258";
 const LINE = "#d9c86a";
 
 const SANS = { fontFamily: '"Inter Tight", system-ui, sans-serif' };
@@ -111,6 +135,35 @@ function Title({ children, size = 30 }) {
   );
 }
 
+/* a photo slot: shows the picture when the file exists, otherwise a placeholder box.
+   name = file name without extension ("readable"), or a full path ("/photos/me.jpg")
+   pos  = CSS object-position for the crop ("50% 0%" = top of the picture) */
+function Pic({ name, alt = "", className = "", pos = "50% 0%" }) {
+  const [tryIdx, setTryIdx] = useState(0);
+  const isPath = !!name && (name.startsWith("/") || name.includes("."));
+  const src = !name ? null : isPath ? name : tryIdx < PHOTO_EXTS.length ? `${PHOTO_DIR}/${name}.${PHOTO_EXTS[tryIdx]}` : null;
+
+  return (
+    <div className={"overflow-hidden border " + className} style={{ borderColor: PINK, background: LAV }}>
+      {src ? (
+        <img
+          src={src}
+          alt={alt}
+          loading="lazy"
+          onError={() => !isPath && setTryIdx((n) => n + 1)}
+          className="block h-full w-full object-cover"
+          style={{ objectPosition: pos }}
+        />
+      ) : (
+        <div className="flex h-full w-full flex-col items-center justify-center gap-0.5 p-1 text-center text-[9px] leading-tight" style={{ color: PINK }}>
+          <span>Photo</span>
+          {name && <span className="opacity-70">{name}</span>}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* header and footer shared by every page, like the template slides */
 function Frame({ n, children }) {
   return (
@@ -130,15 +183,33 @@ function Frame({ n, children }) {
   );
 }
 
-/* pink-bordered card used for projects and side quests */
-function Card({ label, title, text }) {
-  return (
-    <div className="border-2 bg-[#fffbd6] p-2.5" style={{ borderColor: PINK }}>
+/* pink-bordered card used for projects and side quests.
+   layout "top": photo above the text (wide screenshots)
+   layout "side": photo on the left, text on the right (portrait photos) */
+function Card({ label, title, text, img, layout = "top" }) {
+  const head = (
+    <>
       <div className="flex items-baseline gap-2">
         <span className="text-[9px]" style={{ color: PINK }}>{label}</span>
         <b className="text-[13px] leading-tight" style={{ ...SANS, fontWeight: 800 }}>{title}</b>
       </div>
       {text && <p className="m-0 mt-1 text-[9.5px] leading-[1.55]">{text}</p>}
+    </>
+  );
+
+  if (layout === "side") {
+    return (
+      <div className="flex items-start gap-2.5 border-2 bg-[#fffbd6] p-2.5" style={{ borderColor: PINK }}>
+        <Pic name={img} alt={title} pos="50% 0%" className="aspect-[3/4] w-[38%] shrink-0" />
+        <div className="min-w-0 flex-1">{head}</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="border-2 bg-[#fffbd6] p-2.5" style={{ borderColor: PINK }}>
+      {img && <Pic name={img} alt={title} className="mb-2 aspect-[16/9] w-full" />}
+      {head}
     </div>
   );
 }
@@ -173,6 +244,56 @@ function CoverSheet() {
   );
 }
 
+/* "Music vibing" card: click the title to show or hide the Spotify playlist.
+   Accepts a full share link or just the playlist ID. */
+function spotifyRef(v) {
+  const str = String(v || "");
+  const m = str.match(/(playlist|artist|album|track)\/([A-Za-z0-9]+)/);
+  if (m) return { type: m[1], id: m[2] };
+  const id = str.trim();
+  return id ? { type: "playlist", id } : null;
+}
+
+function MusicCard({ title }) {
+  const [show, setShow] = useState(false);
+  const ref = spotifyRef(DATA.spotifyPlaylist);
+
+  return (
+    <div className="col-span-2 flex flex-col items-center justify-center rounded-xl border-2 border-dashed px-2 py-3 text-center" style={{ borderColor: BROWN, background: LAV }}>
+      <button
+        onClick={() => setShow((v) => !v)}
+        aria-expanded={show}
+        className="cursor-pointer border-0 bg-transparent p-0 underline underline-offset-4"
+        style={{ ...SCRIPT, color: PINK, fontSize: 24, lineHeight: 1.1 }}
+      >
+        {title}
+      </button>
+      <span className="mt-1 text-[8.5px]" style={{ color: PINK }}>
+        {show ? "Click again to hide" : "Click to hear my SZA picks"}
+      </span>
+
+      {show && (ref ? (
+        <>
+          <iframe
+            title="SZA on Spotify"
+            src={`https://open.spotify.com/embed/${ref.type}/${ref.id}?theme=0`}
+            width="100%"
+            height="352"
+            loading="lazy"
+            allow="encrypted-media"
+            className="mt-2 rounded-xl border-0"
+          />
+          <a href={`https://open.spotify.com/${ref.type}/${ref.id}`} target="_blank" rel="noreferrer" className="mt-2 text-[10px] underline underline-offset-2" style={{ color: PINK }}>
+            Open in Spotify
+          </a>
+        </>
+      ) : (
+        <p className="m-0 mt-2 text-[10px]">Music coming soon.</p>
+      ))}
+    </div>
+  );
+}
+
 /* ---------- the pages inside the folder ---------- */
 
 function PageContent({ i }) {
@@ -185,12 +306,10 @@ function PageContent({ i }) {
           <div className="min-w-0 flex-1 text-[10px] leading-[1.55]">
             <p className="m-0" style={{ color: PINK }}>Hello!</p>
             <p className="m-0 mb-2 font-bold" style={{ color: PINK }}>I’m {DATA.nickname}</p>
-            <p className="m-0">Full name: {DATA.name}</p>
+            <div className="mt-1" style={{ ...DISPLAY, fontSize: 25, WebkitTextStroke: `3px ${GOLD}` }}>{DATA.name}</div>
           </div>
           <div className="aspect-[0.78] w-[40%] shrink-0 border-2 p-1.5" style={{ background: "#f2c230", borderColor: PINK }}>
-            <div className="flex h-full w-full items-center justify-center overflow-hidden text-[10px]" style={{ background: LAV, color: PINK }}>
-              {DATA.photo ? <img src={DATA.photo} alt={DATA.name} className="h-full w-full object-cover" /> : "Photo"}
-            </div>
+            <Pic name={DATA.photo} alt={DATA.name} pos={DATA.photoPos} className="h-full w-full border-0" />
           </div>
         </div>
 
@@ -213,7 +332,7 @@ function PageContent({ i }) {
         <Title>{PAGES[1]}</Title>
         <div className="space-y-3">
           {DATA.projects.map((p, k) => (
-            <Card key={p.title} label={String(k + 1).padStart(2, "0")} title={p.title} text={p.text} />
+            <Card key={p.title} label={String(k + 1).padStart(2, "0")} title={p.title} text={p.text} img={p.img} />
           ))}
         </div>
       </Frame>
@@ -229,9 +348,10 @@ function PageContent({ i }) {
           {DATA.skills.map((s, k) => (
             <div key={s.title} className="flex gap-3 border-b py-3 first:pt-0" style={{ borderColor: LINE }}>
               <span className="w-3 shrink-0 text-[10px]" style={{ color: PINK }}>{k + 1}</span>
-              <div className="min-w-0">
-                <b className="block text-[14px] leading-tight" style={{ ...SANS, fontWeight: 800 }}>{s.title}</b>
-                <p className="m-0 mt-1 text-[9.5px] leading-[1.6]">{s.text}</p>
+              <div className="min-w-0 flex-1">
+                <b className="block text-[14px] leading-tight" style={{ ...SANS, fontWeight: 800 }}>{s.icon && <span className="mr-1.5" aria-hidden="true">{s.icon}</span>}{s.title}</b>
+                {s.text && <p className="m-0 mt-1 text-[9.5px] leading-[1.6]">{s.text}</p>}
+                {s.img && <Pic name={s.img} alt={s.title} className="mt-2 h-28 w-full" />}
               </div>
             </div>
           ))}
@@ -246,26 +366,20 @@ function PageContent({ i }) {
       <Frame n={4}>
         <Title>{PAGES[3]}</Title>
         <div className="grid grid-cols-2 gap-2.5">
-          {DATA.hobbies.map((h) => (
-            <div
-              key={h.title}
-              className={"flex flex-col items-center justify-center rounded-xl border-2 border-dashed px-2 py-3 text-center " + (h.spotify ? "col-span-2" : "")}
-              style={{ borderColor: BROWN, background: LAV }}
-            >
-              <div style={{ ...SCRIPT, color: PINK, fontSize: 24, lineHeight: 1.1 }}>{h.title}</div>
-              {h.spotify && DATA.spotifyPlaylist && (
-                <iframe
-                  title="Top Spotify playlist"
-                  src={`https://open.spotify.com/embed/playlist/${DATA.spotifyPlaylist}?theme=0`}
-                  width="100%"
-                  height="152"
-                  loading="lazy"
-                  allow="encrypted-media"
-                  className="mt-2 rounded-xl border-0"
-                />
-              )}
-            </div>
-          ))}
+          {DATA.hobbies.map((h) =>
+            h.spotify ? (
+              <MusicCard key={h.title} title={h.title} />
+            ) : (
+              <div
+                key={h.title}
+                className={"flex flex-col items-center justify-center rounded-xl border-2 border-dashed px-2 py-3 text-center " + (h.center ? "col-span-2 w-[calc(50%-5px)] justify-self-center" : "")}
+                style={{ borderColor: BROWN, background: LAV }}
+              >
+                {h.img && <Pic name={h.img} alt={h.title} className="mb-2 aspect-[4/5] w-full" />}
+                <div style={{ ...SCRIPT, color: PINK, fontSize: 24, lineHeight: 1.1 }}>{h.title}</div>
+              </div>
+            )
+          )}
         </div>
       </Frame>
     );
@@ -278,22 +392,29 @@ function PageContent({ i }) {
         <Title>{PAGES[4]}</Title>
         <div className="space-y-3">
           {DATA.quests.map((q, k) => (
-            <Card key={q.title} label={`Quest ${String(k + 1).padStart(2, "0")}`} title={q.title} text={q.text} />
+            <Card key={q.title} layout="side" label={`Quest ${String(k + 1).padStart(2, "0")}`} title={q.title} text={q.text} img={q.img} />
           ))}
         </div>
       </Frame>
     );
   }
 
-  /* Fun Facts */
+  /* Fun Facts: same dashed box and rows as About Me */
+  const rowCls = "flex gap-2 border-b border-dotted py-1.5 text-[10px] leading-[1.5] last:border-b-0";
   return (
     <Frame n={6}>
       <Title>{PAGES[5]}</Title>
-      <div>
-        {DATA.facts.map((f) => (
-          <div key={f} className="flex items-start gap-2.5 border-b py-2.5 first:pt-0" style={{ borderColor: LINE }}>
-            <Star size={13} className="mt-[2px] shrink-0" />
-            <p className="m-0 text-[10.5px] leading-[1.6]">{f}</p>
+      <div className="rounded-lg border-2 border-dashed px-3 py-1.5" style={{ borderColor: BROWN, background: LAV }}>
+        {DATA.favorites.map(([k, v]) => (
+          <div key={k} className={rowCls} style={{ borderColor: "#b08a9c" }}>
+            <b className="w-[84px] shrink-0" style={{ color: PINK }}>{k}</b>
+            <span>{v}</span>
+          </div>
+        ))}
+        {DATA.facts.map(([k, v]) => (
+          <div key={k} className={rowCls} style={{ borderColor: "#b08a9c" }}>
+            <b className="w-[84px] shrink-0" style={{ color: PINK }}>{k}</b>
+            <span>{v}</span>
           </div>
         ))}
       </div>
@@ -343,7 +464,7 @@ export default function GarciaPortfolio({ next, go, dark, toggle }) {
           {/* the folder: closed it is centered, open it slides right so the whole spread is centered */}
           <div
             className={
-              "relative aspect-[0.64] w-[var(--w)] [--w:min(360px,88vw)] md:[--w:min(380px,40vw)] transition-transform duration-[900ms] ease-in-out motion-reduce:transition-none " +
+              "relative aspect-[0.64] w-[var(--w)] [--w:min(420px,92vw)] md:[--w:min(520px,44vw)] transition-transform duration-[900ms] ease-in-out motion-reduce:transition-none " +
               (open ? "md:translate-x-[calc(var(--w)/2)]" : "")
             }
             style={{ transformStyle: "preserve-3d" }}
@@ -362,7 +483,10 @@ export default function GarciaPortfolio({ next, go, dark, toggle }) {
                     if (d < -50) step(1); else if (d > 50) step(-1);
                   }}
                 >
-                  <PageContent i={page} />
+                  {/* zoomed in so the right-hand page is easier to read */}
+                  <div style={{ zoom: PAGE_ZOOM }}>
+                    <PageContent i={page} />
+                  </div>
                 </div>
               </div>
             </div>
@@ -390,8 +514,7 @@ export default function GarciaPortfolio({ next, go, dark, toggle }) {
               {/* inside of the cover: table of contents */}
               <div className={"absolute inset-0 p-6 " + EDGE} style={{ ...HIDE_BACK, transform: "rotateY(180deg)", background: PALE, color: BROWN }}>
                 <div className="absolute inset-y-0 right-[5%] w-px" style={{ background: "#e6d77a" }} />
-                <Star size={34} />
-                <h2 className="mb-6 mt-2 font-normal" style={{ ...DISPLAY, fontSize: 34 }}>Table of<br />Contents</h2>
+                <Star size={34} className="mb-6 mt-2 block" />
                 <ol className="m-0 list-none p-0" style={MONO}>
                   {PAGES.map((p, k) => (
                     <li key={p}>
